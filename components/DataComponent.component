@@ -1,0 +1,195 @@
+<apex:component controller="queryBuilderController">
+	<apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false"/>
+    <apex:attribute name="stepType" type="String" description="Step type: Data or Bulk Data"/>
+    <apex:attribute name="prequery" type="String" description="saved json on previous edition"/>
+    <apex:attribute name="orgId" type="String" description="Organization Id"/>
+    <apex:attribute name="dummy" type="String" description="fake controller var to make legacy inputs"/>
+
+    <style type="text/css">
+        .customMessage * {
+            color: #fff!important
+        }
+    </style>
+    <!-- remove this change -->
+    <apex:outputPanel id="multiselectPanel" layout="block" styleClass="duelingListBox" rendered="{!isEdit}">
+        <apex:outputPanel id="js-stepBlock-QB" >
+            <div>
+            	<center>
+            		<apex:commandLink value="{!$Label.CACHE_REFRESHED_NOW}" style="display:none;" onclick="return dw.qb.removeCached();" rerender="opDummy" id="removeCache"/>
+            	</center>
+            </div>
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium " style="padding-top: 10px;">{!$Label.QUERY_BUILDER}</legend>
+                <div id="loading">
+                    <center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center>
+                </div>
+                <div id="queryBuilder">
+
+                	<apex:actionFunction name="showMessage" action="{!showMessage}" rerender="qb_js_error" oncomplete="overridePageMessages();renderMainPanel();">
+                        <apex:param name="errorLevel" assignTo="{!errorLevel}" value="" />
+                        <apex:param name="messageName" assignTo="{!messageName}" value="" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="clearMessage" action="{!clearMessage}" reRender="xx"/>
+                    <apex:actionFunction name="renderPanel" reRender="qb_js_error"/>
+                    <script type="text/javascript">
+                        function clearMessages(){                            
+                            setTimeout(renderPanel(),5000);
+                        }
+                    </script>
+
+                	<form class="slds-form--stacked">
+    					<div class="slds-grid">
+    						<div class="slds-col" >
+    							<apex:outputPanel layout="block" styleClass="slds-form-element">
+    						    	<label class="slds-form-element__label" for="selPicklist">
+    									{!$Label.OBJECT}
+    								</label>
+    						    	<div class="slds-form-element__control">
+    						    		<div id="objects"></div>
+                                        <br/> 
+    	                            	<button id="getFields" class="btn slds-button slds-button--neutral"  disabled="disabled">{!$Label.GET_FIELDS}</button> <i id="selected-obj">{!$Label.SOBJECT}</i>
+    						    	</div>
+    					    	</apex:outputPanel>
+                            </div>
+                        </div>
+					    <apex:outputPanel styleClass="query-step-2" layout="block" style="display:none;">
+                            <div class="slds-grid">
+                                <div class="slds-col" >
+    						    	<apex:outputPanel layout="block" styleClass="slds-form-element">
+    							    	<label class="slds-form-element__label" for="fieldsEx">
+    										{!$Label.EXTERNAL_ID}
+    									</label>
+    							    	<div class="slds-form-element__control">
+    							    		<select id="fieldsEx" class="slds-select"  width="400px" ></select>
+    							    	</div>
+    						    	</apex:outputPanel>
+                                </div>
+                            </div>
+                            <apex:outputPanel layout="block" styleClass="attachmentOptionPanel">
+                                <div class="slds-grid">
+                                    <div class="slds-col">
+                                        <apex:outputPanel layout="block" styleClass="slds-form-element">
+                                        <label class="slds-form-element__label" for="attachmentOptions">
+                                            {!$Label.Attachment_Options}
+                                        </label>
+                                        <apex:outputPanel styleClass="slds-form-element__control" layout="block">
+                                            <select id="attachmentOptions" class="slds-select" width="400px">
+                                                <option value="none">{!$Label.No_Attachments}</option>
+                                                <option value="insert">{!$Label.Insert_Attachments}</option>
+                                                <option value="update">{!$Label.Upsert_Attachments}</option>
+                                                <option value="replace">{!$Label.Replace_Attachments}</option>
+                                                <option value="remove">{!$Label.Remove_Attachments}</option>
+                                            </select>
+                                        </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            <apex:outputPanel styleClass="matchOwnerPanel">
+                                <div class="slds-grid">
+                                    <div class="slds-col" >
+                                        <apex:outputLabel value="{!$Label.Match_Owner}" />
+                                        <apex:outputPanel layout="block">
+                                            <input type="checkbox" id="matchOwner" />
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+
+                            <apex:outputPanel styleClass="matchRecordTypePanel">
+                                <div class="slds-grid">
+                                    <div class="slds-col" >
+                                        <apex:outputLabel value="{!$Label.Match_Record_Type}" />
+                                        <apex:outputPanel layout="block">
+                                            <input type="checkbox" id="matchRecordType" />
+                                        </apex:outputPanel>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            <div class="slds-grid">
+                                <div class="slds-col" >
+    						    	<apex:outputPanel layout="block" styleClass="slds-form-element slds-float_right">
+                                        <label class="slds-form-element__label" for="fields-unselected" >
+                                            {!$Label.AVAILABLE_FIELDS}
+                                        </label>						    	
+    							    	<div class="slds-form-element__control">
+    							    		<select id="fields-unselected" size="20" style="width:360px;" multiple="multiple"></select>
+    							    	</div>
+    						    	</apex:outputPanel>
+                                </div>
+                                <div class="slds-col">
+                                    <label class="slds-form-element__label" for="fields-selected">
+                                        {!$Label.SELECTED_FIELDS}
+                                    </label>
+                                    <apex:outputPanel layout="block" styleClass="slds-form-element">                                
+                                        <div class="slds-form-element__control">
+                                            <select id="fields-selected" size="20" style="width:360px;float:left" multiple="multiple"></select>
+                                        </div>
+                                    </apex:outputPanel>
+                                </div>
+                            </div>
+                            <div class="slds-grid">
+                                <div class="slds-col" >
+    						    	<apex:outputPanel layout="block" styleClass="slds-form-element">
+    							    	<label class="slds-form-element__label" for="query-label">
+    										{!$Label.QUERY}
+    									</label>
+    							    	<div class="slds-form-element__control">
+    							    		<textarea  id="query-label" class="query-label" cols="60" rows="8" style="width:95%;"></textarea> 
+    							    	</div>
+    						    	</apex:outputPanel>
+                                </div>
+                            </div>
+					    </apex:outputPanel>
+                        <footer class="slds-modal__footer" style="text-align: center">
+                            <apex:pageMessages id="qb_js_error"/>
+                            <br/><br/>
+                            <div class="row action slds-align_absolute-center">
+                                <button id="testQuery" disabled="disabled" class="slds-button">{!$Label.TEST_QUERY}</button>
+                            </div>
+                        </footer>
+    				</form>
+                </div>
+            </fieldset>
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <apex:outputPanel layout="none" rendered="{!!isEdit}">
+        <div class="slds-grid">
+            <div class="slds-col" >
+                <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom">
+                    <label class="slds-form-element__label" for="jsapex">
+                        {!$Label.OBJECT}
+                    </label>
+                    <div class="slds-form-element__control">                        
+                        <span class="slds-form-element__static" style="width:95%">                   
+                            <apex:outputText id="objectsView" styleClass="js-data" />
+                        </span>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom">
+                    <label class="slds-form-element__label" for="fieldsEx">
+                        {!$Label.EXTERNAL_ID}
+                    </label>
+                    <div class="slds-form-element__control">
+                        <span class="slds-form-element__static" style="width:95%">  
+                            <apex:outputText id="fieldsExView" />
+                        </span>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom">
+                    <label class="slds-form-element__label" for="query-label">
+                        {!$Label.QUERY}
+                    </label>
+                    <div class="slds-form-element__control">
+                        <textarea  id="queryView" class="query-label" cols="60" rows="8" style="width:95%;resize: vertical;" readonly="true"></textarea> 
+                    </div>
+                </apex:outputPanel>
+            </div>
+        </div>
+    </apex:outputPanel>
+    <style> .queryBuilder-selected{ background:grey; }</style>
+
+    <c:IncludeJqxResourceComponent addJqxAlljs="true" addJqxBasecss="true"/>
+    <apex:includeScript value="{!URLFOR($Resource.DataComponent)}" />
+    
+</apex:component>

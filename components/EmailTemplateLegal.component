@@ -1,0 +1,12 @@
+<apex:component access="global">
+    <div style="margin: 30px auto; color: #272525; font-size: 9px;">
+        <div style="padding-bottom: 15px;">
+            <apex:outputText value="{!$Label.EMAILS_FOOTER_TITLE}">
+                <apex:param value="{!YEAR(TODAY())}" />
+            </apex:outputText>
+        </div>
+        <div>
+            {!$Label.EMAILS_FOOTER_TEXT}
+        </div>
+    </div>
+</apex:component>

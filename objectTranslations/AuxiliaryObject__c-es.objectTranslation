@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>AuxiliaryObject</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>AuxiliaryObjects</value>
+    </caseValues>
+    <fields>
+        <label><!-- Continuous Integration --></label>
+        <name>Continuous_Integration__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Data Set --></label>
+        <name>Data_Set__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Data Template --></label>
+        <name>Data_Template__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Date Time --></label>
+        <name>Date_Time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Default Number --></label>
+        <name>Default_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Default String --></label>
+        <name>Default_String__c</name>
+    </fields>
+    <fields>
+        <label><!-- Default Text --></label>
+        <name>Default_Text__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pipeline --></label>
+        <name>Deployment_Flow__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Deployment --></label>
+        <name>Deployment__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Environment --></label>
+        <name>Environment__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Git Snapshot --></label>
+        <name>Git_Backup__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Git Repository --></label>
+        <name>Git_Repository__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Org Credential --></label>
+        <name>Org_Credential__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Org Difference --></label>
+        <name>Org_Difference__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Package Version --></label>
+        <name>Package_Version__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Promotion --></label>
+        <name>Promotion__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Release --></label>
+        <name>Release__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Selenium Test Group --></label>
+        <name>Selenium_Test_Group__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Selenium Test Run --></label>
+        <name>Selenium_Test_Run__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Snapshot Difference --></label>
+        <name>Snapshot_Difference__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Static Code Analysis Settings --></label>
+        <name>Static_Code_Analysis_Settings__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- User --></label>
+        <name>User__c</name>
+        <relationshipLabel><!-- AuxiliaryObjects --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

@@ -1,0 +1,79 @@
+<template>
+    <div class="slds-m-top_medium"></div>
+
+    <div class="container">
+        <div class="legend">
+            <h1>{label.legend}</h1>
+            <div class="row">
+                <div class="child-relation"></div>
+                <div class="relation-label">{label.childRelationship}</div>
+            </div>
+            <div class="row">
+                <div class="parent-relation"></div>
+                <div class="relation-label">{label.parentRelationship}</div>
+            </div>
+            <div class="row">
+                <div class="filter-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 172 172" style=" fill:#000000;">
+                        <g
+                            fill="none"
+                            fill-rule="nonzero"
+                            stroke="none"
+                            stroke-width="1"
+                            stroke-linecap="butt"
+                            stroke-linejoin="miter"
+                            stroke-miterlimit="10"
+                            stroke-dasharray=""
+                            stroke-dashoffset="0"
+                            font-family="none"
+                            font-weight="none"
+                            font-size="none"
+                            text-anchor="none"
+                            style="mix-blend-mode: normal"
+                        >
+                            <path d="M0,172v-172h172v172z" fill="none"></path>
+                            <g fill="#2E82E0">
+                                <path
+                                    d="M13.76,6.88c-2.06937,0 -3.44,1.37063 -3.44,3.44v10.32c0,1.03469 0.38969,1.67969 1.075,2.365l55.04,58.48c0.68531,0.68531 1.67969,1.075 2.365,1.075h34.4c1.03469,0 1.67969,-0.38969 2.365,-1.075l55.04,-58.48c0.68531,-0.68531 1.075,-1.33031 1.075,-2.365v-10.32c0,-2.06937 -1.37062,-3.44 -3.44,-3.44zM65.36,89.44v51.6c0,1.37063 0.68531,2.43219 1.72,3.1175l34.4,20.64c0.34938,0.34938 1.03469,0.3225 1.72,0.3225c0.68531,0 1.03469,0.02688 1.72,-0.3225c1.03469,-0.68531 1.72,-1.74687 1.72,-3.1175v-72.24z"
+                                ></path>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div class="relation-label">{label.hasFilter}</div>
+            </div>
+            <div class="row">
+                <div class="attachment-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 172 172" style=" fill:#000000;">
+                        <g
+                            fill="none"
+                            fill-rule="nonzero"
+                            stroke="none"
+                            stroke-width="1"
+                            stroke-linecap="butt"
+                            stroke-linejoin="miter"
+                            stroke-miterlimit="10"
+                            stroke-dasharray=""
+                            stroke-dashoffset="0"
+                            font-family="none"
+                            font-weight="none"
+                            font-size="none"
+                            text-anchor="none"
+                            style="mix-blend-mode: normal"
+                        >
+                            <path d="M0,172v-172h172v172z" fill="none"></path>
+                            <g fill="#2E82E0">
+                                <path
+                                    d="M78.83333,7.16667c-15.74756,0 -28.66667,12.91911 -28.66667,28.66667v89.58333c0,21.6833 17.73337,39.41667 39.41667,39.41667c21.6833,0 39.41667,-17.73336 39.41667,-39.41667v-82.41667h-14.33333v82.41667c0,13.93503 -11.1483,25.08333 -25.08333,25.08333c-13.93503,0 -25.08333,-11.1483 -25.08333,-25.08333v-89.58333c0,-8.00277 6.33056,-14.33333 14.33333,-14.33333c8.00277,0 14.33333,6.33056 14.33333,14.33333v75.25c0,2.05638 -1.52695,3.58333 -3.58333,3.58333c-2.05638,0 -3.58333,-1.52695 -3.58333,-3.58333v-68.08333h-14.33333v68.08333c0,9.81162 8.10505,17.91667 17.91667,17.91667c9.81162,0 17.91667,-8.10505 17.91667,-17.91667v-75.25c0,-15.74756 -12.91911,-28.66667 -28.66667,-28.66667z"
+                                ></path>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div class="relation-label">{label.willDeployAttachments}</div>
+            </div>
+        </div>
+
+        <div class="relationship-diagram"></div>
+    </div>
+</template>

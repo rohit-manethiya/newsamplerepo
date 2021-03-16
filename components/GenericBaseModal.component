@@ -1,0 +1,61 @@
+<apex:component >
+    <apex:attribute name="title" description="Text displayed as title in the modal header." type="String" />
+    <apex:attribute name="actionButtonText" description="Text displayed in the action brand button." type="String" />
+    <apex:attribute name="onActionRerender" description="Comma separated list of the ids of the components to rerender by the brand button."
+        type="String" />
+    <apex:attribute name="actionToInvokeParamName" description="Action to be executed by the action brand button." type="ApexPages.Action" />
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <head>
+        <script>
+            function showModal(){
+                document.getElementById('GenericModalComponent').style = 'display: block;';
+                return false;
+            }
+
+            function hideModal(){
+                document.getElementById('GenericModalComponent').style = 'display: none;';
+                return false;
+            }
+        </script>
+
+        <style>
+            h2.slds-modal__title.slds-hyphenate {
+                font-size: 1.25rem;
+                line-height: 1.25;
+                font-weight: 600;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="GenericModalComponent" style="display: none;">
+            <c:CopadoSpinner />
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1"
+                class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick="return hideModal();">
+                            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">{!title}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <apex:componentBody />
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <apex:commandButton onclick="return hideModal();" value="Cancel" />
+                        <apex:commandButton styleClass="slds-button_brand" rerender="{!onActionRerender}" value="{!actionButtonText}" action="{!actionToInvokeParamName}"
+                            status="loadingScreen" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </body>
+
+    </html>
+</apex:component>

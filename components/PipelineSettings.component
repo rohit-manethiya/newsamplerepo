@@ -1,0 +1,814 @@
+<apex:component id="PipelineSettings" controller="PipelineSettingsComponentController" allowDML="true">
+    <style>
+        /* HIDE RADIO */
+        [type=radio] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        /* IMAGE STYLES */
+        [type=radio]+span {
+            cursor: pointer;
+        }
+        /* CHECKED STYLES */
+        [type=radio]:checked + span {
+            /*outline: 1px solid #f00;*/
+            opacity: 1;
+            text-decoration: underline;
+            border: none;
+            border-radius: 50%;
+            -moz-box-shadow: 0 0 5px rgba(255, 0, 0, 1);
+            -webkit-box-shadow: 0 0 5px rgba(255, 0, 0, 1);
+            box-shadow: 0 0 5px rgba(128, 128, 128, 1);
+            -webkit-filter: grayscale(0%); /* Safari 6.0 - 9.0 */
+            filter: grayscale(0%);
+        }
+        .custom-combobox {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .custom-combobox-toggle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            margin-left: -1px;
+            padding: 0;
+        }
+        .custom-combobox-input {
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+        .img-circular {
+            opacity: 0.6;
+            margin: 5px;
+            width: 50px;
+            height: 50px;
+            background-size: cover;
+            display: block;
+            border: 1px solid lightgrey;
+            border-radius: 25px;
+            -webkit-border-radius: 25px;
+            -moz-border-radius: 25px;
+            text-align: center;
+            vertical-align: middle;
+            -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+            filter: grayscale(100%);
+        }
+        .providerImage {
+            padding: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .providerCaption {
+            max-width: 50px;
+            text-align: center;
+        }
+        .providerRadioList{
+            margin-bottom:25px;
+            overflow:auto;
+            min-height:125px;
+        }
+        .copadoGitProvider {
+            padding: 10px !important;
+            border-color : white !important;
+        }
+        .copadoGitProvider div {
+            white-space: nowrap;
+        }
+        .baseURL {
+            width: 95% !important;
+            cursor: text;
+        }
+    </style>
+    <script>
+        function copyToClipboard() {
+            if (document.selection) { // IE
+                var range = document.body.createTextRange();
+                range.moveToElementText(document.getElementsByClassName('sshKeyOutput')[0]);
+                range.select();
+            } else if (window.getSelection) {
+                var range = document.createRange();
+                range.selectNode(document.getElementsByClassName('sshKeyOutput')[0]);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+            }
+            var isCopySuccess = document.execCommand("copy");
+            var tooltip = document.getElementById('copyTooltip');
+            if(isCopySuccess){
+                console.log('copied!');
+                var copyTooltip = $copado(".copyIcon").tooltip({
+                    content: 'Copied!',
+                  position: {
+                    my: "left top",
+                    at: "right+5 top-5",
+                    collision: "none"
+                  }
+                });
+                copyTooltip.tooltip("open");
+            }else{
+                console.log('cant copy');
+                var copyTooltip = $copado("button").tooltip({
+                    content: "Failed!",
+                  position: {
+                    my: "left top",
+                    at: "right+5 top-5",
+                    collision: "none"
+                  }
+                });
+                copyTooltip.tooltip("open");
+            }
+        }
+
+        function rerenderGitRepositoryCombobox(){
+            $copado("#combobox").combobox();
+        }
+
+        function reselectGitProvider(providerName){
+             if(providerName != null){
+                var providerList = document.getElementsByName('radio');
+                for (var index = 0; index < providerList.length; index++) {
+                    if(providerList[index].title == providerName){
+                        providerList[index].checked = true;
+                    }else{
+                        providerList[index].checked = false;
+                    }
+                }
+            }
+        }
+
+        function reselectGitRepoName(repoName){
+            document.getElementsByClassName('custom-combobox-input')[0].value = repoName;
+        }
+
+        function renderGitRepositoryCombobox() {
+            $copado.widget("custom.combobox", {
+                _create: function () {
+                    this.wrapper = $copado("<span>")
+                        .addClass("custom-combobox")
+                        .insertAfter(this.element);
+
+                    this.element.hide();
+                    this._createAutocomplete();
+                    this._createShowAllButton();
+                },
+
+                _createAutocomplete: function () {
+                    var selected = this.element.children(":selected"),
+                        value = selected.val() ? selected.text() : "";
+                    this.input = $copado("<input>")
+                        .appendTo(this.wrapper)
+                        .val(value)
+                        .addClass("custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left slds-input")
+                        .autocomplete({
+                            delay: 0,
+                            minLength: 0,
+                            source: $copado.proxy(this, "_source")
+                        })
+                        .tooltip({
+                            classes: {
+                                "ui-tooltip": "ui-state-highlight"
+                            }
+                        });
+
+                    this._on(this.input, {
+                        autocompleteselect: function (event, ui) {
+                            ui.item.option.selected = true;
+                            this._trigger("select", event, {
+                                item: ui.item.option
+                            });
+                            pipelineManager.togProv(ui.item.option.value);
+                        },
+                        autocompletechange: "_removeIfInvalid"
+                    });
+                },
+
+                _createShowAllButton: function () {
+                    var input = this.input,
+                        wasOpen = false;
+
+                    $copado("<a>")
+                        .attr("tabIndex", -1)
+                        .attr("title", "Show All Items")
+                        .tooltip()
+                        .appendTo(this.wrapper)
+                        .button({
+                            icons: {
+                                primary: "ui-icon-triangle-1-s"
+                            },
+                            text: false
+                        })
+                        .removeClass("ui-corner-all")
+                        .addClass("custom-combobox-toggle ui-corner-right")
+                        .on("mousedown", function () {
+                            wasOpen = input.autocomplete("widget").is(":visible");
+                        })
+                        .on("click", function () {
+                            input.trigger("focus");
+
+                            // Close if already visible
+                            if (wasOpen) {
+                                return;
+                            }
+
+                            // Pass empty string as value to search for, displaying all results
+                            input.autocomplete("search", "");
+                        });
+                },
+
+                _source: function (request, response) {
+                    var matcher = new RegExp($copado.ui.autocomplete.escapeRegex(request.term), "i");
+                    response(this.element.children("option").map(function () {
+                        var text = $copado(this).text();
+                        if (this.value && (!request.term || matcher.test(text)))
+                            return {
+                                label: text,
+                                value: text,
+                                option: this
+                            };
+                    }));
+                },
+
+                _removeIfInvalid: function (event, ui) {
+                    // Selected an item, nothing to do
+                    if (ui.item) {
+                        return;
+                    }
+
+                    // Search for a match (case-insensitive)
+                    var value = this.input.val(),
+                        valueLowerCase = value.toLowerCase(),
+                        valid = false;
+                    this.element.children("option").each(function () {
+                        if ($copado(this).text().toLowerCase() === valueLowerCase) {
+                            this.selected = valid = true;
+                            return false;
+                        }
+                    });
+
+                    // check if value is null if so enable provider radio list
+                    if(ui.item == null){
+                        pipelineManager.enaProv();
+                    }
+                    // Found a match, nothing to do
+                    if (valid) {
+                        return;
+                    } else {
+                        pipelineManager.enaProv();
+                    }
+                },
+
+                _destroy: function () {
+                    this.wrapper.remove();
+                    this.element.show();
+                }
+            });
+
+            $copado("#combobox").combobox();
+            $copado("#toggle").on("click", function () {
+                $copado("#combobox").toggle();
+            });
+        }
+
+        var pipelineManager;
+        $copado(document).ready(function () {
+            applyRenderSVG(svgButtonsId,['editIcon']); //this is for if last page opened automatically (after a save & close) render edit icon
+            pipelineManager = (function () {
+                var disableProviderRadio = function () {
+                    var providerList = document.getElementsByName('radio');
+                    for (var index = 0; index < providerList.length; index++) {
+                        providerList[index].disabled = true;
+                        providerList[index].readOnly = true;
+                    }
+                },
+
+                enableProviderRadio = function () {
+                    var providerList = document.getElementsByName('radio');
+                    for (var index = 0; index < providerList.length; index++) {
+                        providerList[index].disabled = false;
+                        providerList[index].readOnly = false;
+                    }
+                },
+
+                toggleSelectedGitProvider = function (repoIdWithProvider) {
+                    var repoId = repoIdWithProvider.split("##")[0];
+                    var repoProvider = repoIdWithProvider.split("##")[2];
+                    var repoName = repoIdWithProvider.split("##")[1];
+                    if (repoId === null || repoId === '' || repoProvider === null || repoProvider === '') return;
+                    var providerList = document.getElementsByName('radio');
+                    var selectedProvider = '';
+                    for (var index = 0; index < providerList.length; index++) {
+                        console.log(providerList[index].value +  ' ++++ ' + repoProvider);
+                        if (providerList[index].value === repoProvider) {
+                            providerList[index].checked = true;
+                            selectedProvider = providerList[index].id;
+                            providerList[index].style.opacity = 1;
+                        } else {
+                            providerList[index].checked = false;
+                            providerList[index].style.opacity = 0.5;
+                        }
+                    }
+                    if(selectedProvider != null && selectedProvider != 'undefined' && selectedProvider != ''){
+                        disableProviderRadio();
+                    }else{
+                        enableProviderRadio();
+                    }
+                },
+
+                getSelectedGitProvider = function () {
+                    var providerList = document.getElementsByName('radio');
+                    for (var index = 0; index < providerList.length; index++) {
+                        if (providerList[index].checked === true) {
+                            return providerList[index].value;
+                        }
+                    }
+                },
+
+                populateGitFields = function () {
+                    var selectedGit = $copado('#combobox :selected').val();
+                    var selectedGitName = document.getElementsByClassName('custom-combobox-input')[0].value;
+                    var selectedProvider = getSelectedGitProvider();
+                    var repoInfo = selectedGit.split('##');
+                    if (repoInfo.length === 3) {
+                        var repoObj = {
+                            "repoId": repoInfo[0],
+                            "repoName": repoInfo[1],
+                            "repoProvider": selectedProvider
+                        }
+                        if (repoObj.repoName != selectedGitName) {
+                            updateGit('', selectedGitName, selectedProvider);
+                        } else {
+                            updateGit(repoObj.repoId, repoObj.repoName, repoObj.repoProvider);
+                        }
+                    } else {
+                        updateGit('', selectedGitName, selectedProvider);
+                    }
+                }
+
+                return {
+                    popGF: populateGitFields,
+                    disProv: disableProviderRadio,
+                    enaProv: enableProviderRadio,
+                    togProv: toggleSelectedGitProvider
+                }
+            })();
+
+            renderGitRepositoryCombobox();
+            showToast();
+        });
+
+        function closeToast() {
+            $copado('#notify').css("display", "none");
+        }
+
+        function showToast() {
+            if($copado('[Id$=pagemessage]').html() != "") {
+                $copado('.errorM3').removeClass('errorM3');
+                $copado('.confirmM3').removeClass('confirmM3');
+                $copado('.infoM3').removeClass('infoM3');
+                $copado('.message').removeClass('message');
+                $copado('.msgIcon').removeClass('msgIcon');
+                $copado('#notify').removeAttr("style");
+            } else {
+                closeToast();
+            }
+        }
+
+        function setStepIfNoError(){
+            if($copado('[Id$=pagemessage]').html() == "") {
+                setPipelineSettingsStep();
+            } else {
+                unlockScreen();
+            }
+        }
+
+        function toggleEditMode(){
+            var baseUrlInputList = document.getElementsByClassName('baseURL');
+            for(var index = 0; index < baseUrlInputList.length; index++){
+                baseUrlInputList[index].removeAttribute('readonly');
+            }
+
+            var editButtonList = document.getElementsByClassName('editIcon');
+            for(var index = 0; index < editButtonList.length; index++){
+                editButtonList[index].style.display = 'none';
+            }
+        }
+
+        function autoPopulateGitRepository(repoId) {
+            if(!repoId) {
+                return;
+            }
+            console.log('repoId : ',repoId);
+            var options = $copado('#combobox').find('option');
+            console.log('options : ',options);
+            if(options) {
+                options.each(function() { 
+                    var optionValue = this.value;
+                    console.log('optionValue : ',optionValue);
+                    if(optionValue) {
+                        var repoInfos = optionValue.split('##');
+                        if(repoInfos && repoInfos[0] === repoId) {
+                            $copado(this).prop('selected',true);
+                            $copado('.custom-combobox-input')[0].value = repoInfos[1];
+                        
+                            var selectedProvider = repoInfos[2];
+                            var providerList = document.getElementsByName('radio');
+                            for (var index = 0; index < providerList.length; index++) {
+                                if(selectedProvider === providerList[index].value) {
+                                    providerList[index].checked = true;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+
+    <c:CopadoSpinner />
+
+    <apex:actionFunction name="setPipelineSettingsStep" action="{!setStep}" reRender="pipelineSettingsWrapper,pagemessage,footerButtons" onComplete="unlockScreen();showToast();applyRenderSVG(svgButtonsId,['copyIcon']);" />
+    <apex:actionFunction name="updateGit" action="{!updateAndGoToNext}" reRender="pipelineSettingsWrapper,pagemessage,footerButtons" onComplete="rerenderGitRepositoryCombobox();showToast();unlockScreen();reselectGitRepoName('{!JSINHTMLENCODE(gitRepository.Name)}');reselectGitProvider('{!JSINHTMLENCODE(gitRepository.Git_Provider__c)}');applyRenderSVG(svgButtonsId,['copyIcon']);">
+        <apex:param name="gitRepositoryId" assignTo="{!gitRepository.Id}" value="" />
+        <apex:param name="gitRepositoryName" assignTo="{!gitRepository.Name}" value="" />
+        <apex:param name="gitRepositoryProvider" assignTo="{!gitRepository.Git_Provider__c}" value="" />
+    </apex:actionFunction>
+    <apex:actionFunction name="updateBaseUrls" action="{!updateBaseUrlsMergeFields}" reRender="pipelineSettingsWrapper,pagemessage" onComplete="unlockScreen();showToast();applyRenderSVG(svgButtonsId,['editIcon']);" />
+    <div id="notify" class="slds-notify_container slds-is-absolute" style="display: none">
+        <div class="slds-notify slds-notify_toast slds-theme_warning" role="status">
+            <span class="slds-assistive-text">warning</span>
+            <span class="slds-icon_container slds-icon-utility-warning slds-m-right_small slds-no-flex slds-align-top" title="Warning">
+                        <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#warning')}" />
+                        </svg>
+                        </span>
+            <div class="slds-notify__content">
+                <h2 class="slds-text-heading_small ">
+                    <apex:pageMessages id="pagemessage" />
+                </h2>
+            </div>
+            <div class="slds-notify__close">
+                <button class="slds-button slds-button_icon slds-button_icon-inverse" title="{!$Label.CLOSE}" onClick="closeToast(); return false;">
+                    <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}" />
+                    </svg>
+                    <span class="slds-assistive-text">{!$Label.CLOSE}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <apex:outputPanel id="pipelineSettingsWrapper">
+        <apex:outputPanel id="pipelineSettingsPanel" rendered="{!errorMessageJSON == null}">
+            <div class="slds-illustration slds-illustration_small" style="border:1px solid gray;padding:5%;margin:5% 15% 2% 15%;">
+                <!--############## PIPELINE NAME START ##############-->
+                <apex:outputPanel layout="block" rendered="{!currentPipelineStepName == 'PipelineName'}">
+                    <div class="slds-text-longform copado-section-header">
+                        <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Settings}</h3>
+                        <p class="slds-text-body_regular">{!$Label.Pipeline_First_Give_Pipeline_Name}</p>
+                    </div>
+                    <div style="padding: 0px 20% 0% 20%;" class="copado-section-content">
+                        <div class="slds-form-element" style="margin-bottom:25px;">
+                            <div class="slds-form-element__control" style="border-bottom:1px solid black;" id="pipelineIdControl">
+                                <apex:inputText value="{!newPipeline.Name}" styleClass="slds-input slds-input_bare slds-input_counter"
+                                                html-placeholder="Main Pipeline" id="pipelineId" maxLength="80" />
+                            </div>
+                        </div>
+                        <p class="slds-text-body_regular">{!$Label.Pipeline_Settings_Page_Explanation}</p>
+                    </div>
+                    <div class="copado-section-footer" style="margin-top:25px">
+                        <apex:commandButton action="{!setStep}" onClick="lockScreen();"
+                                            styleClass="slds-button slds-button_brand"
+                                            value="{!$Label.CONTINUE}"
+                                            reRender="pipelineSettingsWrapper,footerButtons,pagemessage" onComplete="renderGitRepositoryCombobox();autoPopulateGitRepository('{!gitRepository.Id}');unlockScreen();" />
+                    </div>
+                </apex:outputPanel>
+                <!--############## PIPELINE NAME END ##############-->
+
+                <!--############## GIT REPOSITORY SELECTION START ##############-->
+                <apex:outputPanel layout="block" rendered="{!currentPipelineStepName == 'GitRepositorySelection'}">
+                    <div class="slds-text-longform copado-section-header">
+                        <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Settings}</h3>
+                    </div>
+                    <div style="padding: 0px 20% 0% 20%;" class="copado-section-content">
+                        <div class="slds-form-element" style="margin-bottom:25px;">
+                            <label class="slds-form-element__label" for="gitRepositoryId" style="float:left;">{!$ObjectType.Git_Repository__c.fields.Name.label}</label>
+                            <div class="slds-form-element__control">
+                                <select id="combobox">
+                                    <option value=""></option>
+                                    <apex:repeat value="{!gitRepositories}" var="repo">
+                                        <option value="{!repo.Id}##{!repo.Name}##{!repo.Git_Provider__c}">{!repo.Name}</option>
+                                    </apex:repeat>
+                                </select>
+                            </div>
+                        </div>
+                        <fieldset class="slds-form-element providerRadioList">
+                            <legend class="slds-form-element__legend slds-form-element__label" style="float:left;">{!$Label.Pipeline_Select_Git_Repo_Provider}
+                            </legend>
+                            <div class="slds-form-element__control">
+                                <div class="slds-radio_button-group" style="border:0px;">
+                                    <span class="slds-button slds-radio_button copadoGitProvider">
+                                        <label class="slds-radio_button__label" for="bitbucket">
+                                            <input name="radio" type="radio" id="bitbucket" value="Bitbucket" title="Bitbucket" />
+                                            <span class="img-circular">
+                                                <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/bitbucket.svg')}" styleClass="providerImage" alt="Bitbucket"></apex:image>
+                                                <br />Bitbucket
+                                            </span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-radio_button copadoGitProvider">
+                                        <label class="slds-radio_button__label" for="github">
+                                            <input name="radio" type="radio" id="github" value="Github" title="Github" />
+                                            <span class="img-circular">
+                                                <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/github.svg')}" styleClass="providerImage" alt="Github"></apex:image>
+                                                <br />Github
+                                            </span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-radio_button copadoGitProvider">
+                                        <label class="slds-radio_button__label" for="gitlab">
+                                            <input name="radio" type="radio" id="gitlab" value="GitLab" title="GitLab" />
+                                            <span class="img-circular">
+                                                <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/gitlab.svg')}" styleClass="providerImage" alt="GitLab"></apex:image>
+                                                <br />GitLab
+                                            </span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-radio_button copadoGitProvider">
+                                        <label class="slds-radio_button__label" for="microsoft">
+                                            <input name="radio" type="radio" id="microsoft" value="Microsoft Team Service" title="Microsoft Team Service" />
+                                            <span class="img-circular">
+                                                <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/visualstudiocode.svg')}" styleClass="providerImage" alt="Microsoft TS"></apex:image>
+                                                <br />Microsoft
+                                            </span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-radio_button copadoGitProvider">
+                                        <label class="slds-radio_button__label" for="other">
+                                            <input name="radio" type="radio" id="other" value="Others" title="Other" />
+                                            <span class="img-circular">
+                                                <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/git.svg')}" styleClass="providerImage" alt="Others"></apex:image>
+                                                <br />Others
+                                            </span>
+                                        </label>
+                                    </span>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="copado-section-footer" style="margin-top:25px">
+                        <apex:commandButton onClick="lockScreen();pipelineManager.popGF();" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" reRender="preventReload" />
+                    </div>
+                </apex:outputPanel>
+                <!--############## GIT REPOSITORY SELECTION END ##############-->
+
+                <!--############## GIT AUTHENTICATION DETAILS SELECTION START ##############-->
+                <apex:outputPanel layout="block" rendered="{!currentPipelineStepName == 'GitAuthenticationDetails'}" style="max-width:1200px;">
+                    <div class="slds-text-longform copado-section-header">
+                        <h3 class="slds-text-heading_medium" style="margin-bottom:25px;text-align:center;">
+                            <apex:outputText value="{!LEFT(gitRepository.Name, 80)}" />
+                        </h3>
+                    </div>
+                    <apex:outputPanel rendered="{!OR(AND(gitAuthTypeValue == 'ssh'), gitAuthTypeValue == 'https')}">
+                        <fieldset class="slds-form-element slds-form-element_compound" style="text-align:left;">
+                            <legend class="slds-form-element__legend slds-form-element__label"></legend>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__row">
+                                    <div class="slds-size_1-of-3" style="padding:5px;">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="authType">{!$Label.Pipeline_Git_Repo_Auth_Type}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid black;">
+                                                <apex:selectList value="{!gitAuthTypeValue}" id="authType" size="1"
+                                                                 multiselect="false" styleClass="slds-select">
+                                                    <apex:selectOption itemValue="https" itemLabel="HTTPS" />
+                                                    <apex:selectOption itemValue="ssh" itemLabel="SSH" />
+                                                    <apex:actionSupport event="onchange" rerender="pipelineSettingsWrapper,pagemessage"
+                                                                        action="{!checkIfSSHKeyExist}" onSubmit="lockScreen();" onComplete="unlockScreen();showToast();applyRenderSVG(svgButtonsId,['copyIcon']);" />
+                                                </apex:selectList>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_2-of-3" style="padding:5px;">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="gitURI">{!$ObjectType.Git_Repository__c.fields.URI__c.label}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid black;">
+                                                <apex:inputField id="gitURI" value="{!gitRepository.URI__c}" style="width:100%;" styleClass="slds-input slds-input_bare" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!gitAuthTypeValue == 'https'}" style="text-align:center;">
+                        <fieldset class="slds-form-element slds-form-element_compound" style="text-align:left;">
+                            <legend class="slds-form-element__legend slds-form-element__label"></legend>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__row">
+                                    <div class="slds-size_1-of-3" style="padding:5px;">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="gitUsername">{!$Label.USERNAME}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid gray;">
+                                                <apex:inputText id="gitUsername" value="{!gitRepositoryUsername}" style="width:100%;" styleClass="slds-input slds-input_bare" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_2-of-3" style="padding:5px;">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="gitPassword">{!$Label.PASSWORD}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid gray;">
+                                                <apex:inputSecret id="gitPassword" value="{!gitRepositoryPassword}" style="width:100%;" styleClass="slds-input slds-input_bare" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="gitExtraHeader" style="float:left;">{!$Label.EXTRA_HEADERS}</label>
+                            <div class="slds-form-element__control" style="border-bottom:1px solid gray;">
+                                <apex:inputTextarea id="gitExtraHeader" value="{!gitRepositoryExtraHeaders}" style="max-width:100%;min-width:100%;width:100%;max:height:200px;min-height:50px;" styleClass="slds-input slds-input_bare" rows="2" />
+                            </div>
+                        </div>
+                        <div class="copado-section-footer" style="margin-top:25px;text-align:center;">
+                            <apex:commandButton action="{!saveGitRepository}" onClick="lockScreen();" onComplete="showToast();setStepIfNoError();" styleClass="slds-button slds-button_brand" value="Continue" reRender="pagemessage" />
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!gitAuthTypeValue == 'ssh'}">
+                        <apex:outputPanel rendered="{!gitRepositorySshKey == null}">
+                            <div class="slds-grid slds-wrap" style="margin-top:10%;">
+                                <div class="slds-size_1-of-3">
+                                    <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/sshKey.svg')}" />
+                                </div>
+                                <div class="slds-size_2-of-3">
+                                    <p>
+                                        <apex:outputText value="{!$Label.Pipeline_SSH_Key_Explanation_Header}" escape="false" />
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="copado-section-footer" style="margin-top:25px;text-align:center;">
+                                <apex:commandButton action="{!createSshKey}" onClick="lockScreen();" onComplete="applyRenderSVG(svgButtonsId,['copyIcon']);unlockScreen();showToast();" styleClass="slds-button slds-button_brand" value="Create SSH Key" reRender="pipelineSettingsWrapper,pagemessage" />
+                            </div>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!gitRepositorySshKey != null}">
+                            <p>
+                                <apex:outputText value="{!$Label.Pipeline_SSH_Key_Explanation}" escape="false" style="padding:10px;" />
+                            </p>
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label" for="sshKeyOutput" style="width:100%">
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-size_1-of-2" style="text-align:left">
+                                            {!$Label.Pipeline_SSH_Key_Header}
+                                        </div>
+                                        <div class="slds-size_1-of-2" style="text-align:right">
+                                            <button class="slds-button slds-button_icon copyIcon" type="button" title="{!$Label.COPY_TO_CLIPBOARD}" onclick="copyToClipboard();return false;">
+                                                <span class="slds-assistive-text" id="copyTooltip">{!$Label.COPY_TO_CLIPBOARD}</span>
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="slds-form-element__control" style="word-wrap: break-word;text-align:left;">
+                                    <apex:outputText value="{!gitRepositorySshKey}" id="sshKeyOutput" styleClass="sshKeyOutput" />
+                                </div>
+                            </div>
+                            <div class="copado-section-footer" style="margin-top:25px;text-align:center;">
+                                <apex:commandButton action="{!saveGitRepository}" onClick="lockScreen();" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" reRender="pagemessage" onComplete="showToast();setStepIfNoError();" />
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <!--############## GIT AUTHENTICATION DETAILS END ##############-->
+
+                <!--############## GIT AUTHENTICATION SUCCESS START ##############-->
+                <apex:outputPanel layout="block" rendered="{!currentPipelineStepName == 'GitAuthenticationSuccess'}">
+                    <div class="slds-text-longform copado-section-header">
+                        <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Settings}</h3>
+                    </div>
+                    <div style="padding: 0px 25% 0% 25%;" class="copado-section-content">
+                        <div class="slds-form-element" style="margin-bottom:25px;">
+                            <label class="slds-form-element__label" style="margin-bottom: 10px;">Your Git Repository</label>
+                            <h3 class="slds-text-heading_medium" style="margin-bottom:10px;">{!gitRepository.Name}</h3>
+                        </div>
+                        <p style="margin-bottom:10px;" class="slds-text-body_regular">{!$Label.Pipeline_Repo_Connected_Successfully}</p>
+                        <p class="slds-text-body_regular">
+                            <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/github.svg')}"
+                                        style="height:50px;width:50px;" rendered="{!gitRepository.Git_Provider__c == 'Github'}" />
+                            <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/bitbucket.svg')}"
+                                        style="height:50px;width:50px;" rendered="{!gitRepository.Git_Provider__c == 'Bitbucket'}" />
+                            <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/gitlab.svg')}"
+                                        style="height:50px;width:50px;" rendered="{!gitRepository.Git_Provider__c == 'GitLab'}" />
+                            <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/visualstudiocode.svg')}"
+                                        style="height:50px;width:50px;" rendered="{!gitRepository.Git_Provider__c == 'Microsoft Team Service'}" />
+                            <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/git.svg')}"
+                                        style="height:50px;width:50px;" rendered="{!gitRepository.Git_Provider__c == 'Others'}" />
+                        </p>
+                        <p class="slds-text-body_regular">{!gitRepositoryUsername}</p>
+                    </div>
+                    <div class="copado-section-footer" style="margin-top:25px">
+                        <apex:commandButton action="{!setStep}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" onClick="lockScreen();" onComplete="unlockScreen();showToast();applyRenderSVG(svgButtonsId,['editIcon']);" reRender="pipelineSettingsWrapper,footerButtons,pagemessage" />
+                    </div>
+                </apex:outputPanel>
+                <!--############## GIT AUTHENTICATION SUCCESS END ##############-->
+
+                <!--############## GIT BASE URLS START ##############-->
+                <apex:outputPanel layout="block" rendered="{!currentPipelineStepName == 'GitBaseUrls'}" style="text-align: left;">
+                    <div class="slds-text-longform copado-section-header slds-truncate">
+                        <h3 class="slds-text-heading_medium" style="margin-bottom:25px;text-align:center;">
+                            <apex:outputText value="{!gitRepository.Name}" />
+                        </h3>
+                    </div>
+                    <p class="slds-text-body_regular" style="text-align:center;margin-bottom:10px;">{!$Label.Pipeline_Base_Urls_Explanation}</p>
+                    <apex:outputPanel layout="none" rendered="{!isUrlsPopulatedByMethod}">
+                        <fieldset class="slds-form-element slds-form-element_compound">
+                            <legend class="slds-form-element__legend slds-form-element__label"></legend>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__row">
+                                    <div class="slds-size_1-of-2">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="gitRepoUsername">{!$Label.USERNAME}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                                                <apex:inputText id="gitRepoUsername" value="{!gitRepositoryUsername}" style="width:100%;" styleClass="slds-input slds-input_bare" onChange="lockScreen();updateBaseUrls();" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-2">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label" for="repoName">{!$ObjectType.Git_Repository__c.fields.Name.label}</label>
+                                            <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                                                <apex:inputText id="repoName" value="{!gitRepositoryRepoName}" style="width:100%;" styleClass="slds-input slds-input_bare" onChange="lockScreen();updateBaseUrls();" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </apex:outputPanel>
+                    <div class="slds-form-element slds-form-element_edit">
+                        <label class="slds-form-element__label" for="branchBaseURL">{!$ObjectType.Git_Repository__c.fields.Branch_Base_URL__c.label}</label>
+                        <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                            <apex:inputText id="branchBaseURL" value="{!gitRepository.Branch_Base_URL__c}" styleClass="slds-input slds-input_bare baseURL" html-readonly="" onDblClick="toggleEditMode();" />
+                            <button class="slds-button slds-button_icon editIcon" title="{!$Label.EDIT}: {!$ObjectType.Git_Repository__c.fields.Branch_Base_URL__c.label}" onclick="toggleEditMode();" type="button"></button>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-form-element_edit">
+                        <label class="slds-form-element__label" for="commitBaseURL">{!$ObjectType.Git_Repository__c.fields.Commit_Base_URL__c.label}</label>
+                        <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                            <apex:inputText id="commitBaseURL" value="{!gitRepository.Commit_Base_URL__c}" styleClass="slds-input slds-input_bare baseURL" html-readonly="" onDblClick="toggleEditMode();" />
+                            <button class="slds-button slds-button_icon editIcon" title="{!$Label.EDIT}: {!$ObjectType.Git_Repository__c.fields.Commit_Base_URL__c.label}" onclick="toggleEditMode();" type="button"></button>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-form-element_edit">
+                        <label class="slds-form-element__label" for="pullBaseURL">{!$ObjectType.Git_Repository__c.fields.Pull_Request_Base_URL__c.label}</label>
+                        <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                            <apex:inputText id="pullBaseURL" value="{!gitRepository.Pull_Request_Base_URL__c}" styleClass="slds-input slds-input_bare baseURL" html-readonly="" onDblClick="toggleEditMode();" />
+                            <button class="slds-button slds-button_icon editIcon" title="{!$Label.EDIT}: {!$ObjectType.Git_Repository__c.fields.Pull_Request_Base_URL__c.label}" onclick="toggleEditMode();" type="button"></button>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-form-element_edit">
+                        <label class="slds-form-element__label" for="tagBaseURL">{!$ObjectType.Git_Repository__c.fields.Tag_Base_URL__c.label}</label>
+                        <div class="slds-form-element__control" style="border-bottom:1px solid lightgrey;">
+                            <apex:inputText id="tagBaseURL" value="{!gitRepository.Tag_Base_URL__c}" styleClass="slds-input slds-input_bare baseURL" html-readonly="" onDblClick="toggleEditMode();" />
+                            <button class="slds-button slds-button_icon editIcon" title="{!$Label.EDIT}: {!$ObjectType.Git_Repository__c.fields.Tag_Base_URL__c.label}" onclick="toggleEditMode();" type="button"></button>
+                        </div>
+                    </div>
+
+                    <div class="copado-section-footer" style="margin-top:25px;text-align:center;">
+                        <apex:commandButton action="{!updateRepoAndMoveToNext}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" onClick="lockScreen();" onComplete="unlockScreen();" reRender="preventReload" />
+                    </div>
+                </apex:outputPanel>
+                <!--############## GIT BASE URLS END ##############-->
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!errorMessageJSON != null}">
+            <c:ErrorHandling messageJSON="{!errorMessageJSON}" />
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <apex:outputPanel layout="block" styleClass="slds-align_absolute-center" id="footerButtons">
+
+        <apex:outputPanel layout="none" rendered="{!currentPipelineStepName == 'GitRepositorySelection'}">
+            <apex:commandButton styleClass="slds-button" action="{!goToPreviousStep}" value="{!$Label.Go_Back}" onClick="lockScreen();" onComplete="unlockScreen();" reRender="pipelineSettingsWrapper,footerButtons,pagemessage"/>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!currentPipelineStepName == 'GitAuthenticationDetails'}">
+            <apex:commandButton styleClass="slds-button" action="{!goToPreviousStep}" value="{!$Label.Go_Back}" onClick="lockScreen();" onComplete="renderGitRepositoryCombobox();autoPopulateGitRepository('{!gitRepository.Id}');unlockScreen();" reRender="pipelineSettingsWrapper,footerButtons,pagemessage"/>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!currentPipelineStepName == 'GitAuthenticationSuccess'}">
+            <apex:commandButton styleClass="slds-button" action="{!goToPreviousStep}" value="{!$Label.Go_Back}" onClick="lockScreen();" onComplete="showToast();applyRenderSVG(svgButtonsId,['copyIcon']);unlockScreen();" reRender="pipelineSettingsWrapper,footerButtons,pagemessage"/>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!currentPipelineStepName == 'GitBaseUrls'}">
+            <apex:commandButton styleClass="slds-button" action="{!goToPreviousStep}" value="{!$Label.Go_Back}" onClick="lockScreen();" onComplete="showToast();applyRenderSVG(svgButtonsId,['editIcon']);unlockScreen();" reRender="pipelineSettingsWrapper,footerButtons,pagemessage"/>
+        </apex:outputPanel>
+
+        <apex:outputText style="margin-left:5px;" value="{!$Label.OR}" rendered="{!currentPipelineStepName != 'PipelineName'}" />
+        <apex:commandButton styleClass="slds-button" action="{!saveAndClose}" value="{!$Label.SAVE_AND_CLOSE}" />
+        <apex:outputText style="margin-left:5px;" value="{!$Label.OR}" rendered="{!currentPipelineStepName == 'GitBaseUrls'}" />
+        <apex:commandButton styleClass="slds-button" onClick="lockScreen();" action="{!skipUrls}" value="{!$Label.SKIP}" rendered="{!currentPipelineStepName == 'GitBaseUrls'}" />
+    </apex:outputPanel>
+</apex:component>

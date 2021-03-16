@@ -1,0 +1,31 @@
+<apex:page standardController="User_Story__c" recordSetVar="storyList" extensions="UserStoryBundleCtrl" lightningStylesheets="true">
+    <apex:includeLightning />
+    <apex:form >
+        <apex:actionFunction action="{!navigate}" name="navigate" reRender="">
+            <apex:param name="url" value="" assignTo="{!recordId}" />
+        </apex:actionFunction>
+    </apex:form>
+    <div id="lightningvf" />
+    <script> 
+        $Lightning.use("c:UserStoryBundleApp", function () {
+            $Lightning.createComponent("c:userStoryBundle",
+                { ids: {!stories }}
+            ,
+            "lightningvf",
+            function (cmp) {
+                console.log("Component created");
+            }
+        );
+        });
+
+        document.addEventListener("navigatetorecord", (event) => {
+            navigate(event.detail);
+        });
+    </script>
+    <style>
+        body {
+            background: url("https://res.cloudinary.com/hy4kyit2a/f_auto,fl_lossy,q_70/learn/modules/lightning_design_system/lightning-design-system3/images/9830e3e95f11941fe2d0f3a14230f714_unit3-listview-wireframe.png ") no-repeat;
+            background-size: cover;
+        }
+    </style>
+</apex:page>

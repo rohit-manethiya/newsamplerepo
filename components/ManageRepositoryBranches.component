@@ -1,0 +1,86 @@
+<!--
+ - Created by mertyalti on 17/04/2018.
+ -->
+<apex:component id="ManageRepositoryBranches" allowDML="true"  controller="ManageRepositoryBranchesController" extensions="Settings">
+    <apex:attribute name="repoId" type="String" required="true" assignTo="{!repositoryId}" description="Copado Git Repository record id to use as a Source repository." />
+    <c:IncludeStaticsResourceComponent addJQuery="true" />
+    <apex:includeScript value="{!URLFOR($Resource.RepositoryBranches)}"/>
+    <script>
+        var Copado_Licenses = {!CurrentUserLicenses};
+    </script>
+    <c:IncludeConnectionJsComponent />
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" addJqxEBcss="true"/>
+    <c:WizardUtils />
+    <c:GAnalytics />
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting)}"/>
+    <apex:includeScript value="{!URLFOR($Resource.utils) }"/>
+    <apex:outputPanel layout="block" id="branchContainer">
+        <apex:pageMessages id="branchMessages"/>
+        <c:ScreenLocker msg="{!$Label.LOADING}" useJobsManager="true" possibleRunningJobs=",DxListRepositoryBranches,,true;"/>
+        <script>
+            window.addEventListener('copadoJobsManagerFinished', function (evt) {
+                for(var i=0 ; i < evt.detail.length ; i++ ) {
+                    var jobFinished = evt.detail[i].isFinished;
+                    var jobSuccess = evt.detail[i].isSuccess;
+                    var jobMessage = evt.detail[i].message;
+                    var jobType = evt.detail[i].type;
+                    console.debug("copadoJobsManagerFinished:::Job Success: ", jobSuccess);
+                    console.debug("copadoJobsManagerFinished:::Job Finished: ", jobFinished);
+                    console.debug("copadoJobsManagerFinished:::Job Message: ", jobMessage);
+                    console.debug("copadoJobsManagerFinished:::Job Type: ", jobType);
+                    jobstatus(jobFinished,jobSuccess,jobMessage,jobType);
+                    if(jobFinished){
+                        setLockScreenMessage('{!JSENCODE($Label.LOADING)}');
+                    }
+                }
+            }, false);
+        </script>
+        <apex:actionFunction name="jobstatus" action="{!jobStatusNotification}" onComplete="rerenderbranchGridContainer();" reRender="branchMessages">
+            <apex:param value="" name="jobFinished"/>
+            <apex:param value="" name="jobSuccess"/>
+            <apex:param value="" name="jobMessage"/>
+            <apex:param value="" name="jobType"/>
+        </apex:actionFunction>
+        <apex:pageMessages id="branchMessage"/>
+        <apex:pageBlock id="branchBlock">
+            <apex:actionFunction name="rerenderbranchGridContainer" reRender="branchGridContainer" onComplete="unlockScreen();"/>
+            <apex:pageBlockSection title="Select a Branch" collapsible="false" columns="1" showHeader="true">
+                <apex:outputPanel layout="block" id="branchGridContainer">
+                    <apex:outputPanel id="branchGrid" layout="block">
+                        <apex:outputPanel layout="none">
+                            <script type="application/javascript">
+                                        var repoId = '{!JSENCODE(repoId)}';//getElementByIdCS('OT_INPUT_lkid').value
+                                        var _config = {
+                                            repoId: repoId,
+                                            url: '{!JSENCODE(urlBase)}dx/gitBranches/' + repoId + '{!JSENCODE(urlParameters)}',
+                                            attachmentName: 'GitBranches'
+                                        };
+                                        $copado(function () {
+                                            window.setTimeout(branches.initBraches(_config), 0);
+                                            unlockScreen();
+                                        });
+                                    </script>
+                            <div>
+                                <div id="removeCacheContainer">
+                                    <apex:commandLink style="display:none;" action="{!refreshBranchCache}" onComplete="unlockScreen();"
+                                                      value="{!$Label.CACHE_REFRESHED_NOW_BRANCH}"
+                                                      onclick="lockScreen();"
+                                                      rerender="opDummy" id="removeCache"/>
+                                </div>
+                                <div class="branchesGrid" style="display: none;">
+                                    <label style="display: none;" class="mg2_mtFilter">Metadata Type
+                                        Filter</label>&nbsp;
+                                    <div class="mg2_scaleFilter" style="display: none;"/>
+                                </div>
+                                <div id="branchSelectorGrid">
+                                    <center><img src="/img/loading.gif"/><i><span
+                                                    id="retry-label">{!$Label.LOADING}</span></i></center>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:outputPanel>
+</apex:component>

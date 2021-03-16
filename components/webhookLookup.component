@@ -1,0 +1,109 @@
+<apex:component id="theComponent" controller="webhookLookupController" extensions="Settings">
+
+    <c:ScreenLocker msg=""/>
+    <c:WizardUtils />
+    
+    <script type="text/javascript">
+        var Copado_Licenses = {!CurrentUserLicenses};
+    </script>
+
+    <c:IncludeStaticsResourceComponent addJQuery="true" addUIjs="true"/>
+    <c:IncludeConnectionJsComponent />
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+    <apex:includeScript value="{!URLFOR($Resource.utilsV2) }"/>
+    <apex:includeScript value="{!URLFOR($Resource.webhookLookup) }"/>
+    
+    <script>
+        webhookLookup.config.ns = '{!JSENCODE(settings.namespace)}';
+        webhookLookup.config.herokuServer = '{!JSENCODE(settings.herokuServer)}';
+    </script>
+
+    <script>
+        var btnCopy = document.getElementById("#btnCopy");
+        var btnCancel = document.getElementById("#btnCopy");
+        if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) && btnCopy && btnCancel) {
+            btnCopy.className += " copado-lightning";
+            btnCancel.className += " copado-lightning";
+        }
+    </script>
+    
+    <div id="whl-popup" class="copadoScreenLocker" style="display:none;">
+        <span id="webhookLockerWrapper" class="copadoScreenLockerContent" style="width:75%; height:75%; overflow:auto;">
+            <div id="divWebhooksTable" style="display:block;">
+                <apex:pageBlock id="pbWebhookTable" mode="edit" title="Copado Webhooks">
+                    <apex:pageBlockButtons location="both">
+                        <button id="btnCancelFloater" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="webhookLookup.hide(); return false;">{!$Label.CANCEL}</button>
+                    </apex:pageBlockButtons>
+                    <div id="divWebhooksLoading" style="display:block;">
+                        <center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center>
+                    </div>
+                    <table id="webhooksTable" cellpadding="0" cellspacing="0" class="list" style="width:100%; display:none;">
+                        <thead>
+                            <tr class="headerRow">
+                                <th>Webhook Name</th>
+                                <th>Webhook Description</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </apex:pageBlock>
+            </div>
+            <div id="webhookLookupFields" style="display:none;">
+                <apex:pageBlock id="pbWebhookLookups" title="Copado Webhooks">
+                    <apex:pageBlockButtons location="bottom">
+                        <button id="btnApplyMultiReferal" style="display:none;" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="webhookLookup.applyMultiReferal(); return false;">Apply</button>
+                        <button id="btnCancelFloater" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="webhookLookup.hide(true); return false;">Cancel</button>
+                    </apex:pageBlockButtons>
+                    <div id="js-deployment__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Deployment__c}" onchange="webhookLookup.getLookupRecordId(this.id,'deployment__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-git_repository__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Git_Repository__c}" onchange="webhookLookup.getLookupRecordId(this.id,'git_repository__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-orgdiff__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Org_Difference__c}" onchange="webhookLookup.getLookupRecordId(this.id,'orgdiff__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-snapshot_difference__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Snapshot_Difference__c}" onchange="webhookLookup.getLookupRecordId(this.id,'snapshot_difference__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-org__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Org_Credential__c}" onchange="webhookLookup.getLookupRecordId(this.id,'org__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-git_backup__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Git_Backup__c}" onchange="webhookLookup.getLookupRecordId(this.id,'git_backup__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-continuous_integration__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Continuous_Integration__c}" onchange="webhookLookup.getLookupRecordId(this.id,'continuous_integration__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-deployment_flow__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Deployment_Flow__c}" onchange="webhookLookup.getLookupRecordId(this.id,'deployment_flow__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-selenium_test_run__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Selenium_Test_Run__c}" onchange="webhookLookup.getLookupRecordId(this.id,'selenium_test_run__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-selenium_test_group__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Selenium_Test_Group__c }" onchange="webhookLookup.getLookupRecordId(this.id,'selenium_test_group__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-promotion__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Promotion__c }" onchange="webhookLookup.getLookupRecordId(this.id,'promotion__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-user_story__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.User_Story__c }" onchange="webhookLookup.getLookupRecordId(this.id,'user_story__c');"/></apex:pageBlockSection>
+                    </div>
+                     <div id="js-static_code_analysis_settings__c" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1"><apex:inputField value="{!lookupAux.Static_Code_Analysis_Settings__c }" onchange="webhookLookup.getLookupRecordId(this.id,'static_code_analysis_settings__c');"/></apex:pageBlockSection>
+                    </div>
+                    <div id="js-branch" style="display:none;" data-type="lookupDiv">
+                        <apex:pageBlockSection columns="1">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Branch Name" for="branch_output"/>
+                                <apex:inputText value="{!branch}" styleClass="lookupInput" onchange="webhookLookup.getLookupRecordId(this.id,'branch',true);" id="branch_output"/>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                    </div>
+                </apex:pageBlock>
+            </div>
+        </span>
+    </div>
+</apex:component>

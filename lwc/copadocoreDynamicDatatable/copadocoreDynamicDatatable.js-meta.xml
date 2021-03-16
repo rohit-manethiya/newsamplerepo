@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>50.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Copado Dynamic Datatable</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property name="recordId" type="String" label="Id of the parent which the records are related to" default="{!recordId}"/>
+            <property name="relatedList" type="String" label="Child related list" required="true" datasource="apex://RelatedListVisualPicklist"/>
+            <property name="fieldset" type="String" label="Fieldset for the column fields" required="false"/>
+            <property name="lookUpObjectApi" type="String" label="Relationship field" description="Api name of the relationship field in the child object referencing the parent" required="false"/>
+            <property name="orderBy" type="String" label="Specifications about how to order the records displayed" required="false" default="Id ASC NULLS LAST, CreatedDate"/>
+            <property name="recordSize" type="Integer" label="Number of records to show" required="false" default="6"/>
+            <property name="heightStyle" type="String" label="Height Style" description="Value for the height CSS attribute (should be fixed if inifite loading is enabled)" required="false" default="auto"/>
+            <property name="showRowNumberColumn" type="Boolean" label="Show row numbers in the first column?" required="false"/>
+            <property name="hideCheckboxColumn" type="Boolean" label="Hide checkbox column for row selection?" required="false"/>
+            <property name="resizeColumnDisabled" type="Boolean" label="Disable column resizing?" required="false"/>
+            <property name="enableInfiniteLoading" type="Boolean" label="Enable infinite loading on scrolling to retrieve more records?" description="Requires fixed height" required="false"/>
+            <property name="hideDefaultColumnsActions" type="Boolean" label="Hide default actions in column headers?" required="false"/>
+            <!--Deprecated--><property name="height" type="Integer" label="Height (deprecated)" description="This value is deprecated and is no longer used. Please use Height Style instead" required="false" default="750"/>
+            <!--Deprecated--><property name="showSearch" type="Boolean" label="Show search" required="false"/>
+            <!--Deprecated--><property name="showFilter" type="Boolean" label="Show Filter" required="false"/>
+            <supportedFormFactors>
+                <supportedFormFactor type="Small"/>
+                <supportedFormFactor type="Large"/>
+            </supportedFormFactors>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

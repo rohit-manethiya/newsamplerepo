@@ -1,0 +1,23 @@
+<!--
+ - Created by ferhatozsavran on 10/2/18.
+ -->
+
+<apex:component id="SObjectSummaryComponent">
+    <apex:attribute name="userStory" description="User Story to summarize" type="User_Story__c" required="false" />
+    <apex:attribute name="columnsHeader" description="Page block section number" type="Integer" required="false" />
+
+    <!-- render the user story summary header only if there is a user story -->
+
+    <apex:outputpanel layout="none" rendered="{! !ISNULL(userStory)}">
+        <apex:pageBlock mode="detail">
+            <apex:pageBlockSection title="{!userStory.User_Story_Title__c}" columns="{!columnsHeader}">
+                <apex:outputField value="{!userStory.Project__c}"/>
+                <apex:outputField value="{!userStory.Release__c}"/>
+                <apex:outputField value="{!userStory.Org_Credential__c}"/>
+                <apex:outputField value="{!userStory.Developer__c}"/>
+                <apex:outputField value="{!userStory.Status__c}"/>
+                <apex:outputField value="{!userStory.Progress__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:outputpanel>
+</apex:component>

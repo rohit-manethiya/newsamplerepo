@@ -1,0 +1,14 @@
+<apex:component id="csrComponent" controller="ComplianceHelper">
+    <apex:attribute name="sId" type="Id" description="Parent Id" assignTo="{!soId}"/>
+    <apex:attribute name="apiName" type="String" description="Parent API Name" assignTo="{!soAPIRelName}" />
+    <apex:outputPanel layout="block" rendered="{!AND(SRW.Id != null,SRW.Compliance_Findings__r.size != null,SRW.Compliance_Findings__r.size > 0)}" >
+        <apex:outputPanel layout="block" rendered="{!SRW.Status__c == 'Completed - Findings detected'}">
+            <apex:outputPanel rendered="{!SRW.Compliance_Findings__r[0].Compliance_Rule__r.Action__c == 'Continue with alert'}">
+                <apex:pageMessage summary="{!wMessage}" severity="warning" strength="1"  escape="false"/>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!SRW.Compliance_Findings__r[0].Compliance_Rule__r.Action__c == 'Abort Process'}">
+                <apex:pageMessage summary="{!eMessage}" severity="error" strength="1"  escape="false"/>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

@@ -1,0 +1,629 @@
+<!--
+ - Created by Mert YALTI on 08/01/2018.
+ -->
+
+<apex:component id="ScratchOrgMetadata" controller="ScratchOrgMetadataController" extensions="Settings" allowDML="true">
+    <apex:attribute name="parentPageController" type="ScratchOrgWizardPageBase" assignTo="{!pageController}" required="true"
+        description="The controller for the parent page." />
+    <apex:attribute name="componentName" type="String" assignTo="{!controllerKey}" description="Component Name" />
+    <apex:attribute name="showActionButtons" type="Boolean" assignTo="{!showButtons}" default="true" description="Hide or show action buttons"
+    />
+    <apex:attribute name="mode" type="String" assignTo="{!componentMode}" description="Component mode that will define the default behaviour."
+        required="true" default="edit" />
+    <apex:attribute name="showAllTemplateButtons" type="Boolean" assignTo="{!showTemplateButtons}" default="true" description="Hide or show template buttons"
+    />
+    <style type="text/css">
+        .copadoGrid {
+            min-height: 55rem; //display: flex;
+            height: 100%;
+        }
+
+        #copado_leftPanel {
+            float: left;
+            width: 17%;
+            height: 100%;
+            text-align: left;
+            padding: 10px;
+        }
+
+        #copado_mainPanel {
+            float: right;
+            width: 83%; //height: 100%;
+            text-align: left;
+            padding: 10px;
+            left: 175px;
+            position: absolute;
+            overflow-y: scroll;
+            overflow-x: scroll;
+        }
+
+        #copado_mainPanelFull {
+            float: right;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            position: absolute;
+            overflow-y: scroll;
+            overflow-x: scroll;
+        }
+
+        .side-menu {
+            /* Full screen nav menu */
+            width: 175px;
+            height: 85% !important;
+            left: 0;
+            z-index: 100;
+            position: absolute;
+            box-sizing: border-box;
+            display: block;
+            border-right: 2px solid lightgray;
+            overflow-y: scroll;
+            -ms-transition: all 0.3s;
+            -moz-transition: all 0.3s;
+            -webkit-transition: all 4.3s;
+            -o-transition: all 0.3s;
+            transition: all 0.3s;
+            -ms-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0px, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0px, 0, 0);
+            padding: 10px 20px 20px 20px;
+            height: 100%;
+        }
+
+        .slds-scope h3 {
+            display: -webkit-inline-box;
+        }
+
+        .side-menu h3 {
+            display: inherit;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            color: #656565;
+            margin: 0 0 20px;
+            text-transform: uppercase;
+            /*font-size: 12px;*/
+            -ms-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+            -ms-transition: all 0.3s;
+            -moz-transition: all 0.3s;
+            -webkit-transition: all 0.3s;
+            -o-transition: all 0.3s;
+            transition: all 0.3s;
+        }
+
+        .side-menu ul {
+            padding: 0;
+            margin: 0 0 25px;
+        }
+
+        .side-menu li {
+            text-align: left;
+            list-style: none;
+            -ms-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+            -ms-transition: all 0.3s;
+            -moz-transition: all 0.3s;
+            -webkit-transition: all 0.3s;
+            -o-transition: all 0.3s;
+            transition: all 0.3s;
+        }
+
+        .side-menu li a {
+            text-decoration: none;
+            color: #01a5e2;
+            font-size: 12px;
+        }
+
+        .side-menu li a:hover {
+            color: #01a5e2;
+            text-decoration: underline;
+
+        }
+
+        .side-menu li a:hover::before {
+            content: "";
+            position: absolute;
+            background: black;
+            width: 4px;
+            height: 10px;
+            display: block;
+            left: -20px;
+            margin-top: 5px;
+        }
+
+        .active {
+            color: black !important;
+        }
+
+        .active::before {
+            content: "";
+            position: absolute;
+            background: #01a5e2;
+            width: 4px;
+            height: 10px;
+            display: block;
+            left: -20px;
+            margin-top: 5px;
+        }
+
+        h1 {
+            display: none;
+        }
+    </style>
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" addjqxEBcss="true" />
+    <apex:includeScript value="{!URLFOR($Resource.copadoDXGrid) }" />
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting)}" />
+    <apex:includeScript value="{!URLFOR($Resource.ScratchOrg)}" />
+
+    <apex:includeScript value="{!URLFOR($Resource.utils) }" />
+    <script>
+        function clearBranchState() {
+            var rl = getElementByIdCS('RL_INPUT_lkid');
+            if (rl) rl.value = '000000000000000';
+            var ot = getElementByIdCS('OT_INPUT_lkid');
+            if (ot) ot.value = '000000000000000';
+        }
+        function selectReadTemplate() {
+            if (getElementByIdCS('OT_INPUT').value == '') {
+                readTemplate('');
+            } else {
+                readTemplate(getElementByIdCS('OT_INPUT_lkid').value);
+            }
+        }
+
+    </script>
+    <c:ScreenLocker msg="{!$Label.LOADING}" />
+    <apex:actionFunction name="switchSelection" action="{!selectType}" reRender="legandContainer,copado_container,branchGridContainer"
+        onComplete="unlockScreen();">
+        <apex:param value="" name="typeName" id="typeName" />
+    </apex:actionFunction>
+    <apex:outputPanel id="copado_container" styleClass="copadoGrid" layout="block">
+        <apex:outputPanel layout="none">
+            <apex:pageMessages id="definitionMessages" />
+        </apex:outputPanel>
+        <apex:outputPanel id="leftPanel" rendered="{!mode != 'editStd'}">
+            <div id="copado_leftPanel" class="copadoColumn">
+                <nav class="side-menu">
+                    <h3>{!$Label.SelectMetadataFrom}</h3>
+                    <ul class="Sections slds-accordion">
+                        <apex:outputPanel layout="none" rendered="{!AND(canViewArtifact,OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),dxDeploymentFlowMode == 'Git Package')))}">
+                            <li class="slds-accordion__list-item">
+                                <a class="{!IF(typeName == 'artifact','active','')}" href="#" onclick="lockScreen();copadoDX.clearMetadataTabState();switchSelection('artifact');">- {!$Label.Git_Artifacts}</a>
+                            </li>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(canViewArtifact,OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),dxDeploymentFlowMode == 'Salesforce Package')))}">
+                            <li class="slds-accordion__list-item">
+                                <a class="{!IF(typeName == 'unlocked','active','')}" href="#" onclick="lockScreen();copadoDX.clearMetadataTabState();switchSelection('unlocked')">- {!$Label.Unlocked_Packages}</a>
+                            </li>
+                        </apex:outputPanel>
+                        <!-- Commenting this code out to implement this feature in the future-->
+                        <!--apex:outputPanel layout="none" rendered="{!AND(canViewArtifact,OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),dxDeploymentFlowMode == 'Salesforce Package')))}">
+                            <li class="slds-accordion__list-item">
+                                <a class="{!IF(typeName == 'managed','active','')}" href="#"
+                                   onclick="lockScreen();copadoDX.clearMetadataTabState();switchSelection('managed')">- {!$Label.Second_Generation_Packages}</a>
+                            </li>
+                        </apex:outputPanel>
+                            <li class="slds-accordion__list-item">
+                                <a class="{!IF(typeName == 'patch','active','')}" href="#" onclick="lockScreen();clearBranchState();copadoDX.clearMetadataTabState();switchSelection('patch')">- {!$Label.Patch_a_Release}</a>
+                            </li>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(canViewGitRepository,mode != 'template',OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),dxDeploymentFlowMode == 'Branches')))}">
+                            <li class="slds-accordion__list-item">
+                                <a class="{!IF(AND(typeName == 'branch',NOT(typeName == 'patch')),'active','')}" href="#" onclick="lockScreen();clearBranchState();copadoDX.clearMetadataTabState();switchSelection('branch')">- {!$Label.DX_Branch}</a>
+                            </li>
+                        </apex:outputPanel>-->
+                    </ul>
+                </nav>
+            </div>
+        </apex:outputPanel>
+        <div id="{!IF(mode == 'editStd', 'copado_mainPanelFull','copado_mainPanel')}" class="copadoColumn">
+            <c:CopadoHelp sectionText="{!$Label.ScratchOrgMetadata_Help}" sectionTitle="{!$Label.HELP}" sectionOpen="false" />
+            <apex:outputPanel layout="block" id="legandContainer" rendered="{!AND(typeName != 'artifact',typeName != 'branch',typeName != 'patch',typeName != 'unlocked',typeName != 'managed')}">
+                <apex:pageBlock title="{!$Label.About_Metadata_Source_Options}">
+                    <table class="list">
+                        <thead class="rich-table-thead">
+                            <tr class="headerRow">
+                                <th class="headerRow" scope="col" colspan="1">
+                                    <div>Metadata Source</div>
+                                </th>
+                                <th class="headerRow" scope="col" colspan="1">
+                                    <div>Description</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <apex:outputPanel layout="none" rendered="{!AND(canViewArtifact,OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),OR(dxDeploymentFlowMode == 'Git Package',dxDeploymentFlowMode == 'Salesforce Package'))))}">
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <span>{!$Label.Artifacts}</span>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <span>{!$Label.FourDifferentPacApproach}</span>
+                                    <ul>
+                                        <li>{!$Label.PackageFromVCS}</li>
+                                        <li>{!$Label.PackageFromUnlocked}</li>
+                                        <!-- Commenting this code out to implement this feature in the future-->
+                                        <!--li>{!$Label.PackageFrom2GP}</li-->
+                                    </ul>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(canViewGitRepository,mode != 'template',OR(ISBLANK(dxDeploymentFlowMode),AND(OR(mode == 'add',mode == 'wizard'),dxDeploymentFlowMode == 'Branches')))}">
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <span>{!$Label.BRANCH}</span>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <span>{!$Label.BRANCH}: {!$Label.DX_Source_MD_Type_Branch_Definition}</span>
+                                    <ul>
+                                        <li>
+                                            {!$Label.DX_Git_Branch_Definition}
+                                        </li>
+                                        <li>
+                                            {!$Label.DX_Feature_Branch_Definition}
+                                        </li>
+                                        <li>
+                                            {!$Label.DX_Promotion_Branch_Definition}
+                                        </li>
+                                        <li>
+                                            {!$Label.DX_Project_Branch_Definition}
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                    </table>
+                </apex:pageBlock>
+            </apex:outputPanel>
+            <!-- Metadata Source = Artifact VCS / Unlocked Package / Second Generation Package -->
+            <apex:outputPanel layout="block" id="artifactContainer" rendered="{!OR(typeName == 'artifact',typeName == 'unlocked',typeName == 'managed')}">
+                <apex:pageMessages id="artifactVCSMessage" />
+                <apex:pageBlock id="artifactsBlock">
+                    <apex:pageBlockButtons location="top" id="pb_btns">
+                        <apex:commandButton action="{!newTemplate}" id="saveProjectTemplate" value="{!$Label.Save_As_Template}" title="Save Project Template"
+                            reRender="artifactVCSMessage,artifactContainer" rendered="{!AND(showTemplateButtons,showTemplateSaveAsButton,canCreateProjectTemplate,typeName != 'unlocked',typeName != 'managed')}"
+                            status="screenLocker" />
+                        <apex:commandButton action="{!updateTemplate}" id="updateProjectTemplate" value="{!$Label.Update_Template}" title="Update Project Template"
+                            reRender="artifactVCSMessage,artifactContainer" rendered="{!AND(mode == 'editStd',canUpdateProjectTemplate, showTemplateButtons, showTemplateUpdateButton)}"
+                            status="screenLocker" />
+                        <apex:commandButton action="{!loadMetadata}" id="loadMetadata" value="{!$Label.DXOperation_LoadMetadata}" title="Load Metadata"
+                            reRender="artifactVCSMessage,artifactContainer" rendered="{!AND(showActionButtons,mode == 'add',typeName != 'unlocked',typeName != 'managed')}"
+                            status="screenLocker" />
+                        <apex:commandButton action="{!loadMetadata}" id="installPackages" value="{!$Label.Install_Package}" title="Install Package"
+                            reRender="artifactVCSMessage,artifactContainer" rendered="{!AND(showActionButtons,mode == 'add',OR(typeName == 'unlocked',typeName == 'managed'))}"
+                            status="screenLocker" />
+                    </apex:pageBlockButtons>
+
+                    <apex:pageBlockSection title="{!$Label.Sfdx_Project}" collapsible="true" columns="2" showHeader="true">
+                        <apex:pageBlockSectionItem helpText="{!$Label.Project_Template}" rendered="{!AND(typeName != 'unlocked',typeName != 'managed')}">
+                            <apex:outputLabel value="{!$Label.Project_Template}" />
+                            <apex:outputPanel layout="block">
+                                <input type="hidden" name="OT_INPUT_lkid" id="OT_INPUT_lkid" value="{!selectedTemplateId}" />
+                                <input type="hidden" name="OT_INPUT_lkold" id="OT_INPUT_lkold" value="" />
+                                <input type="hidden" name="OT_INPUT_lktp" id="OT_INPUT_lktp" value="{!$ObjectType.Scratch_Org_Project_Template__c.keyPrefix}"
+                                />
+                                <input type="hidden" name="OT_INPUT_lspf" id="OT_INPUT_lspf" value="0" />
+                                <input type="hidden" name="OT_INPUT_lspfsub" id="OT_INPUT_lspfsub" value="0" />
+                                <input type="hidden" name="OT_INPUT_mod" id="OT_INPUT_mod" value="0" />
+                                <span class="lookupInput" style="margin-left: 0;">
+                                    <input id="OT_INPUT" maxlength="255" name="OT_INPUT" onchange="lockScreen();selectReadTemplate();getElementByIdCS('OT_INPUT_lkid').value='';getElementByIdCS('OT_INPUT_mod').value='1';"
+                                        size="20" tabindex="3" type="text" value="{!selectedTemplateName}" />
+                                    <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DOT_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27OT_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27OT_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                                        id="OT_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="{!$Label.Org_Credential_Lookup_New_Window}">
+                                        <img src="/img/s.gif" alt="Org Credential Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';"
+                                            onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';"
+                                            onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" title="{!$Label.Artifacts_Lookup_New_Window}"
+                                        />
+                                    </a>
+                                </span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(typeName != 'unlocked',typeName != 'managed')}">
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Name.Label}" />
+                            <apex:inputText value="{!selectedTemplateName}" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Name.Label}"
+                                maxLength="80" id="templateName" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Source_Org_Credential__c.Label}" for="orgCredential"
+                            />
+                            <apex:selectList value="{!selectedOrgId}" multiselect="false" size="1" id="orgCredential" required="false">
+                                <apex:actionSupport event="onchange" action="{!getOrgArtifacts}" status="screenLocker" onComplete="loadArtifactMetadata();"
+                                    rerender="artifactSelectionSection,artifactVCSMessage" />
+                                <apex:selectOptions value="{!OrgCredentialsWithArtifactsList}" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Api_Version__c.Label}" />
+                            <apex:selectList value="{!thisDXProject.sourceApiVersion}" size="1" multiSelect="false" id="apiversion" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Api_Version__c.Label}">
+                                <apex:selectOptions value="{!Versions}" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.SFDC_Login_Url__c.Label}" />
+                            <apex:inputText value="{!thisDXProject.sfdcLoginUrl}" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.SFDC_Login_Url__c.Label}"
+                                maxLength="175" id="loginUrl" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!typeName != 'managed'}">
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Namespace__c.Label}" />
+                            <apex:inputText value="{!thisDXProject.namespace}" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Namespace__c.Label}"
+                                maxLength="100" id="namespace" />
+                        </apex:pageBlockSectionItem>
+                        <apex:actionFunction name="readTemplate" action="{!readProjectTemplate}" onComplete="unlockScreen();" reRender="artifactrenderpanel,artifactSelectionSection,artifactsBlock,artifactVCSMessage">
+                            <apex:param value="" name="templateId" id="templateId" />
+                        </apex:actionFunction>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="{!$Label.Select_Artifact}" collapsible="false" columns="2" showHeader="true" id="artifactSelectionSection">
+                        <apex:pageBlockSectionItem rendered="{!typeName == 'artifact'}">
+                            <apex:outputLabel value="{!$Label.Artifacts}" for="artifactSelection" />
+                            <apex:selectList value="{!selectedArtifactIds}" size="7" multiSelect="true" id="artifactSelection">
+                                <apex:selectOptions value="{!artifactOptions}" />
+                                <apex:actionSupport event="onchange" action="{!updateSourceSelections}" reRender="defaultArtifact,artifactVCSMessage" onSubmit="lockScreen()"
+                                    onComplete="loadArtifactMetadata();" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!OR(typeName == 'unlocked',typeName == 'managed')}">
+                            <apex:outputLabel value="{!$Label.Artifacts}" for="artifactSelectionSingle" />
+                            <apex:selectList value="{!selectedArtifactId}" size="1" multiSelect="false" id="artifactSelectionSingle">
+                                <apex:selectOptions value="{!artifactOptions}" />
+                                <apex:actionSupport event="onchange" action="{!populateArtifactVersions}" reRender="artifactSelectionSection" status="screenLocker"
+                                />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$Label.Default}" for="defaultArtifact" />
+                            <apex:outputText value="{!selectedArtifacts[0].Label}" id="defaultArtifact" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(showArtifactVersions,OR(typeName == 'unlocked',typeName == 'managed'))}">
+                            <apex:outputLabel value="{!$Label.Versions}" for="versionSelection" />
+                            <apex:selectList value="{!selectedVersionId}" size="1" multiSelect="false" id="versionSelection">
+                                <apex:selectOptions value="{!artifactVersionOptions}" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!AND(showArtifactVersions,OR(typeName == 'unlocked',typeName == 'managed'))}">
+                            <apex:commandButton action="{!addValuesToSelectedPackages}" id="addtoselectedpackage" value="{!$Label.Add_to_Selection}"
+                                title="{!$Label.Add_to_Selection}" reRender="selectedPackageOuterPanel,artifactVCSMessage" status="screenLocker"
+                            />
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="{!$Label.Preview_Artifact_Metadata}" collapsible="true" columns="1" showHeader="true" rendered="{!typeName == 'artifact'}">
+                        <apex:outputPanel layout="block" id="artifactGridContainer">
+                            <apex:outputPanel id="artifactGrid" layout="block">
+                                <div id="metadataGrid2">
+                                    <div id="removeCacheContainer">
+                                        <apex:commandLink style="display:none;" value="{!$Label.CACHE_REFRESHED_NOW}" onclick="return metadataGridDX.refreshCache();"
+                                            rerender="opDummy" id="removeCache" />
+                                    </div>
+                                    <div class="mg2_scaleFilterFrame" style="display: none;">
+                                        <label style="display: none;" class="mg2_mtFilter">{!$Label.Metadata_Type_Filter}</label>&nbsp;
+                                        <div class="mg2_scaleFilter" style="display: none;" />
+                                    </div>
+
+                                    <div class="mg2_jqxgrid">
+                                        <center>
+                                            <img src="/img/loading.gif" />
+                                            <i>
+                                                <span id="retry-label">{!$Label.LOADING}</span>
+                                            </i>
+                                        </center>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                    <apex:outputPanel id="selectedPackageOuterPanel">
+                        <apex:pageBlockSection title="Selected Packages" collapsible="true" columns="1" id="selectedpackagespanel" showHeader="true"
+                            rendered="{!AND(selectedPackageList.size > 0, OR(typeName == 'unlocked',typeName == 'managed'))}">
+                            <apex:pageBlockSectionItem >
+                                <apex:pageBlockTable value="{!selectedPackageList}" var="spl">
+                                    <apex:column headerValue="{!$Label.Order}">
+                                        <apex:inputText value="{!spl.order}" style="width: 75px;" />
+                                    </apex:column>
+                                    <apex:column headerValue="{!$Label.Package_Name}" value="{!spl.version.Artifact__c}" />
+                                    <apex:column headerValue="{!$Label.Package_Version}" value="{!spl.version.Name}" />
+                                    <apex:column headerValue="{!$Label.Version_Number}" value="{!spl.version.Version_number__c}" />
+                                    <apex:column headerValue="{!$Label.Namespace}" value="{!spl.version.Artifact__r.Package_Namespace__c}" rendered="{!typeName == 'managed'}"
+                                    />
+                                    <apex:column headerValue="{!$Label.Included_By}" value="{!spl.includedBy}" />
+                                    <apex:column headerValue="{!$Label.Action}">
+                                        <apex:commandButton value="{!$Label.REMOVE}" action="{!removePackage}" reRender="selectedPackageOuterPanel" status="screenLocker">
+                                            <apex:param value="{!spl.version.Id}" name="aVersion" />
+                                        </apex:commandButton>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                </apex:pageBlock>
+                <apex:actionFunction name="loadArtifactMetadata" reRender="artifactrenderpanel" />
+
+                <apex:outputPanel layout="block" id="artifactrenderpanel">
+                    <script type="application/javascript">
+                        var _config = {
+                            data: {
+                                id: '',
+                                orgId: '',
+                                envId: ''
+                            },
+                            server: { //If they are urls should not be URLENCODE?
+                                metadataUrl: '{!JSENCODE(urlBase)}metadata/__ORGID__{!JSENCODE(urlParameters)}&parentId=__ORGID__&dates=format',
+                                typesUrl: '{!JSENCODE(urlBase)}gitTypes{!JSENCODE(urlParameters)}'
+                            },
+                            ns: '{!JSENCODE(namespace)}',
+                            attachmentName: 'ArtifactMetaData',
+                            viewType: 0,
+                            contextSize: 10,
+                            leftContent: '',
+                            rightContent: '',
+                            gridMode: 'orgMetadata',
+                            dxGridType: 'artifacts'
+                        };
+
+                        (function () {
+                            var selectList = document.querySelectorAll("[id$=artifactSelection]")[0];
+                            var selected = [];
+                            var selectOptions = selectList.options;
+                            for (var i = 0; i < selectList.options.length; i++) {
+                                var opt = selectOptions[i];
+                                if (opt.selected) {
+                                    selected.push(selectOptions[i].value);
+                                }
+                            }
+                            if (globalSelectedArtifacts) globalSelectedArtifacts = selected;
+                            copadoDX.init(_config, false, {!scalableGrid}, 'orgMetadata');
+                        if (selected.length !== 0) {
+                            copadoDX.loadArtifactMetadata(selected, _config.attachmentName, true, null, unlockScreen());
+                        } else {
+                            unlockScreen();
+                        }
+                        }) ();
+                    </script>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <!-- END OF Metadata Source = Artifact VCS -->
+            <!-- Metadata Source = Branch -->
+            <apex:outputPanel layout="block" id="branchContainer" rendered="{!OR(typeName == 'branch',typeName == 'patch')}">
+                <apex:pageMessages id="branchMessage" />
+                <div id="branchHardSizeLimitMessage" style="display:none;">
+                    <apex:pageMessage severity="warning" title="{!$Label.DX_Branch_Hard_Limit_Message_Title}" detail="{!$Label.DX_Selected_Metadata_Exceed_size_limit}"
+                        summary="{!$Label.DX_Selected_branch_not_contain_exceeded_metadata}" strength="3" />
+                </div>
+                <apex:pageBlock id="branchBlock">
+                    <apex:pageBlockButtons location="top" id="pb_btns_branch">
+                        <apex:commandButton action="{!loadMetadata}" id="loadMetadataBranch" value="{!$Label.Load_Metadata}" title="Load Metadata"
+                            rendered="{!AND(showActionButtons,mode == 'add')}" status="screenLocker" reRender="branchMessage"
+                        />
+                    </apex:pageBlockButtons>
+                    <apex:pageBlockSection id="projectBranch" title="{!$Label.Sfdx_Project}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Api_Version__c.Label}" for="api_version" />
+                            <apex:selectList value="{!thisDXProject.sourceApiVersion}" size="1" multiSelect="false" id="api_version" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.Api_Version__c.Label}">
+                                <apex:selectOptions value="{!Versions}" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.SFDC_Login_Url__c.Label}" />
+                            <apex:inputText value="{!thisDXProject.sfdcLoginUrl}" title="{!$ObjectType.Scratch_Org_Project_Template__c.Fields.SFDC_Login_Url__c.Label}"
+                                maxLength="175" id="loginUrl" />
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="{!$Label.Select_Repository}" collapsible="false" columns="2" showHeader="true">
+                        <apex:pageBlockSectionItem rendered="{!typeName == 'branch'}">
+                            <apex:outputLabel title="{!$Label.Repository}" value="{!$Label.Repository}" for="branchRepo" />
+                            <input type="hidden" name="OT_INPUT_lkid" id="OT_INPUT_lkid" value="{!selectedRepositoryId}" />
+                            <input type="hidden" name="OT_INPUT_lkold" id="OT_INPUT_lkold" value="" />
+                            <input type="hidden" name="OT_INPUT_lktp" id="OT_INPUT_lktp" value="{!$ObjectType.Git_Repository__c.keyPrefix}" />
+                            <input type="hidden" name="OT_INPUT_lspf" id="OT_INPUT_lspf" value="0" />
+                            <input type="hidden" name="OT_INPUT_lspfsub" id="OT_INPUT_lspfsub" value="0" />
+                            <input type="hidden" name="OT_INPUT_mod" id="OT_INPUT_mod" value="0" />
+                            <span class="lookupInput">
+                                <input id="OT_INPUT" maxlength="255" name="OT_INPUT" onchange="lockScreen();getRepoBranches($copado(this).val(),getElementByIdCS('OT_INPUT_lkid').value);getElementByIdCS('OT_INPUT_lkid').value='';getElementByIdCS('OT_INPUT_mod').value='1';"
+                                    size="20" tabindex="3" type="text" value="{!selectedRepositoryName}" />
+                                <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DOT_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27OT_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27OT_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                                    id="OT_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="{!$Label.Org_Credential_Lookup_New_Window}">
+                                    <img src="/img/s.gif" alt="Org Credential Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';"
+                                        onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';"
+                                        onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" title="{!$Label.Artifacts_Lookup_New_Window}"
+                                    />
+                                </a>
+                            </span>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!typeName == 'patch'}">
+                            <apex:outputLabel title="{!$Label.Release}" value="{!$Label.Release}" for="branchRepo" />
+                            <input type="hidden" name="RL_INPUT_lkid" id="RL_INPUT_lkid" value="{!selectedReleaseId}" />
+                            <input type="hidden" name="RL_INPUT_lkold" id="RL_INPUT_lkold" value="" />
+                            <input type="hidden" name="RL_INPUT_lktp" id="RL_INPUT_lktp" value="{!$ObjectType.Release__c.keyPrefix}" />
+                            <input type="hidden" name="RL_INPUT_lspf" id="RL_INPUT_lspf" value="0" />
+                            <input type="hidden" name="RL_INPUT_lspfsub" id="RL_INPUT_lspfsub" value="0" />
+                            <input type="hidden" name="RL_INPUT_mod" id="RL_INPUT_mod" value="0" />
+                            <span class="lookupInput">
+                                <input id="RL_INPUT" maxlength="255" name="RL_INPUT" onchange="lockScreen();getReleaseTags($copado('#OT_INPUT').val(),getElementByIdCS('RL_INPUT_lkid').value);getElementByIdCS('RL_INPUT_lkid').value='';getElementByIdCS('RL_INPUT_mod').value='1';"
+                                    size="20" tabindex="3" type="text" value="{!selectedReleaseName}" />
+                                <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DRL_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27RL_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27RL_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                                    id="RL_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="{!$Label.Org_Credential_Lookup_New_Window}">
+                                    <img src="/img/s.gif" alt="Org Credential Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';"
+                                        onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';"
+                                        onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" title="{!$Label.Release_New_Window}"
+                                    />
+                                </a>
+                            </span>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel title="{!IF(typeName != 'patch','Branch Format','Tag Format')}" value="{!IF(typeName != 'patch','Branch Format','Tag Format')}"
+                            />
+                            <apex:selectList value="{!selectedMetadataFormat}" size="1" multiSelect="false">
+                                <apex:selectOptions value="{!metadataFormatOptions}" />
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:actionFunction name="getRepoBranches" action="{!getRepoBranches}" reRender="branchGridContainer" onComplete="unlockScreen();">
+                        <apex:param value="" name="repoName" assignTo="{!selectedRepositoryName}" />
+                        <apex:param value="" name="repoId" assignTo="{!selectedRepositoryId}" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="getReleaseTags" reRender="branchMessage" action="{!setRepository}" onComplete="rerenderbranchGridContainer();">
+                        <apex:param value="" name="releaseName" assignTo="{!selectedReleaseName}" />
+                        <apex:param value="" name="releaseId" assignTo="{!selectedReleaseId}" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="rerenderbranchGridContainer" reRender="branchGridContainer" onComplete="unlockScreen();" />
+                    <apex:pageBlockSection title="{!IF(typeName != 'patch','Select Branch','Select Tag')}" collapsible="false" columns="1" showHeader="true">
+                        <apex:outputPanel layout="block" id="branchGridContainer">
+                            <apex:outputPanel id="branchGrid" layout="block">
+                                <apex:outputPanel layout="none">
+                                    <script type="application/javascript">
+                                        var repoId;
+                                        if ({!typeName == 'patch'} && getElementByIdCS('RL_INPUT_lkid').value) {
+                                            repoId = '{!JSENCODE(selectedRepositoryId)}';
+                                        } else if ({!typeName == 'branch'} && getElementByIdCS('OT_INPUT_lkid')) {
+                                            repoId = '{!JSENCODE(selectedRepositoryId)}';
+                                        } else if (getElementByIdCS('OT_INPUT_lkid')) {
+                                            repoId = '{!JSENCODE(selectedRepositoryId)}';
+                                        }
+                                        var _config = {
+                                            repoId: repoId, //Should not be URLENCODE?
+                                            url: '{!JSENCODE(urlBase)}dx/gitBranches/' + repoId + '{!JSENCODE(urlParameters)}',
+                                            attachmentName: 'GitBranches',
+                                            gridMode: '{!JSENCODE(branchGridMode)}',
+                                            isPatch: {!typeName == 'patch'                                        
+}
+                                        };
+                                        $copado(function () {
+                                            window.setTimeout(copadoDX.initBraches(_config), 0);
+                                            unlockScreen();
+                                        });
+                                    </script>
+                                    <div>
+                                        <div id="removeCacheContainer">
+                                            <apex:commandLink style="display:none;" action="{!refreshBranchCache}" value="{!$Label.CACHE_REFRESHED_NOW}" status="screenLocker"
+                                                rerender="opDummy" id="removeCache" />
+                                        </div>
+                                        <div class="branchesGrid" style="display: none;">
+                                            <label style="display: none;" class="mg2_mtFilter">{!$Label.Metadata_Type_Filter}</label>&nbsp;
+                                            <div class="mg2_scaleFilter" style="display: none;" />
+                                        </div>
+
+                                        <div id="branchSelectorGrid">
+                                            <center>
+                                                <img src="/img/loading.gif" />
+                                                <i>
+                                                    <span id="retry-label">{!$Label.LOADING}</span>
+                                                </i>
+                                            </center>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+            </apex:outputPanel>
+            <!-- END OF Metadata Source = Branch -->
+        </div>
+    </apex:outputPanel>
+</apex:component>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Copado License</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Copado License</value>
+    </caseValues>
+    <fields>
+        <label><!-- Enable ADD --></label>
+        <name>Enable_ADD__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable CAD --></label>
+        <name>Enable_CAD__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable CCH --></label>
+        <name>Enable_CCH__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable CCM --></label>
+        <name>Enable_CCM__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable CST --></label>
+        <name>Enable_CST__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enable Copado --></label>
+        <name>Enable_Copado__c</name>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

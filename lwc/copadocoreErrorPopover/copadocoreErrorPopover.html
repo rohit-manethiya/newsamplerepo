@@ -1,0 +1,39 @@
+<template>
+    <button
+        id="error-button"
+        type="button"
+        class="slds-button slds-button_icon slds-button_icon slds-button_icon-error slds-is-relative"
+        title={title}
+    >
+        <lightning-icon icon-name="utility:error" variant="error" size="small" onclick={displayErrors}></lightning-icon>
+
+        <template if:true={displayPopover}>
+            <section
+                id="popover-section"
+                class="slds-popover slds-popover_error slds-nubbin_bottom-left slds-is-absolute"
+                role="dialog"
+                style="position: absolute; display: none"
+            >
+                <button
+                    type="button"
+                    class="slds-button slds-button_icon slds-button_icon-small slds-float_right slds-popover__close slds-button_icon-inverse"
+                    title="Close dialog"
+                >
+                    <lightning-icon icon-name="utility:close" variant="inverse" size="xx-small" onclick={displayErrors}></lightning-icon>
+                </button>
+
+                <header class="slds-popover__header">
+                    <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <lightning-icon class="slds-media__figure" icon-name="utility:error" variant="inverse" size="x-small"></lightning-icon>
+
+                        <div class="slds-media__body" style="flex: unset">
+                            <h2 class="slds-truncate slds-text-heading_medium" title={title}>{title}</h2>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="slds-popover__body slds-text-body_regular slds-text-align_left slds-text-color_default">{message}</div>
+            </section>
+        </template>
+    </button>
+</template>

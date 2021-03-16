@@ -1,0 +1,209 @@
+<apex:component controller="StepEditionController">
+	<apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false"/>
+    <!-- **************************************************************** -->
+    <!-- URL CALLOUT STEP -->
+    <!-- **************************************************************** -->
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+	<c:IncludeStaticsResourceComponent addJQuery="true"/>
+    <apex:includeScript value="{!URLFOR($Resource.urlcallout) }" />
+    <apex:outputPanel id="js-stepBlock-UrlCallout" style="margin-bottom: 55px;">
+        <apex:outputPanel id="js-stepBlock-UrlCallout-ResumeUrl" style="display:none;">
+            <div class="slds-grid">
+				<div class="slds-col">
+                    <apex:outputLabel id="lbljsUrlCalloutResumeUrl" value="Resume URL" for="jsUrlCalloutResumeUrl" />
+                    <apex:outputPanel >
+                        <div id="jsUrlCalloutResumeUrl"> </div>
+                        <div id="js-urlCallOut-hide-div" style="display:none;"><br /><button id="btnHideResumeUrl" class="slds-button slds-button--neutral" type="button" onclick="urlCallout.hookUrl.hide();">Hide</button></div>
+                        <div id="js-urlCallOut-show-div" style="display:none;"><button id="btnShowResumeUrl" class="slds-button slds-button--neutral" type="button" onclick="urlCallout.hookUrl.show();">Show</button></div>
+                    </apex:outputPanel>
+            	</div>
+            </div>
+        </apex:outputPanel>
+        <div class="slds-grid">
+			<div class="slds-col">
+				<apex:outputPanel layout="none" rendered="{!isEdit}">
+					<apex:outputPanel layout="block" styleClass="slds-form-element" id="divTextInput" >							
+				    	<div class="slds-form-element__control">
+				    		<c:webhookLookup ></c:webhookLookup>
+		                    <script>
+		                    	webhookLookup.config.URL_ELEMENT_ID = 'jsUrlCalloutUrl';
+		                    	webhookLookup.config.ns = '{!JSENCODE(settings.namespace)}';
+		                    	webhookLookup.config.herokuServer = '{!JSENCODE(settings.herokuServer)}';
+		                    	webhookLookup.config.ADD_API_KEY_TO_URL = true;
+		                    	webhookLookup.onSuccessCB = function(){
+		                        	urlCallout.parseUrl($copado('input[id$=jsUrlCalloutUrl]').val());
+		                            $copado('[id=jsUrlCalloutMethod]').val('POST');
+		                            $copado('[id=jsUrlCalloutType]').val('wait');
+		                            $copado('[id=jsUrlCalloutType]').change();
+		                        };
+		                    </script>
+		                    <div id="jsWebhookLookup">
+		                        <button class="btn slds-button slds-button--neutral" id="btnWebhookLookup" onclick="webhookLookup.show();return false;" value="Look up Copado Webhook">
+		                        	<img height="20" width="20" src="{!URLFOR($Resource.Statics,'img/icons/logo-icon.png')}" alt="Lookup Copado Webhook"/>
+		                        	{!$Label.LOOK_UP_COPADO_WEBHOOK}
+		                        </button>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							<abbr class="slds-required" title="required">*</abbr>{!$Label.TYPE}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div class="slds-select_container">
+					    		<select id="jsUrlCalloutType" class="slds-select">
+			                        <option class="uiMenuItem uiRadioMenuItem" value="wait">Perform callout and pause Step</option>
+			                        <option class="uiMenuItem uiRadioMenuItem" value="continue" >Perform callout and continue with deployment</option>
+			                    </select>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							<abbr class="slds-required" title="required">*</abbr>{!$Label.METHODS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div class="slds-select_container slds-combobox_container">
+					    		<select id="jsUrlCalloutMethod" class="slds-select">
+									<option value="GET" selected="selected">GET</option>
+			                        <option value="POST" >POST</option>
+			                        <option value="PUT" >PUT</option>
+			                        <option value="PATCH" >PATCH</option>
+			                        <option value="DELETE" >DELETE</option>
+			                    </select>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							{!$Label.DYNAMIC_URL_PARAMETERS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<c:VariableLookup id="cmpVarLookup" />
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							<abbr class="slds-required" title="required">*</abbr>URL
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<apex:inputText value="{!inputAux}" id="jsUrlCalloutUrl" styleClass="js-UrlCallout slds-input" html-placeholder="Enter URL here"/>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							{!$Label.URL_PARAMETERS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div id="urlCalloutParamWrapper">
+		                        <div id="urlCalloutUrlParameters"> </div>
+								<div style="clear:both;">
+		                            <button id="btn-js-addUrlParameter" class="btn slds-button slds-button--neutral" onclick="urlCallout.param.addRow(); return false;" >{!$Label.ADD_URL_PARAMETERS}</button>
+		                        </div>
+                    		</div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							{!$Label.HEADERS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div id="urlCalloutHeadersWrapper">
+		                    	<div id="urlCalloutUrlHeaders"> </div>
+								<div style="clear:both;">
+		                            <button id="btn-js-addHeader" class="btn slds-button slds-button--neutral" onclick="urlCallout.header.addRow(); return false;" >{!$Label.ADD_HEADER}</button>
+		                        </div>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element">
+				    	<label class="slds-form-element__label">
+							{!$Label.BODY}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<textarea id="jsUrlCalloutBody" html-escape="false" rows="9" styleClass="js-manual" html-placeholder="Optional POST body goes here" style="width:95%;display: inline-table;" >&nbsp;&nbsp;&nbsp;&nbsp;</textarea>
+				    	</div>
+				    </apex:outputPanel>
+				    <script type="text/javascript">
+		                urlCallout.config.ns = '{!settings.namespace}';
+		                urlCallout.config.herokuServer = '{!settings.herokuServer}';
+		            	$copado(document).ready(function() {
+		                    urlCallout.bindings.bindActions();
+		                });
+		            </script> 
+		        </apex:outputPanel>
+		        <apex:outputPanel layout="none" rendered="{!!isEdit}">
+		        	<apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label">
+							{!$Label.TYPE}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div class="slds-select_container">
+					    		<select id="jsUrlCalloutTypeView" class="slds-select" disabled="disabled">
+			                        <option class="uiMenuItem uiRadioMenuItem" value="wait">Perform callout and pause Step</option>
+			                        <option class="uiMenuItem uiRadioMenuItem" value="continue" >Perform callout and continue with deployment</option>
+			                    </select>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label">
+							{!$Label.METHODS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div class="slds-select_container slds-combobox_container">
+					    		<select id="jsUrlCalloutMethodView" class="slds-select" disabled="disabled">
+									<option value="GET" selected="selected">GET</option>
+			                        <option value="POST" >POST</option>
+			                        <option value="PUT" >PUT</option>
+			                        <option value="PATCH" >PATCH</option>
+			                        <option value="DELETE" >DELETE</option>
+			                    </select>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label" for="jsUrlCalloutUrlView">
+							URL
+						</label>
+						<div class="slds-form-element__control">
+					    	
+					    	<span id="jsUrlCalloutUrlView" styleClass="js-UrlCallout slds-input" html-placeholder="Enter URL here"/>
+					    	
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label">
+							{!$Label.URL_PARAMETERS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div id="urlCalloutParamWrapper">
+		                        <div id="urlCalloutUrlParametersView"> </div>
+                    		</div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label">
+							{!$Label.HEADERS}
+						</label>
+				    	<div class="slds-form-element__control">
+				    		<div id="urlCalloutHeadersWrapper">
+		                    	<div id="urlCalloutUrlHeadersView"> </div>
+		                    </div>
+				    	</div>
+				    </apex:outputPanel>
+				    <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+				    	<label class="slds-form-element__label">
+							{!$Label.BODY}
+						</label>
+						<div class="slds-form-element__control">
+					    	<span class="slds-form-element__static" style="width:95%">
+					    		<apex:outputText id="jsUrlCalloutBodyView" escape="false" styleClass="js-manual" style="width:95%;display: inline-table;" ></apex:outputText>
+					    	</span>
+				    	</div>
+				    </apex:outputPanel>
+		        </apex:outputPanel>                           
+            </div>
+        </div>            
+    </apex:outputPanel>
+</apex:component>

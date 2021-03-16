@@ -1,0 +1,30 @@
+<apex:component id="CopadoErrorPanel">
+    <apex:attribute name="pageMessagesMap" type="map" required="true" description="map of messages" />
+    <apex:outputPanel layout="block" id="errorPanel" style="position: absolute; top: 0px; left: 30%; height: 60px; width: 500px; z-index: 99;">
+        <apex:outputPanel layout="none" styleClass="error-panel">
+            <div id="divToast" class="slds-notify_container slds-is-relative">
+                <apex:repeat value="{!pageMessagesMap}" var="severity">
+                    <div class="slds-notify slds-notify_toast slds-theme_{!severity}" role="status">
+                        <span class="slds-assistive-text"></span>
+                        <span class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+                            <span class="slds-icon_container slds-icon__svg--default {!severity}ToastIcon"></span>
+                        </span>
+                        <div class="slds-notify__content">
+                            <apex:repeat value="{!pageMessagesMap[severity]}" var="messages">
+                                <h2 class="slds-text-heading_small ">{!messages}</h2>
+                            </apex:repeat>
+                        </div>
+                        <div class="slds-notify__close">
+                            <button type="button" class="slds-button slds-button_icon slds-button_icon-inverse" title="{!$Label.CLOSE}" onclick="$copado('[id=divToast]').addClass('slds-hide');">
+                                <svg class="slds-button__icon" aria-hidden="true">
+                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#close')}" />
+                                </svg>
+                                <span class="slds-assistive-text">Help</span>
+                            </button>
+                        </div>
+                    </div>
+                </apex:repeat>
+            </div>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

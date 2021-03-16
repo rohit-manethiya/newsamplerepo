@@ -1,0 +1,74 @@
+<apex:component >
+	 <apex:attribute name="usList" description="List of User Stories" type="User_Story__c[]" required="true"/>
+			<table class="slds-table slds-table_bordered slds-table_cell-buffer">
+			  <thead>
+			    <tr class="slds-text-title_caps">
+			      <th scope="col" class="">
+			        <div class="slds-truncate" title="{!$Label.USDependency_Reference}">{!$Label.USDependency_Reference}</div>
+			      </th>
+			      <th scope="col" class="">
+			        <div class="slds-truncate" title="{!$Label.USDependency_Title}">{!$Label.USDependency_Title}</div>
+			      </th>
+			      <th scope="col" class="">
+			        <div class="slds-truncate" title="{!$Label.USDependency_Status}">{!$Label.USDependency_Status}</div>
+			      </th>
+			      <th scope="col" class="">
+			        <div class="slds-truncate" title="{!$Label.USDependency_Environment}">{!$Label.USDependency_Environment}</div>
+			      </th>
+			      <th scope="col" class="">
+			        <div class="slds-truncate" title="{!$Label.USDependency_Dependency_Info}">{!$Label.USDependency_Dependency_Info}</div>
+			      </th>
+			    </tr>
+			  </thead>
+			  <tbody>
+			  	<apex:repeat value="{!usList}" var="us">
+					<apex:outputField value="{!us.Environment__c}" rendered="false"/><!-- NR to avoid vf NS issues -->
+				    <tr>
+				      <td class="">
+				        <div class="slds-truncate"><a href="{!URLFOR($Action.User_Story__c.View, us.Id)}" target="_blank">{!us.Name}</a></div>
+				      </td>
+				      <td class="">
+				        <div class="slds-truncate" style="white-space: normal;"><apex:outputField value="{!us.User_Story_Title__c}"/></div>
+				      </td>
+				      <td  class="">
+				        <div class="slds-truncate"><apex:outputField value="{!us.Status__c}"/></div>
+
+				      </td>
+				      <td  class="">
+				        <div class="slds-truncate">
+                            <apex:outputPanel layout="none" rendered="{!us.Environment__c != null}">
+							    <a href="{!URLFOR($Action.Environment__c.View, us.Environment__c)}" target="_blank"><apex:outputField value="{!us.Environment__r.Name}"/></a>
+                            </apex:outputPanel>
+						</div>
+				      </td>
+				      <td  class="" style="padding-top: 0px;">
+				      	<apex:repeat value="{!us.Team_Dependencies_On_UStory__r}" var="usD">
+				      	<table>
+				      		<tr>
+							    <td style="width: 10%;">{!$Label.USDependency_Name}</td>
+							    <td><div class="slds-truncate"><a href="{!URLFOR($Action.Team_Dependency__c.View, usD.Id)}" target="_blank">{!usD.Name}</a></div></td>
+				      		</tr>
+				      		<tr>
+							    <td style="width: 10%;">{!$Label.USDependency_Status}</td>
+							    <td>
+							    	<div class="slds-truncate" style="white-space: normal;">{!usD.Dependency_Status__c}</div>
+							    </td>
+				      		</tr>		
+				      		<tr>
+							    <td style="width: 10%;">{!$Label.USDependency_ProviderTeam}</td>
+							    <td>
+							    	<div class="slds-truncate"><a href="/{!usD.Dependent_Team__c}" target="_blank">{!usD.Dependent_Team__r.Name}</a></div>
+							    </td>
+				      		</tr>				      					      		
+				      		<tr>
+							    <td style="width: 10%;">{!$Label.USDependency_Deliverable}</td>
+							    <td><div class="slds-truncate" style="white-space: normal;">{!usD.Deliverable__c}</div></td>
+				      		</tr>			      						      		
+				      	</table>
+				    	</apex:repeat>
+				      </td>
+				    </tr>
+				</apex:repeat>
+			  </tbody>
+			</table>
+</apex:component>

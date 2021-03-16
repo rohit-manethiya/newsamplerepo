@@ -1,0 +1,145 @@
+<apex:component id="GitCommit_Intermediary" controller="GitCommit_IntermediaryController" allowDML="true">
+    <apex:attribute name="pController"
+                    type="GitCommit_PageBase"
+                    assignTo="{!pageController}"
+                    required="true"
+                    description="The controller for the page." />
+
+    <!--<apex:attribute name="ckey"
+                    type="String"
+                    assignTo="{!componentKey}"
+                    description="The key given to this component so the page can easily get access to it" />-->
+
+    <style>
+        .slds-scope .slds-visual-picker__figure span {
+            display: inline-grid;
+        }
+    </style>
+
+
+    <apex:outputPanel layout="none" rendered="{!pageController.showCreateDXBranchPrompt}">
+        <div style="height: 24rem;">
+            <section role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt" aria-modal="true">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header" style="background-color: #3593c6;;color:white;">
+                        <h2 class="slds-text-heading_medium" id="prompt-heading-id">{!$Label.INFO}</h2>
+                    </header>
+                    <apex:outputPanel layout="block" styleClass="slds-size_1-of-1 slds-scrollable_y" id="rightPanelOnly">
+                        <div class="slds-modal__content slds-p-around_medium" id="prompt-message-wrapper">
+                            <apex:outputPanel layout="none" rendered="{!AND(!dxBranchJobStarted,ComponentMessageSize == 0)}">
+                                <p>{!$Label.DX_Project_Not_Created}</p>
+                            </apex:outputPanel>
+                            <div class="slds-box_x-small slds-m-around_x-small slds-p-around_x-small">
+                                <apex:variable var="counter" value="{!0}" />
+                                <apex:outputPanel layout="none" rendered="{!componentMessagesMap != null}">
+                                    <apex:repeat value="{!componentMessagesMap}" var="status">
+                                        <apex:repeat value="{!componentMessagesMap[status]}" var="message">
+                                            <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                                <div class="slds-media__figure">
+
+                                                    <div class="slds-input__icon-group">
+                                                        <apex:outputPanel layout="none" rendered="{!OR(AND(ComponentMessageSize > 0, (counter + 1 < ComponentMessageSize)),AND(ComponentMessageSize > 0, (counter + 1 = ComponentMessageSize),!dxBranchJobStarted))}">
+                                                            <apex:outputPanel layout="none" rendered="{!status == 'success'}">
+                                                                <span class="slds-icon_container slds-icon__svg--default approvalIcon"></span>&nbsp;&nbsp;
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel layout="none" rendered="{!status == 'info'}">
+                                                                <span class="slds-icon_container slds-icon__svg--default pinIcon"></span>&nbsp;&nbsp;
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel layout="none" rendered="{!status == 'error'}">
+                                                                <span class="slds-icon_container slds-icon__svg--default errorIcon"></span>&nbsp;&nbsp;
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel layout="none" rendered="{!status == 'warning'}">
+                                                                <span class="slds-icon_container slds-icon__svg--default warningIcon"></span>&nbsp;&nbsp;
+                                                            </apex:outputPanel>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel layout="none" rendered="{!AND(ComponentMessageSize > 0, (counter + 1 = ComponentMessageSize),dxBranchJobStarted)}">
+                                                            <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_x-small slds-input__spinner">
+                                                                <div class="slds-spinner__dot-a"></div>
+                                                                <div class="slds-spinner__dot-b"></div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+
+                                                </div>
+                                                <div class="slds-media__body" style="margin-left:10px;text-align: left;">
+                                                    <p>{!message}</p>
+                                                </div>
+
+                                            </div>
+                                            <apex:variable var="counter" value="{!counter + 1}" />
+                                        </apex:repeat>
+                                    </apex:repeat>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+                        <apex:outputPanel layout="none" rendered="{!AND(!dxBranchJobStarted,ComponentMessageSize == 0)}">
+                            <footer class="slds-modal__footer slds-theme_default">
+                                <button type="button" class="slds-button slds-button_neutral" style="color:#3593c6;" onclick="startDxBranchCreateJob();lockScreen();">{!$Label.Create_DX_Branch}</button>
+                            </footer>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(ComponentMessageSize > 0, (counter = ComponentMessageSize),!dxBranchJobStarted)}">
+                            <footer class="slds-modal__footer slds-theme_default">
+                                <apex:commandLink styleClass="slds-button slds-button_brand" action="{!goBackToUserStory}" value="{!$Label.Go_Back} to the {!$ObjectType.User_Story__c.Label}" />
+                            </footer>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+
+        <apex:actionFunction name="startDxBranchCreateJob" action="{!createDXBranch}" onComplete="unlockScreen();" reRender="rightPanelOnly,branchCreatePoller" />
+        <apex:actionPoller action="{!pollerHandler}" id="branchCreatePoller" reRender="rightPanelOnly,branchCreatePoller" interval="5" enabled="{!dxBranchJobStarted}" onComplete="applyRenderSVG(svgButtonsId,['approvalIcon', 'errorIcon', 'pinIcon', 'warningIcon']);" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!AND(pageController.snapshotList.size > 0, !pageController.showCreateDXBranchPrompt)}">
+        <fieldset class="slds-form-element">
+            <legend class="slds-form-element__legend slds-form-element__label slds-text-heading_large">{!$Label.Select_Snapshot}</legend>
+            <div class="slds-form-element__control">
+                <div class="slds-grid slds-wrap">
+                    <apex:repeat value="{!pageController.snapshotList}" var="snapshot">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="slds-visual-picker slds-visual-picker_vertical" style="margin-bottom: 20px;">
+                                <input type="radio" id="{!snapshot.Id}" name="options" value="{!snapshot.Id}" onclick="lockScreen();populateSnapshot('{!JSENCODE(snapshot.Id)}');" />
+                                <label for="{!snapshot.Id}">
+                                <span class="slds-visual-picker__figure slds-align_absolute-center" style="height: auto !important;">
+                                    <span style="width: 100%;">
+                                        <span class="slds-text-heading_medium slds-m-bottom_x-small">{!snapshot.Name}</span>
+                                        <span class="slds-text-title">
+                                            <p class="slds-truncate">
+                                                <b>{!$ObjectType.Git_Backup__c.fields.Git_Repository__c.Label}:&nbsp;</b>
+                                                <apex:outputField value="{!snapshot.Git_Repository__c}" />
+                                            </p>
+                                            <p class="slds-truncate">
+                                                <b>{!$ObjectType.Git_Backup__c.fields.Org__c.Label}:&nbsp;</b>
+                                                <apex:outputField value="{!snapshot.Org__c}" />
+                                            </p>
+                                            <p class="slds-truncate">
+                                                <b>{!$ObjectType.Git_Backup__c.fields.Branch__c.Label}:&nbsp;</b>
+                                                <apex:outputField value="{!snapshot.Branch__c}" />
+                                            </p>
+                                            <p class="slds-truncate">
+                                                <b>{!$ObjectType.Git_Backup__c.fields.Frequency__c.Label}:&nbsp;</b>
+                                                <apex:outputField value="{!snapshot.Frequency__c}" />
+                                            </p>
+                                            <p class="slds-truncate">
+                                                <b>{!$ObjectType.Git_Backup__c.fields.Git_Snapshot_Permissions__c.Label}:&nbsp;</b>
+                                                <apex:outputField value="{!snapshot.Git_Snapshot_Permissions__c}" />
+                                            </p>
+                                        </span>
+                                    </span>
+                                </span>
+                                </label>
+                            </div>
+                        </div>
+                    </apex:repeat>
+                </div>
+            </div>
+        </fieldset>
+    </apex:outputPanel>
+
+    <apex:actionFunction name="populateSnapshot" action="{!populateSnapshotRecord}" reRender="tempRender">
+        <apex:param name="gitSnapshotId" value="" />
+    </apex:actionFunction>
+
+</apex:component>

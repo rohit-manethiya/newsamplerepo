@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Test Script</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Test Scripts</value>
+    </caseValues>
+    <fields>
+        <label><!-- Expected Result --></label>
+        <name>Expected_Result__c</name>
+    </fields>
+    <fields>
+        <label><!-- Introduction --></label>
+        <name>Introduction__c</name>
+    </fields>
+    <fields>
+        <label><!-- Org --></label>
+        <name>Org__c</name>
+    </fields>
+    <fields>
+        <label><!-- Overall Outcome --></label>
+        <name>Overall_Outcome__c</name>
+        <picklistValues>
+            <masterLabel>Failed</masterLabel>
+            <translation><!-- Failed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Passed</masterLabel>
+            <translation><!-- Passed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Passed with comments</masterLabel>
+            <translation><!-- Passed with comments --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Peer Reviewer --></label>
+        <name>Peer_Reviewer__c</name>
+        <relationshipLabel><!-- Test Scripts --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Prerequisites --></label>
+        <name>Prerequisites__c</name>
+    </fields>
+    <fields>
+        <label><!-- Project --></label>
+        <name>Project__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk --></label>
+        <name>Risk__c</name>
+        <picklistValues>
+            <masterLabel>High</masterLabel>
+            <translation><!-- High --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Low</masterLabel>
+            <translation><!-- Low --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Medium</masterLabel>
+            <translation><!-- Medium --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Sprint --></label>
+        <name>Sprint__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Complete</masterLabel>
+            <translation><!-- Complete --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Ready for testing</masterLabel>
+            <translation><!-- Ready for testing --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Test Description --></label>
+        <name>Test_Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Test Title --></label>
+        <name>Test_Title__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Test Scripts (User Story) --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+    <webLinks>
+        <label><!-- Add_Test_Script_Steps --></label>
+        <name>Add_Test_Script_Steps</name>
+    </webLinks>
+</CustomObjectTranslation>

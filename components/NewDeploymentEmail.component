@@ -1,0 +1,70 @@
+<apex:component controller="NewDeploymentEmailController" access="global">
+    <apex:attribute name="recordId" type="String" description="Deployment Id" assignTo="{!deploymentId}" />
+    <input type="hidden" value="{!deployment}" />
+    <apex:outputPanel layout="block" rendered="{!deploymentId != ''}" style="width: 80%; margin: 0px auto;">
+        <div style="font-size: 13px; padding-bottom: 40px">
+            <div style="font-size: 25px; padding-bottom: 10px;">The Deployment is {!deployment.Status__c}.</div>
+            <div>
+                The Deployment
+                <a style="text-decoration: none; color: #579af9;" href="{!recordUrl}">{!deployment.Name}</a>
+                is {!deployment.Status__c}. {!$Label.FIND_DETAILS}
+            </div>
+        </div>
+        <apex:outputPanel layout="block" rendered="{!statusMessageErrorMessages == ''}">
+            <div style="text-align: left; padding-bottom: 8px;">
+                <b>{!$Label.Result}</b>
+            </div>
+            <table style="border-collapse: collapse; margin-bottom: 30px;">
+                <thead>
+                    <tr>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 70px;">{!$Label.TYPE}</th>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px;">{!$Label.MESSAGE}</th>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 100px;">{!$Label.COPADO_TIP}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!errorMessages}" var="error">
+                        <tr>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.type}</td>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.message}</td>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.copadoTip}</td>
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+            </table>
+        </apex:outputPanel>
+        <div style="text-align: left; padding-bottom: 8px;">
+            <b>{!$Label.DEPLOYMENT_STEPS}</b>
+        </div>
+        <table style="border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="color: #666662; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 250px;">{!$Label.STEP_NAME}</th>
+                    <th style="color: #666662; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 150px;">{!$Label.TYPE}</th>
+                    <th style="color: #666662; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 70px;">{!$Label.STATUS}</th>
+                    <th style="color: #666662; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 130px;">{!$Label.DESTINATION_ORG}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!deploymentSteps}" var="deploymentStep">
+                    <tr>
+                        <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!deploymentStep.name}</td>
+                        <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!deploymentStep.type}</td>
+                        <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!deploymentStep.status}</td>
+                        <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!deploymentStep.destinationOrg}</td>
+                    </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+        <apex:outputPanel style="padding-top: 40px;" layout="block" rendered="{!AND(OR(statusMessageErrorMessages != '', statusMessage != ''), NOT(AND(deployment.Status__c == 'Completed Successfully', statusMessageErrorMessages == $Label.NO_ERROR_ATTACHMENT_FOUND)))}">
+        <c:EmailWarningMessageContainer emailContext="{!$Label.DEPLOYMENT}" errorMessage="{!IF(statusMessageErrorMessages != '', statusMessageErrorMessages, statusMessage)}" />
+        </apex:outputPanel>
+        <div style="text-align: center; padding: 40px 0px;">
+            <a style="text-decoration: none; border-radius: 4px; background-color: #0070D2; color: #FFFFFF; padding: 7px 15px; font-size: 13px;"
+                href="{!recordUrl}">{!$Label.VIEW} {!$Label.DEPLOYMENT} {!$Label.Result}</a>
+        </div>
+    </apex:outputPanel>
+    <apex:outputPanel style="margin-bottom: 40px;" layout="block" rendered="{!deploymentId == ''}">
+        <c:EmailWarningMessageContainer emailContext="{!$Label.DEPLOYMENT}" errorMessage="{!statusMessage}" />
+    </apex:outputPanel>
+</apex:component>

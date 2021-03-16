@@ -1,0 +1,86 @@
+<apex:component controller="NewApexTestResultEmailController" access="global">
+    <apex:attribute name="recordId" type="String" description="Apex Test Result Id" assignTo="{!apexTestResultId}" />
+    <input type="hidden" value="{!apexTestResult}" />
+    <apex:outputPanel layout="block" rendered="{!apexTestResultId != ''}" style="width: 80%; margin: 0px auto;">
+        <div style="font-size: 13px; padding-bottom: 40px;">
+            <div style="font-size: 25px; padding-bottom: 10px;">Your Test was completed {!IF((apexTestResult.Status__c = 'Success'), 'Successfully', 'with Errors')}.</div>
+            <div>
+                The Test
+                <a style="text-decoration: none; color: #579af9;" href="{!recordUrl}">{!apexTestResult.Name}</a>
+                was completed {!IF((apexTestResult.Status__c = 'Success'), 'Successfully', 'with Errors')}. {!$Label.FIND_DETAILS}
+            </div>
+        </div>
+        <div style="font-size: 13px; padding-bottom: 30px;">
+            <div>
+                <b>{!$ObjectType.Org__c.Label}:</b> {!apexTestResult.Org__r.Name}
+            </div>
+            <div>
+                <b>{!$ObjectType.Environment__c.Label}:</b> {!apexTestResult.Org__r.Environment__r.Name}
+            </div>
+            <div>
+                <b>{!$ObjectType.Apex_Test_Result__c.fields.Status__c.Label}:</b> {!apexTestResult.Status__c}
+            </div>
+            <div>
+                <b>{!$Label.DURATION}:</b>
+                <apex:outputText value="{0, number, 0 minute(s)}">
+                    <apex:param value="{!apexTestResult.Total_time__c/60000}" />
+                </apex:outputText>
+            </div>
+            <div>
+                <b>{!$Label.TESTS_PASSED}:</b>
+                <apex:outputText value="{0, number, 0}">
+                    <apex:param value="{!apexTestResult.Tests_run__c - apexTestResult.Failures__c}" />
+                </apex:outputText>
+                /
+                <apex:outputText value="{0, number, 0}">
+                    <apex:param value="{!apexTestResult.Tests_run__c}" />
+                </apex:outputText>
+            </div>
+            <div>
+                <b>{!$ObjectType.Apex_Test_Result__c.fields.Failures__c.Label}:</b>
+                <apex:outputText value="{0, number, 0}">
+                    <apex:param value="{!apexTestResult.Failures__c}" />
+                </apex:outputText>
+            </div>
+        </div>
+        <apex:outputPanel layout="block" rendered="{!statusMessageTestResult == ''}">
+            <table style="border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="color: #666662; font-weight: 500; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 5px 0px;">{!$Label.COVERAGE_STATUS}</th>
+                        <th style="color: #666662; font-weight: 500; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 5px 15px;">{!$Label.TOTAL_NUMBER_OF_LINES}</th>
+                        <th style="color: #666662; font-weight: 500; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 5px 15px;">{!$Label.LINES_NOT_COVERED}</th>
+                        <th style="color: #666662; font-weight: 500; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 5px 15px;">{!$Label.LINES_COVERED}</th>
+                        <th style="color: #666662; font-weight: 500; text-align: center; padding: 0px 00px 5px 10px;">{!$Label.COVERAGE} (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color: #3E3E3C; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 0px 15px;">{!IF(totalLines == 0, 'NA', IF((totalLines - notCoveredLines) / totalLines * 100 > minCoverage,
+                            $Label.PASSED, $Label.FAILED))}
+                        </td>
+                        <td style="color: #3E3E3C; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 0px 15px;">{!totalLines}</td>
+                        <td style="color: #3E3E3C; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 0px 15px;">{!notCoveredLines}</td>
+                        <td style="color: #3E3E3C; text-align: center; border-right: 1px solid #dcdcdc; padding: 0px 15px 0px 15px;">{!totalLines - notCoveredLines}</td>
+                        <td style="color: #3E3E3C; text-align: center; padding: 0px 15px 0px 15px;">
+                            <apex:outputText value="{0, number, 00.00}">
+                                <apex:param value="{!IF(totalLines == 0, 0, (totalLines - notCoveredLines) / totalLines
+                        * 100)}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel style="padding-top: 40px;" layout="block" rendered="{!OR(statusMessageTestResult != '', statusMessage != '')}">
+            <c:EmailWarningMessageContainer emailContext="{!$Label.TEST}" errorMessage="{!IF(statusMessageTestResult != '', statusMessageTestResult, statusMessage)}" />
+        </apex:outputPanel>
+        <div style="text-align: center; padding: 40px 0px;">
+            <a style="text-decoration: none; border-radius: 4px; background-color: #0070D2; color: #FFFFFF; padding: 7px 15px; font-size: 13px;"
+                href="{!resultsUrl}">{!$Label.VIEW} {!$Label.APEX_TEST} {!$Label.Result}</a>
+        </div>
+    </apex:outputPanel>
+    <apex:outputPanel style="margin-bottom: 40px;" layout="block" rendered="{!apexTestResultId == ''}">
+        <c:EmailWarningMessageContainer emailContext="{!$Label.TEST}" errorMessage="{!statusMessage}" />
+    </apex:outputPanel>
+</apex:component>

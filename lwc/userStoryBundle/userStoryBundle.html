@@ -1,0 +1,50 @@
+<template>
+    <c-copadocore-prompt
+        if:true={validationErrors.isError}
+        title="Bundle not Possible"
+        message={validationErrors.message}
+        button-label="Close"
+        variant="info"
+        onpromptclose={closeModal}
+    ></c-copadocore-prompt>
+    <section
+        if:false={validationErrors.isError}
+        aria-describedby="modal-content-id-1"
+        aria-labelledby="modal-heading-01"
+        aria-modal="true"
+        class="slds-modal slds-visible slds-fade-in-open"
+        role="dialog"
+        tabindex="-1"
+    >
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <button onclick={closeModal} class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close">
+                    <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                        <use xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                    </svg>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">{label.User_Story_Bundle}</h2>
+            </header>
+            <lightning-record-edit-form object-api-name={objectApiName} onsubmit={handleSubmit}>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1" tabindex="-1">
+                    <div class="slds-p-around_medium slds-is-relative">
+                        <lightning-spinner if:true={isLoading} variant="brand" alternative-text="Loading"></lightning-spinner>
+                        <label class="slds-form-element__label" for="title"> <abbr class="slds-required" title="required">* </abbr>Title</label>
+                        <lightning-input-field field-name={fieldApiName} id="title" variant="label-hidden"></lightning-input-field>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer slds-align_absolute-center">
+                    <c-copadocore-error-popover
+                        if:true={submitError.isError}
+                        class="slds-p-right_x-small"
+                        message={submitError.message}
+                    ></c-copadocore-error-popover>
+                    <button type="button" class="slds-button slds-button_neutral cancel" onclick={closeModal}>{label.Cancel}</button>
+                    <lightning-button class="slds-button" variant="brand" type="submit" label={label.CREATE_US_BUNDLE_BUTTON}></lightning-button>
+                </footer>
+            </lightning-record-edit-form>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

@@ -1,0 +1,158 @@
+<!--
+ - Created by mertyalti on 12/09/2018.
+ -->
+
+<apex:component id="DXExtensionStatuses" allowDML="false" controller="DXExtensionStatusController">
+    <apex:attribute name="parentPageController" type="ScratchOrgWizardPageBase" assignTo="{!pageController}"
+                    required="true" description="The controller for the parent page." />
+    <apex:attribute name="componentName" type="String" assignTo="{!controllerKey}" description="Component Name" />
+    <apex:attribute name="mode" type="String" assignTo="{!componentMode}"
+                    description="Component mode that will define the default behaviour."
+                    default="wizard" />
+    <apex:attribute name="destinationEnvironmentName" description="The scratch org that has extensions running against" type="String" required="true" />
+    <apex:actionPoller action="{!checkExtensionStatuses}" id="rebasePromotionPoller" enabled="{!enabledRebasePromotionPoller}" interval="8" reRender="rebasePromotionsPanel,rebasePromotionPoller" />
+    <apex:outputPanel layout="block" id="rebasePromotionsPanel" styleClass="slds-scope">
+        <table class="slds-table slds-table_resizable-cols slds-table_fixed-layout slds-table_bordered slds-table_striped">
+            <thead>
+            <tr>
+                <td>
+                    <apex:outputLabel value="{!$ObjectType.Deployment__c.fields.Name.Label}" />
+                </td>
+                <td>
+                    <apex:outputLabel value="{!$ObjectType.Deployment__c.fields.From_Org__c.Label}" />
+                </td>
+                <td>
+                    <apex:outputLabel value="{!$ObjectType.Deployment__c.fields.Deployed__c.Label}" />
+                </td>
+                <td>
+                    <apex:outputLabel value="{!$ObjectType.Deployment__c.fields.Status__c.Label}" />
+                </td>
+                <apex:outputPanel layout="none" rendered="{!enabledRebasePromotionPoller}">
+                    <td style="text-align: center;">
+                        <b>Deployment Status</b> <!--TODO: Create custom label for this one -->
+                    </td>
+                </apex:outputPanel>
+            </tr>
+            </thead>
+            <tbody>
+            <apex:repeat var="extension" value="{!scratchOrgExtensions}">
+                <tr>
+                    <td>
+                        <c:LightningReadyOutputFields SObject="{!extension}" Field="Name" showLabel="false" dividerBottom="false" customClass="pfFields" isViewLink="true" htmlTarget="_blank" />
+                    </td>
+                    <td>
+                        <c:LightningReadyOutputFields SObject="{!extension}" Field="From_Org__c" showLabel="false" dividerBottom="false" customClass="pfFields" isViewLink="false" htmlTarget="_blank" />
+                    </td>
+                    <td>
+                        <c:LightningReadyOutputFields SObject="{!extension}" Field="Deployed__c" showLabel="false" dividerBottom="false" customClass="pfFields" isViewLink="false" htmlTarget="_blank" />
+                    </td>
+                    <td>
+                        <c:LightningReadyOutputFields SObject="{!extension}" Field="Status__c" showLabel="false" dividerBottom="false" customClass="pfFields" isViewLink="false" htmlTarget="_blank" />
+                    </td>
+                    <apex:outputPanel layout="none" rendered="{!enabledRebasePromotionPoller}">
+                        <td style="text-align: center;">
+                            <apex:outputPanel layout="none" rendered="{!OR(extension.Status__c == 'Scheduled',extension.Status__c == 'Draft')}">
+                                <div id="statusImg" class="slds-icon_container">
+                                    <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#clock')}">
+                                        </use>
+                                    </svg>
+                                </div>
+
+                                <script type="text/javascript">
+                                    $copado(function(){
+                                        var item = $copado('[Id$=statusImg]');
+                                        item.html("");
+                                        var imageURL = "{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#clock')}";
+                                        var SVG = $copado('<svg/>', {
+                                            class: 'slds-icon slds-icon_small slds-icon-text-default',
+                                        });
+                                        var SVGUse = $copado('<use/>');
+                                        SVGUse.attr('xlink:href', imageURL);
+                                        item.prepend(SVG.append(SVGUse));
+                                        item.html(item.html());
+                                    });
+
+
+
+
+                                </script>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!extension.Status__c == 'In progress'}">
+                                <img id="statusImg" style="width: 20px;" src="{!URLFOR($Resource.SLDS,'/assets/images/spinners/slds_spinner_brand.gif')}" />
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!extension.Status__c == 'Completed Successfully'}">
+                                <div id="statusImgApproval" class="slds-icon_container">
+                                    <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/action-sprite/svg/symbols.svg#approval')}">
+                                        </use>
+                                    </svg>
+                                </div>
+
+                                <script type="text/javascript">
+                                    $copado(function(){
+                                        var item = $copado('[Id$=statusImgApproval]');
+                                        item.html("");
+                                        var imageURL = "{!URLFOR($Resource.SLDS,'/assets/icons/action-sprite/svg/symbols.svg#approval')}";
+                                        var SVG = $copado('<svg/>', {
+                                            class: 'slds-icon slds-icon_small slds-icon-text-default',
+                                        });
+                                        var SVGUse = $copado('<use/>');
+                                        SVGUse.attr('xlink:href', imageURL);
+                                        item.prepend(SVG.append(SVGUse));
+                                        item.html(item.html());
+                                    });
+
+                                </script>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!OR(extension.Status__c == 'Completed with Errors',extension.Status__c == 'Cancelled')}">
+                                <div id="statusImgClose" class="slds-icon_container">
+                                    <svg class="slds-icon slds-icon_x-small slds-icon-text-default" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/action-sprite/svg/symbols.svg#close')}">
+                                        </use>
+                                    </svg>
+                                </div>
+
+                                <script type="text/javascript">
+                                    $copado(function(){
+                                        var item = $copado('[Id$=statusImgClose]');
+                                        item.html("");
+                                        var imageURL = "{!URLFOR($Resource.SLDS,'/assets/icons/action-sprite/svg/symbols.svg#close')}";
+                                        var SVG = $copado('<svg/>', {
+                                            class: 'slds-icon slds-icon_small slds-icon-text-default',
+                                        });
+                                        var SVGUse = $copado('<use/>');
+                                        SVGUse.attr('xlink:href', imageURL);
+                                        item.prepend(SVG.append(SVGUse));
+                                        item.html(item.html());
+                                    });
+
+
+
+
+                                </script>
+                            </apex:outputPanel>
+                        </td>
+                    </apex:outputPanel>
+                </tr>
+            </apex:repeat>
+            </tbody>
+            <apex:outputPanel rendered="{!AND($User.UIThemeDisplayed=='Theme3',scratchOrgExtensions.size == 0,enabledRebasePromotionPoller)}">
+                <c:IncludeStaticsResourceComponent addSLcss="true" />
+                <div id="screenLocker" style="display:block;">
+                    <p>
+                        <img src="/img/loading.gif" /> <span id="screenLockerMessage">{!$Label.LOADING}</span>
+                    </p>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!AND($User.UIThemeDisplayed!='Theme3',scratchOrgExtensions.size == 0,enabledRebasePromotionPoller)}">
+                <div id="screenLocker" class="slds-screenlocker lightninglocker" style="display:block;">
+                    <div id="screenLockerLightningFrame">
+                        <img style="width: 100px;" src="{!URLFOR($Resource.SLDS,'/assets/images/spinners/slds_spinner_brand.gif')}" />
+                        <p id="screenLockerMessage" class="lightninglockerMessage">{!$Label.LOADING}</p>
+                    </div>
+                </div>
+            </apex:outputPanel>
+        </table>
+    </apex:outputPanel>
+</apex:component>

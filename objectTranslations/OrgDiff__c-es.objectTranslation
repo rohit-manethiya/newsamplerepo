@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Org Difference</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Org Differences</value>
+    </caseValues>
+    <fieldSets>
+        <label><!-- Copado Header Fields --></label>
+        <name>Copado_Header_Fields</name>
+    </fieldSets>
+    <fields>
+        <help><!-- If a value is entered only modification after this date (inclusive) will be added in the Diff --></help>
+        <label><!-- From Date --></label>
+        <name>From_Date__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select the Source Org for which you would like to compare the Metadata. This Org will be the Org from which you would like to migrate Metadata. --></help>
+        <label><!-- Source Org --></label>
+        <name>From_Org__c</name>
+        <relationshipLabel><!-- Org Differences (From Org) --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- If a value is entered, only modifications from this user will be included in the Diff. Use the user Full Name --></help>
+        <label><!-- Last Modified By Name --></label>
+        <name>Last_Modified_By_Name__c</name>
+    </fields>
+    <fields>
+        <help><!-- Empty means all types. Select one or more types to limit the Org Difference only to selected items. --></help>
+        <label><!-- Metadata Types --></label>
+        <name>Metadata_Types__c</name>
+    </fields>
+    <fields>
+        <help><!-- If a value is entered only modification before this date (inclusive) will be added in the Diff --></help>
+        <label><!-- To Date --></label>
+        <name>To_Date__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select the Destination Org for which you would like to compare the Metadata and would like to migrate Metadata to. The resulting grid will show a list of differences with &apos;create&apos;, &apos;update&apos; and &apos;delete&apos; which apply to this Org. --></help>
+        <label><!-- Destination Org --></label>
+        <name>To_Org__c</name>
+        <relationshipLabel><!-- Org Differences (To Org) --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+    <validationRules>
+        <errorMessage><!-- The Org&apos;s to be compared can not be the same. --></errorMessage>
+        <name>Should_be_differents</name>
+    </validationRules>
+</CustomObjectTranslation>

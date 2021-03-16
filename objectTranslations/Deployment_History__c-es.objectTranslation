@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Copado Deployment History</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Copado Deployment History</value>
+    </caseValues>
+    <fields>
+        <label><!-- Date --></label>
+        <name>Date__c</name>
+    </fields>
+    <fields>
+        <help><!-- In case of Deployment being deleted. Deployment Id will be kept in this field. --></help>
+        <label><!-- Deployment Id --></label>
+        <name>Deployment_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Deployment --></label>
+        <name>Deployment__c</name>
+        <relationshipLabel><!-- Copado Deployment History --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Event --></label>
+        <name>Event__c</name>
+        <picklistValues>
+            <masterLabel>Created</masterLabel>
+            <translation><!-- Created --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Deleted</masterLabel>
+            <translation><!-- Deleted --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Updated</masterLabel>
+            <translation><!-- Updated --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Field --></label>
+        <name>Field__c</name>
+    </fields>
+    <fields>
+        <label><!-- New Value --></label>
+        <name>New_Value__c</name>
+    </fields>
+    <fields>
+        <label><!-- Object --></label>
+        <name>Object__c</name>
+        <picklistValues>
+            <masterLabel>Deployment</masterLabel>
+            <translation><!-- Deployment --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Destination Org</masterLabel>
+            <translation><!-- Destination Org --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Step</masterLabel>
+            <translation><!-- Step --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Old Value --></label>
+        <name>Old_Value__c</name>
+    </fields>
+    <fields>
+        <label><!-- User --></label>
+        <name>User__c</name>
+        <relationshipLabel><!-- Copado Deployment History --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

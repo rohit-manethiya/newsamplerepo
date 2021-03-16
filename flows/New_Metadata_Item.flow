@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <apiVersion>49.0</apiVersion>
+    <dynamicChoiceSets>
+        <name>MetadataType</name>
+        <dataType>Picklist</dataType>
+        <displayField xsi:nil="true"/>
+        <object xsi:nil="true"/>
+        <picklistField>Type__c</picklistField>
+        <picklistObject>Metadata_Group_Item__c</picklistObject>
+    </dynamicChoiceSets>
+    <dynamicChoiceSets>
+        <name>Operator</name>
+        <dataType>Picklist</dataType>
+        <displayField xsi:nil="true"/>
+        <object xsi:nil="true"/>
+        <picklistField>Operator__c</picklistField>
+        <picklistObject>Metadata_Group_Item__c</picklistObject>
+    </dynamicChoiceSets>
+    <interviewLabel>New Metadata Item {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>New Metadata Item</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <recordCreates>
+        <name>Create_Metadata_Item</name>
+        <label>Create Metadata Item</label>
+        <locationX>624</locationX>
+        <locationY>75</locationY>
+        <inputAssignments>
+            <field>Metadata_Group__c</field>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Operator__c</field>
+            <value>
+                <elementReference>Operator_Choice</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type__c</field>
+            <value>
+                <elementReference>Metadata_Type</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Value__c</field>
+            <value>
+                <elementReference>Value</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Metadata_Group_Item__c</object>
+    </recordCreates>
+    <recordLookups>
+        <name>Get_Parent_Metadata_Group</name>
+        <label>Get Parent Metadata Group</label>
+        <locationX>207</locationX>
+        <locationY>64</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>New_Metadata_Item</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <object>Metadata_Group__c</object>
+        <outputReference>metadataGroup</outputReference>
+        <queriedFields>Id</queriedFields>
+    </recordLookups>
+    <screens>
+        <description>Add a new metadata Item</description>
+        <name>New_Metadata_Item</name>
+        <label>New Metadata Item</label>
+        <locationX>342</locationX>
+        <locationY>74</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Create_Metadata_Item</targetReference>
+        </connector>
+        <fields>
+            <name>Metadata_Type</name>
+            <choiceReferences>MetadataType</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Metadata Type</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Operator_Choice</name>
+            <choiceReferences>Operator</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Metadata Name</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Value</name>
+            <dataType>String</dataType>
+            <fieldText>Value</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>Operator_Choice</leftValueReference>
+                    <operator>NotEqualTo</operator>
+                    <rightValue>
+                        <stringValue>All</stringValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <startElementReference>Get_Parent_Metadata_Group</startElementReference>
+    <status>Active</status>
+    <variables>
+        <name>metadataGroup</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Metadata_Group__c</objectType>
+    </variables>
+    <variables>
+        <name>New_Metadata_Item_Record</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Metadata_Group_Item__c</objectType>
+    </variables>
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

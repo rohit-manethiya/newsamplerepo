@@ -1,0 +1,90 @@
+<apex:component id="cmp" controller="DeploymentEmailController" access="global">
+    <apex:attribute name="dpId" type="String" description="Deployment Id" assignTo="{!deployId}" />
+    Link to Deployment: {!podUrl}/{!deployId}<br />
+    <br />
+    <body>
+        <style>
+            table.StepsAndMetadata {
+               border: 1px solid black;
+               border-radius: 10px;
+               padding: 5px;
+               font-size: 13px;
+            }
+
+            table.StepsAndMetadata thead tr th {
+               text-align: left;
+               border-bottom: 1px solid black;
+            }
+
+            table.StepsAndMetadata tr.Step td {
+              font-weight: bold;
+              color: #4C7DA5;
+              padding-top: 30px;
+              height: 60px;
+            }
+
+            table.StepsAndMetadata tr.Metadata td:nth-child(n+2) {
+              background-color: #B9E2F7;
+              border-radius: 5px;
+            }
+
+            table.StepsAndMetadata tr.Division td {
+            	border-bottom: 1px solid black;
+            }
+
+            h1 {
+               font-size: 15px;
+               font-weight: bold;
+            }
+        </style>
+        <h1>Deployment Steps</h1>
+    	<table cellspacing="5px" cellpadding="5px" class="StepsAndMetadata">
+            <thead>
+            	<tr>
+                	<th>Step Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Destination Org</th>
+                    <th>Metadata Name</th>
+                    <th>Metadata Type</th>
+                    <th>Check Only</th>
+                </tr>
+            </thead>
+            <tbody>
+            	<apex:repeat id="rptResults" value="{!DeploymentSteps}" var="s" >
+                    <tr class="{!s.className}">
+                        <td>{!s.n}</td>
+                        <td>{!s.t}</td>
+                        <td>{!s.s}</td>
+                        <td>{!s.o}</td>
+                        <td>{!s.cn}</td>
+                        <td>{!s.ct}</td>
+                        <td>{!IF(s.n != '',s.co,'')}</td>
+                    </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+        <h1>Deployment Results</h1>
+    	<table cellspacing="5px" cellpadding="5px"  class="StepsAndMetadata">
+            <thead>
+            	<tr>
+                	<th>Level</th>
+                    <th>Message</th>
+                    <th>Copado Tip</th>
+                </tr>
+            </thead>
+            <tbody>
+            	<apex:repeat id="rptErrors" value="{!ErrorMessages}" var="e" >
+                    <tr class="row">
+                        <td>{!e.l}</td>
+                        <td>{!e.m}</td>
+                        <td>{!e.t}</td>
+                    </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+        {!statusMessage}
+    </body>
+    <br />
+    This email was generated automatically by Copado.
+</apex:component>

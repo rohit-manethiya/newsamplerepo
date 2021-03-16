@@ -1,0 +1,135 @@
+<apex:component id="ScratchOrgExtensions" layout="none" controller="ScratchOrgExtensionsController" allowDML="true">
+    <apex:attribute name="parentPageController" type="ScratchOrgWizardPageBase" assignTo="{!pageController}" required="true"
+        description="The controller for the parent page." />
+    <apex:attribute name="componentName" type="String" assignTo="{!controllerKey}" description="Component Name" required="true"
+    />
+    <apex:attribute name="mode" type="String" assignTo="{!componentMode}" description="Component mode that will define the default behaviour."
+        required="true" default="add" />
+    <apex:actionFunction name="getDeployment" action="{!populateDeployments}" onComplete="unlockScreen();" reRender="deploymentselectlistpanel,applyChangesToTemplate,extensionMessages">
+        <apex:param value="" name="sourceOrgName" assignTo="{!sourceOrgName}" />
+        <apex:param value="" name="sourceOrgId" assignTo="{!sourceOrgId}" />
+    </apex:actionFunction>
+    <apex:actionFunction name="editExtension" action="{!editExtension}" onComplete="unlockScreen();" reRender="extensionButtons,loaddatapanel,deploymentselectlistpanel,iframesection,extensionMessages">
+        <apex:param value="" name="depId" assignTo="{!selectedDeploymentId}" />
+    </apex:actionFunction>
+    <apex:actionFunction name="deleteExtension" action="{!deleteExtension}" onComplete="unlockScreen();" reRender="listOfExtensions,loaddatapanel,deploymentselectlistpanel,iframesection,extensionMessages">
+        <apex:param value="" name="depId" assignTo="{!selectedDeploymentId}" />
+    </apex:actionFunction>
+
+    <apex:pageMessages id="extensionMessages" />
+
+    <apex:pageBlock mode="detail" title="Scratch Org Extensions" id="listOfExtensions">
+        <apex:pageBlockButtons location="top">
+            <apex:commandButton action="{!executeSteps}" reRender="extensionMessages" onClick="lockScreen();" onComplete="renderParent();unlockScreen();"
+                value="{!$Label.DEPLOY} All" id="cso" rendered="{!mode == 'add'}" />
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection columns="1" collapsible="false" title="Extensions to be executed">
+            <apex:pageBlockSectionItem >
+                <apex:pageBlockTable value="{!deploymentInfoList}" var="ext">
+                    <apex:column headerValue="{!$Label.Source_Org}" value="{!ext.scratchOrgName}" />
+                    <apex:column headerValue="{!$Label.DEPLOYMENT}">
+                        <apex:outputlink target="_blank" value="/{!ext.deploymentId}">{!ext.deploymentName}</apex:outputlink>
+                    </apex:column>
+                    <apex:column headerValue="Actions">
+                        <a href="#" onclick="lockScreen();editExtension('{!JSINHTMLENCODE(ext.deploymentId)}')">{!$Label.EDIT}</a>
+                        &nbsp; | &nbsp;
+                        <a href="#" onclick="lockScreen();deleteExtension('{!JSINHTMLENCODE(ext.deploymentId)}')">{!$Label.DELETE}</a>
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <apex:outputPanel layout="block" id="templateWarning">
+        <apex:pageMessage severity="warning" title="Warning" strength="3" summary="Changes will affect selected job template" detail="This change may affect future extension processes."
+            rendered="{!appChangesToSelectedTemplate}" />
+    </apex:outputPanel>
+    <apex:pageBlock id="deploymentpanel" title="Prepare Extension Deployment">
+        <apex:pageBlockButtons location="top">
+            <apex:outputPanel id="extensionButtons" layout="block">
+                <apex:commandButton value="Add to extensions" action="{!addToExtensions}" reRender="listOfExtensions,loaddatapanel,deploymentselectlistpanel,iframesection,extensionMessages"
+                    onClick="lockScreen();" onComplete="unlockScreen();" rendered="{!!editMode}" />
+                <apex:commandButton value="Complete Edit" action="{!initExtensionPrep}" reRender="extensionButtons,listOfExtensions,loaddatapanel,deploymentselectlistpanel,iframesection,extensionMessages"
+                    onClick="lockScreen();" onComplete="unlockScreen();" rendered="{!editMode}" />
+                <apex:commandButton value="Clear" immediate="true" action="{!cancelPrep}" reRender="extensionButtons,listOfExtensions,loaddatapanel,deploymentselectlistpanel,iframesection,extensionMessages"
+                />
+            </apex:outputPanel>
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection id="loaddatapanel" columns="2">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Source_Org}" />
+                <apex:outputPanel layout="block">
+                    <input type="hidden" name="SORG_INPUT_lkid" id="SORG_INPUT_lkid" value="{!sourceOrgId}" />
+                    <input type="hidden" name="SORG_INPUT_lkold" id="SORG_INPUT_lkold" value="" />
+                    <input type="hidden" name="SORG_INPUT_lktp" id="SORG_INPUT_lktp" value="{!$ObjectType.Org__c.keyPrefix}" />
+                    <input type="hidden" name="SORG_INPUT_lspf" id="SORG_INPUT_lspf" value="0" />
+                    <input type="hidden" name="SORG_INPUT_lspfsub" id="SORG_INPUT_lspfsub" value="0" />
+                    <input type="hidden" name="SORG_INPUT_mod" id="SORG_INPUT_mod" value="0" />
+                    <span class="lookupInput" style="margin-left: 0;">
+                        <input id="SORG_INPUT" maxlength="255" name="SORG_INPUT" onchange="lockScreen();getDeployment($copado(this).val(),getElementByIdCS('SORG_INPUT_lkid').value);getElementByIdCS('SORG_INPUT_lkid').value='';getElementByIdCS('SORG_INPUT_mod').value='1';"
+                            size="20" tabindex="3" type="text" value="{!sourceOrgName}" />
+                        <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DSORG_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27SORG_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27SORG_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                            id="SORG_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="{!$Label.Source_Org_New_Window}">
+                            <img src="/img/s.gif" alt="{!$Label.Source_Org_New_Window}" class="lookupIcon" onblur="this.className = 'lookupIcon';" onfocus="this.className = 'lookupIconOn';"
+                                onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';"
+                                title="{!$Label.Source_Org_New_Window}" />
+                        </a>
+                    </span>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <!-- Empty section item for alignment -->
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+
+        <apex:pageBlockSection id="deploymentselectlistpanel" columns="2">
+            <apex:pageBlockSectionItem rendered="{!AND(deploymentList!=null,deploymentList.size>0)}">
+                <apex:outputLabel value="{!$Label.Select_Job}" />
+                <apex:outputPanel layout="none">
+                    <apex:selectList value="{!selectedDeploymentId}" multiselect="false" size="1" rendered="{!!editMode}">
+                        <apex:selectOptions value="{!deploymentList}" />
+                        <apex:actionSupport event="onchange" action="{!initDeploymentStep}" onSubmit="lockScreen();" reRender="iframesection,extensionMessages"
+                        />
+                    </apex:selectList>
+                    <apex:outputText rendered="{!editMode}" value="{!editingDeployment}" />
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem rendered="{!AND(deploymentList!=null,deploymentList.size>0, !editMode)}">
+                <apex:outputLabel value="Apply Changes to Template" />
+                <apex:inputCheckbox value="{!appChangesToSelectedTemplate}" id="applyChanges">
+                    <apex:actionSupport event="onchange" reRender="templateWarning" />
+                </apex:inputCheckbox>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+
+        <apex:pageBlockSection id="iframesection" columns="1">
+            <apex:pageBlockSectionItem >
+                <apex:outputPanel layout="block" id="iframedetail" rendered="{!pageRef != null}">
+                    <apex:iframe src="{!pageRef}" height="1200px" id="exIframe" width="100%" scrolling="true" />
+                    <script>
+                        var toTop = $copado('[id$="iframedetail"]').offset().top;
+                        var sh = screen.height;
+                        var definedHeight = sh + 200 - toTop;
+                        $copado('[id$="exIframe"]').css('height', definedHeight + 'px');
+                        $copado("[Id$='exIframe']").on('load', function () {
+                            unlockScreen();
+                        });
+
+
+
+
+                    </script>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <script>
+        var renderParent = function () {
+            try {
+                renderActionsPanel();
+            } catch (ex) {
+                console.log('renderActionsPanel not found in parent.');
+            }
+        }
+
+    </script>
+</apex:component>

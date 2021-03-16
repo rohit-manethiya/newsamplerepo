@@ -1,0 +1,23 @@
+<template>
+    <div class="slds-box soft-blue">
+        <div class="dark-blue">{label.Dynamic_Parameter_Helper}</div>
+
+        <lightning-combobox class="slds-m-top_x-small" name="parameterContext" label={label.Parameter_Context}
+            value={parameterContext} options={parameterContexts} onchange={handleChange}></lightning-combobox>
+
+        <lightning-combobox class="slds-m-top_x-small" name="parameterField" label={label.Parameter_Field}
+            value={parameterField} options={parameterFields} onchange={handleChange}></lightning-combobox>
+
+        <!-- Standard html and SLDS is used since, in order to use copy to clipboard, we need to access directly to the HTML element -->
+        <div class="slds-form-element slds-m-top_x-small">
+            <label class="slds-form-element__label" for="variable">{label.Variable_Value}</label>
+            <lightning-helptext content={label.Dynamic_Variable_Helper_Helptext}></lightning-helptext>
+            <div class="slds-form-element__control">
+                <textarea id="variable" class="slds-textarea">{variable}</textarea>
+            </div>
+        </div>
+
+        <lightning-button variant="base" label={label.COPY_TO_CLIPBOARD} title={label.COPY_TO_CLIPBOARD}
+            icon-name="utility:copy" onclick={handleCopyVariable}></lightning-button>
+    </div>
+</template>

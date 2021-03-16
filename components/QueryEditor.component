@@ -1,0 +1,330 @@
+<!--
+ - Created by ferhatozsavran on 5/28/18.
+ -->
+
+<apex:component id="QueryEditor" controller="QueryEditorController">
+    <apex:attribute name="dynamicSOQL" type="QueryEditor" required="true" assignTo="{!qEditor}" description="Component Controller will update soql of the main page" />
+    <apex:attribute name="componentMode" type="String" required="true" assignTo="{!compMode}" description="valid values are: NewView, Edit" />
+
+    <style>
+        .msgIcon {
+            display: none!important
+        }
+        .customMessage * {
+            color: #fff!important
+        }
+        .customMessage {
+            margin: 0!important;
+            opacity: 1!important;
+            width: 100%;
+            font-size: 12px;
+            border: 0px;
+            padding-left: 10px;
+        }
+        .message {
+            opacity: 1.1;
+        }
+    </style>
+
+    <script type="text/javascript">
+        $copado(document).ready(function(){
+            overridePageMessages();
+        });
+
+		var togglePanel = function(elem){
+            var show = elem.attr('active');
+            if(show === "false"){
+                toggleLogic();
+                $copado('.defaultAnd').hide()
+                elem.text("{!JSENCODE($Label.Clear_Filter_Logic)}");
+                elem.attr('active',"true");
+            }else{
+                toggleLogic();
+                $copado('.defaultAnd').show()
+                elem.text("{!JSENCODE($Label.Add_Filter_Logic)}");
+                elem.attr('active',"false");
+            }
+            setTimeout(function(){unlockScreen();},1000);
+            return false;
+        }
+
+        function overridePageMessages(){
+            $copado('.warningM3').addClass('slds-notify slds-notify--toast slds-theme--warning customMessage ');
+            $copado('.confirmM3').addClass('slds-notify slds-notify--alert slds-theme--success  customMessage ');
+            $copado('.errorM3').addClass('slds-notify slds-notify--alert slds-theme--error customMessage ');
+            $copado('.infoM3').addClass('slds-notify slds-notify--toast customMessage ');
+
+            $copado('.errorM3').removeClass('errorM3');
+            $copado('.confirmM3').removeClass('confirmM3');
+            $copado('.infoM3').removeClass('infoM3');
+        }
+	</script>
+
+    <apex:outputPanel layout="block" id="qEditorSobject">
+        <apex:pageMessages id="pageActionMessages" />
+
+        <apex:outputPanel layout="none" rendered="{!OR(qEditor.queryWrapper.sobjectTypeName == null,AND(qEditor.queryWrapper.sobjectTypeName != null,qEditor.queryWrapper.sobjectTypeName == '--None--'))}">
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Object_Process}</b>
+                </legend>
+                * {!$Label.Enter_Object_API_or_Name}
+                <apex:input styleClass="slds-input" value="{!qEditor.queryWrapper.sobjectTypeName}" type="text" html-placeholder="E.g. copado__User_Story__c or User Story" onKeyDown="if(event.keyCode==13){return false;}" />
+                <center>
+                    <a href="#" id="addLogic" onclick="lockScreen();loadView();" style="margin-top: 10px;" class="slds-button slds-button_neutral">
+                        {!$Label.NEXT}
+                    </a>
+                </center>
+            </fieldset>
+            <apex:actionFunction name="loadView" action="{!objectNameValidation}" onComplete="unlockScreen()" reRender="qEditorSobject,pageActionMessages" />
+        </apex:outputPanel>
+
+        <apex:outputPanel layout="none" rendered="{!AND(qEditor.queryWrapper.sobjectTypeName != null,qEditor.queryWrapper.sobjectTypeName != '--None--')}">
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.View_Name}</b>
+                </legend>
+                <b>{!$Label.NAME}:</b>
+                <apex:input styleClass="slds-input" value="{!qEditor.queryWrapper.viewName}" type="text"/>
+                <b>{!$Label.Description}:</b>
+                <apex:input styleClass="slds-input" value="{!qEditor.queryWrapper.kanbanDescription}" type="text"/>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.selectedFields}" size="5" multiselect="true">
+                    <apex:selectOptions value="{!AllFieldsAPINameMultiSelect}" />
+                </apex:selectlist>
+            </fieldset>
+
+            <!-- filter criteria selection -->
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Specify_Filter_Criteria}</b>
+                </legend>
+                <apex:outputpanel id="criterias" layout="block" >
+                    <table cellspacing="1" cellpadding="1" style="border-collapse: collapse;width: 65%;" class="slds-table slds-table_cell-buffer">
+                        <thead style="font-weight: bold;font-size: 11pt;">
+                        <tr style="padding-bottom: 5px;">
+                            <td style="width: 5%;">&nbsp;</td>
+                            <td >{!$Label.Field}</td>
+                            <td >{!$Label.Operator}</td>
+                            <td >{!$Label.Value}</td>
+                            <td >&nbsp;</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <apex:repeat value="{!qEditor.queryWrapper.criteriaList}" var="criteria">
+                            <tr style="min-height: 40px;">
+                                <td style="width: 3%;">
+                                    <apex:outputPanel layout="block" rendered="{!qEditor.queryWrapper.enableFilterLogic}">
+                                        <span style="display: block;" class="defaultAnd">{!criteria.order} </span>
+                                    </apex:outputPanel>
+                                </td>
+                                <td style="width: 20%;">
+                                    <apex:selectList styleClass="slds-select" style="width: 100%;" value="{!criteria.fieldName}" size="1" multiselect="false">
+                                        <apex:selectOptions value="{!AllFieldsAPIName}" />
+                                        <apex:actionSupport action="{!getFieldOperators}" event="onchange" reRender="criterias" onSubmit="lockScreen();" onComplete="unlockScreen();">
+                                            <apex:param name="cro" value="{!criteria.order}" />
+                                        </apex:actionSupport>
+                                    </apex:selectList>
+                                </td>
+                                <td style="width: 15%;">
+                                    <apex:selectList styleClass="slds-select" style="width: 100%;"  value="{!criteria.operator}" size="1" multiselect="false">
+                                        <apex:selectOptions value="{!criteria.operatorSet}" />
+                                    </apex:selectList>
+                                </td>
+                                <td >
+                                    <apex:input styleClass="slds-input" rendered="{!OR(criteria.fieldType='STRING', criteria.fieldType='REFERENCE', criteria.fieldType='PICKLIST', criteria.fieldType='TEXTAREA', criteria.fieldType='ID', criteria.fieldType='BASE64BINARY')}" value="{!criteria.input}" type="text"/>
+                                    <apex:input styleClass="slds-input" rendered="{!criteria.fieldType='DATE'}" value="{!criteria.dateInput}" type="date"/>
+                                    <apex:input styleClass="slds-input" rendered="{!criteria.fieldType='DATETIME'}" value="{!criteria.dateTimeInput}" type="datetime-local"/>
+                                    <apex:input styleClass="slds-input numberInput{!criteria.order}" rendered="{!OR(criteria.fieldType='INTEGER', criteria.fieldType='DOUBLE',criteria.fieldType='INT',criteria.fieldType='PERCENT')}" value="{!criteria.input}" type="text"/>
+                                    <script type="text/javascript">
+                                        $copado(function () {
+                                            $copado("input[class^='numberInput']").keydown(function (event) {
+                                                if (event.shiftKey == true) {
+                                                    event.preventDefault();
+                                                }
+                                                if ((event.keyCode >= 48 && event.keyCode <= 57) ||
+                                                    (event.keyCode >= 96 && event.keyCode <= 105) ||
+                                                    event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 37 ||
+                                                    event.keyCode == 39 || event.keyCode == 46 || event.keyCode == 190 || event.keyCode == 44 || event.keyCode == 188 || event.keyCode == 110) {
+
+                                                } else {
+                                                    event.preventDefault();
+                                                }
+                                                if($copado(this).val().indexOf('.') !== -1 && event.keyCode == 190 && $copado(this).val().indexOf(',') === -1){
+                                                    event.preventDefault();
+                                                }
+                                                if($copado(this).val().indexOf('.') === -1 && $copado(this).val().indexOf(',') !== -1 && (event.keyCode == 188 || event.keyCode == 44 || event.keyCode == 110)){
+                                                    event.preventDefault();
+                                                }
+                                                //if a decimal has been added, disable the "." or "," -button
+                                            });
+                                        })
+                                    </script>
+                                    <apex:inputCheckbox style="font-size: x-large;" rendered="{!criteria.fieldType='BOOLEAN'}" value="{!criteria.input}"/>
+                                    <apex:input styleClass="slds-input" rendered="{!criteria.fieldType='TIME'}" value="{!criteria.input}" type="text"/>
+                                </td>
+                                <td style="width: 3%;">
+                                    <apex:outputPanel layout="block" rendered="{!!qEditor.queryWrapper.enableFilterLogic}">
+                                        <span style="display: block;" class="defaultAnd">AND</span>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                        </tbody>
+                    </table>
+
+                    <apex:commandLink id="addRow" action="{!addNewCriteria}" reRender="criterias,renderPanel" value="{!$Label.ADD_ROW}" onClick="lockScreen();" onComplete="unlockScreen();"/>&nbsp;&nbsp;
+                    <apex:outputPanel layout="none" rendered="{!AND(qEditor.queryWrapper.criteriaList != null,qEditor.queryWrapper.criteriaList.size>1)}">|&nbsp;&nbsp;</apex:outputPanel>
+                    <apex:commandLink id="removeRow" action="{!removeCriteria}" reRender="criterias,renderPanel" value="{!$Label.Remove_Row}" rendered="{!AND(qEditor.queryWrapper.criteriaList != null,qEditor.queryWrapper.criteriaList.size>1)}" onClick="lockScreen();" onComplete="unlockScreen();"/>
+
+                </apex:outputPanel>
+
+                <!-- Filter Logic Entry -->
+                <apex:outputPanel layout="block" styleClass="slds-grid" id="logicPanel" >
+                    <div>
+                        <apex:outputPanel layout="block" id="renderPanel">
+                            <apex:outputPanel layout="block" rendered="{!qEditor.queryWrapper.enableFilterLogic}">
+                                <p>
+                                    <apex:inputText styleClass="logic slds-input" style="width: 50%;" value="{!qEditor.queryWrapper.filterLogic}" />
+                                </p>
+                                <img class="logic" src="/img/report_boolean_filter.gif" alt="Open tips link above for help using filters" width="533" height="211" title="Open tips link above for help using filters"/>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </div>
+                    <apex:actionFunction name="toggleLogic" action="{!toggleLogic}" reRender="renderPanel,criterias,removeRowPanel"/>
+                </apex:outputPanel>
+                <!-- Filter Criteria Selection End -->
+                <center>
+                    <a href="#" id="addLogic" onclick="lockScreen();togglePanel($copado(this));" active="{!qEditor.queryWrapper.enableFilterLogic}" class="slds-button slds-button_neutral">
+                        {!IF(qEditor.queryWrapper.enableFilterLogic,$Label.Clear_Filter_Logic,$Label.Add_Filter_Logic)}
+                    </a>
+                </center>
+            </fieldset>
+            <!-- Filter Logic Entry END-->
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Additional_Criteria}</b>
+                </legend>
+                <b>{!$Label.Order_By}:</b>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.orderByList}" size="3" multiselect="true">
+                    <apex:selectOptions value="{!AllFieldsAPINameOrderBy}" />
+                </apex:selectList>
+                <b>{!$Label.Sort_In}:</b>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.orderedIn}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!OrderedInOptions}" />
+                </apex:selectList>
+                <b>{!$Label.Null_Values}:</b>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.nullValues}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!NullValuesOptions}" />
+                </apex:selectList>
+                <b>{!$Label.Limit}:</b>
+                <apex:input styleClass="slds-input" value="{!qEditor.queryWrapper.queryLimit}" type="text"/>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Read_Update_Field}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.fieldToReadUpdate}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!AllFieldsAPINameReadUpdate}" />
+                </apex:selectList>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field_Header}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.headerField}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!AllFieldsAPINameForHeader}" />
+                </apex:selectList>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field_Footer}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.selectedFooterFields}" size="3" multiselect="true">
+                    <apex:selectOptions value="{!AllFieldsAPINameMultiSelect}" />
+                </apex:selectlist>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field_User_Image}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.userImageField}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!UserLookupFieldsAPIName}" />
+                </apex:selectList>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field_Card_Color}</b>
+                </legend>
+                <apex:selectList styleClass="slds-select" value="{!qEditor.queryWrapper.colorField}" size="1" multiselect="false">
+                    <apex:selectOptions value="{!AllFieldsAPINameReadUpdate}" />
+                </apex:selectList>
+            </fieldset>
+
+            <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    <b>{!$Label.Select_Field_Summarize_By}</b>
+                </legend>
+                <apex:outputpanel id="summarizeBy" layout="block" >
+                    <table cellspacing="1" cellpadding="1" style="border-collapse: collapse;width: 65%;" class="slds-table slds-table_cell-buffer">
+                        <thead style="font-weight: bold;font-size: 11pt;">
+                        <tr style="padding-bottom: 5px;">
+                            <td style="width: 5%;">&nbsp;</td>
+                            <td >{!$Label.Field}</td>
+                            <td >{!$Label.Operator}</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <apex:repeat value="{!qEditor.queryWrapper.summarizeByList}" var="summarizeByField">
+                            <tr style="min-height: 40px;">
+                                <td style="width: 3%;">
+                                    <span style="display: block;" class="defaultAnd">{!summarizeByField.order} </span>
+                                </td>
+                                <td style="width: 20%;">
+                                    <apex:selectList styleClass="slds-select" style="width: 100%;" value="{!summarizeByField.fieldName}" size="1" multiselect="false">
+                                        <apex:selectOptions value="{!SummarizeByFields}" />
+                                    </apex:selectList>
+                                </td>
+                                <td style="width: 15%;">
+                                    <apex:selectList styleClass="slds-select" style="width: 100%;"  value="{!summarizeByField.operatorName}" size="1" multiselect="false">
+                                        <apex:selectOptions value="{!SummarizeByOpeartor}" />
+                                    </apex:selectList>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                        </tbody>
+                    </table>
+
+                    <apex:commandLink id="addRowSummarize" action="{!addNewSummarizeBy}" reRender="summarizeBy" value="{!$Label.ADD_ROW}" onClick="lockScreen();" onComplete="unlockScreen();"/>&nbsp;&nbsp;
+                    <apex:outputPanel layout="none" rendered="{!AND(qEditor.queryWrapper.summarizeByList != null,qEditor.queryWrapper.summarizeByList.size>1)}">|&nbsp;&nbsp;</apex:outputPanel>
+                    <apex:commandLink id="removeRowSummarize" action="{!removeSummarizeBy}" reRender="summarizeBy" value="{!$Label.Remove_Row}" rendered="{!AND(qEditor.queryWrapper.summarizeByList != null,qEditor.queryWrapper.summarizeByList.size>1)}" onClick="lockScreen();" onComplete="unlockScreen();"/>
+
+                </apex:outputPanel>
+            </fieldset>
+
+            <apex:outputPanel layout="block" id="queryEditorPanel">
+                <fieldset class="slds-box slds-theme--default slds-container--fluid">
+                    <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                        <b>{!$Label.Query_Editor}</b>
+                    </legend>
+                    <apex:pageMessages id="componentMessages" />
+                    <apex:input styleClass="slds-input" value="{!qEditor.queryWrapper.wholeSoql}" type="text" disabled="true"/>
+                    <center>
+                        <apex:commandButton styleClass="slds-button slds-button_brand" action="{!queryMaker}" reRender="queryEditorPanel,componentMessages" value="{!$Label.Create_Query_and_Validate}" onClick="lockScreen();" onComplete="overridePageMessages();unlockScreen();" style="background-color: #f28b00;border: 1px solid #f28b00;margin-top: 10px;"/>
+                    </center>
+                </fieldset>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

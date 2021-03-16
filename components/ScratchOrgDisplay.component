@@ -1,0 +1,67 @@
+<!--
+ - Created by mertyalti on 07/02/2018.
+ -->
+<apex:component id="ScratchOrgDisplay" allowDML="true" controller="ScratchOrgDisplayController" extensions="Settings">
+    <apex:attribute type="String" name="orgId" assignTo="{!scratchOrgId}" required="true" description="Org Id to display org's status"
+    />
+    <script>
+        function tooglePassword() {
+            var x = document.getElementById("password");
+            var b = document.getElementById("passwordButton");
+            if (x.type === "password") {
+                x.type = "text";
+                b.innerText = "{!$Label.Hide_Password}";
+            } else {
+                x.type = "password";
+                b.innerText = "{!$Label.Show_Password}";
+            }
+        }
+    </script>
+    <apex:outputPanel layout="block" id="orgInformations" style="padding-top:10px;">
+        <apex:pageBlock mode="detail" title="{!$Label.Scratch_Org_Details}">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="{!$Label.DX_Get_Org_Details}" action="{!orgDetails}" onclick="lockScreen();" styleClass="slds-button slds-button--neutral slds-col--bump-left"
+                    rendered="{!AND(showOwnerOperations,showDisplayButton)}" />
+                <apex:commandButton value="{!$Label.Generate_Password}" action="{!generatePassword}" onclick="lockScreen();" styleClass="slds-button slds-button--neutral slds-col--bump-left"
+                    rendered="{!AND(showOwnerOperations,showPasswordButton)}" />
+                <apex:outputLink value="{!URLFOR('/apex/' + URLENCODE(namespace) + 'ScratchOrgOpen?id=' + scratchOrgId)}" target="_blank"
+                    styleClass="slds-button slds-button--neutral slds-col--bump-left" rendered="{!showOwnerOperations}">{!$Label.Open_Scratch_Org}</apex:outputLink>
+                <apex:commandButton value="{!$Label.Delete_Scratch_Org}" action="{!deleteScratchOrg}" onclick="lockScreen();" styleClass="slds-button slds-button--neutral slds-col--bump-left"
+                    rendered="{!showOwnerOperations}" />
+                <apex:outputLink rendered="{!showErrorButton}" value="{!URLFOR('/apex/' + URLENCODE(namespace) + 'ScratchOrgLoadMetadataErrors?id=' + scratchOrgId)}"
+                    target="_blank" styleClass="slds-button slds-button--neutral slds-col--bump-left">{!$Label.DX_Metadata_Load_Errors}</apex:outputLink>
+            </apex:pageBlockButtons>
+            <apex:outputPanel id="renderPanel" rendered="{!showDisplay}">
+                <apex:pageBlockSection showHeader="false" columns="2" collapsible="false" id="informationDetails">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Connected Status " for="connectionStatus" />
+                        <apex:outputText value="{!orgDetails.connectedStatus}" id="connectionStatus" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Org Id" for="orgId" />
+                        <apex:outputText value="{!orgDetails.id}" id="orgId" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Instance URL" for="instanceUrl" />
+                        <apex:outputText value="{!orgDetails.instanceURL}" id="instanceUrl" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Username" for="username" />
+                        <apex:outputText value="{!orgDetails.username}" id="username" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Access Token" for="accessToken" />
+                        <apex:outputText value="{!orgDetails.accessToken}" id="accessToken" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!showPassword}">
+                        <apex:outputLabel value="Password" for="password" />
+                        <apex:outputPanel layout="none">
+                            <input type="password" autocomplete="off" value="{!orgDetails.password}" id="password" readonly="readonly" />
+                            <button id="passwordButton" type="button" onmousedown="tooglePassword()">{!$Label.Show_Password}</button>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:outputPanel>
+</apex:component>

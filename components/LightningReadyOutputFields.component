@@ -1,0 +1,59 @@
+<apex:component controller="LightningReadyFieldsController">
+    <apex:attribute name="sObject" description="" type="SObject" assignTo="{!subjectedObject}" required="true" />
+    <apex:attribute name="field" description="" type="String" assignTo="{!fName}" required="true" />
+    <apex:attribute name="showClassic" description="If true component will render salesforce classic view for inputFields" type="Boolean" default="false" />
+    <apex:attribute name="dividerBottom" description="" type="Boolean" default="true" />
+    <apex:attribute name="isViewLink" description="" type="Boolean" default="false" />
+    <apex:attribute name="customClass" description="" type="String" />
+    <!--If you want to enable inline edit for a specific field you should pass handler javascript -->
+    <apex:attribute name="inlineEditHandler" description="String" type="String" />
+    <apex:attribute name="showLabel" description="" type="Boolean" default="true" />
+    <apex:attribute name="htmlTarget" description="" type="String" default="_self" />
+
+    <apex:outputPanel layout="block" rendered="{!showClassic && $User.UIThemeDisplayed=='Theme3'}">
+        <apex:outputField value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" />
+    </apex:outputPanel>
+    <!-- Display outputField like Read-Only Field -->
+    <apex:outputPanel layout="block" rendered="{!!(showClassic && $User.UIThemeDisplayed=='Theme3')}">
+        <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+            <div class="slds-form-element {!IF(dividerBottom,'slds-has-divider--bottom','')} " xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <span class="slds-form-element__label" style="{!if(showLabel,'','display: none')}">{!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}</span>
+                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right" ondblclick="{!JSENCODE(inlineEditHandler)}">
+                    <apex:outputPanel layout="none" rendered="{!inlineEditHandler != null}">
+                        <button class="slds-button slds-button_icon slds-float_right slds-button_icon slds-button_icon-small" title="Edit this Field">
+                            <svg class="slds-button__icon slds-button__icon_hint" aria-hidden="true">
+                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Edit this Field</span>
+                        </button>
+                    </apex:outputPanel>
+                    <span class="slds-form-element__static">
+                        <apex:outputField html-customClass="{!customClass}" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" rendered="{!!isViewLink}" />
+                        <apex:outputLink value="javascript:void(0);" html-customClass="{!HTMLENCODE(customClass)}" onClick="copadoNavigateToUrl('{!sObject['Id']}','/{!sObject['Id']}','{!JSINHTMLENCODE(htmlTarget)}')" target="{!HTMLENCODE(htmlTarget)}" rendered="{!isViewLink}">{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}</apex:outputLink>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+
+    <script>
+        function copadoNavigateToUrl(id, url, target) {
+        // lightning/any other way to navigate
+        if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+            if(target != '_blank'){
+                sforce.one.navigateToSObject(id, 'detail');
+            }else{
+                window.open('/lightning/r/' + id + '/view');
+            }
+        } else {
+            if(target != undefined){
+                window.open(url, target);
+            }else{
+                window.open(url, '_blank');
+            }
+
+        }
+    };
+
+    </script>
+</apex:component>

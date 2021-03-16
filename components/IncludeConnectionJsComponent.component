@@ -1,0 +1,12 @@
+<!--
+ - Created by umitcanuckan, ferhatozsavran on 17/07/2018
+   to be able to control library versions from one place
+ -->
+
+<apex:component layout="none" id="IncludeConnectionJsComponent">
+    <script type="text/javascript">
+        var __sfdcSessionId = '{!GETSESSIONID()}';
+    </script>
+
+    <script src="/soap/ajax/43.0/connection.js" type="text/javascript"></script>
+</apex:component>

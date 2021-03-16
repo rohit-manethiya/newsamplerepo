@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Apex Test Result</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Apex Test Results</value>
+    </caseValues>
+    <fields>
+        <label><!-- Details --></label>
+        <name>Details__c</name>
+    </fields>
+    <fields>
+        <label><!-- Failures --></label>
+        <name>Failures__c</name>
+    </fields>
+    <fields>
+        <label><!-- Org --></label>
+        <name>Org__c</name>
+        <relationshipLabel><!-- Apex Test Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Errors</masterLabel>
+            <translation><!-- Errors --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Success</masterLabel>
+            <translation><!-- Success --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Successes (%) --></label>
+        <name>Successes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Tests run --></label>
+        <name>Tests_run__c</name>
+    </fields>
+    <fields>
+        <help><!-- This is the total time taken to run the Apex Tests --></help>
+        <label><!-- Total time (ms) --></label>
+        <name>Total_time__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Apex Test Results --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

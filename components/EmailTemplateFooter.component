@@ -1,0 +1,44 @@
+<apex:component access="global">
+    <apex:attribute name="link" type="String" description="link to documentation" />
+    <apex:attribute name="linkName" type="String" description="user-friendly name for the link" />
+    <div style="padding-bottom: 30px; width: 80%; margin: 0px auto;">
+        <div style="font-size:13px; display: flex; padding: 30px 0px; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; margin-bottom: 30px;">
+            <div style="width: 41px;">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/LightningLogo.png" width="41px" height="56px" />
+            </div>
+            <span style="width: auto; padding-left: 30px;">
+                <div style="padding-bottom: 10px; letter-spacing: 0; font-weight: bold; padding-bottom: 0px;">
+                    <span style="color: #363839; font-size: 13px; line-height: 17px;">{!$Label.Academy}</span>
+                    <span style="color: #A5A7AA; font-size: 12px; line-height: 15px;">
+                        <span style="margin-left: 15px; margin-right: 10px;">|</span>
+                        {!linkName}
+                    </span>
+                </div>
+                <div style="color: #050505; font-size: 12px; letter-spacing: 0; line-height: 20px; margin-top: 0px;">
+                    <apex:outputText escape="false" value="{!$Label.STILL_HAVE_QUESTIONS}">
+                        <apex:param value="{!link}" />
+                        <apex:param value="{!linkName}" />
+                    </apex:outputText>
+                </div>
+            </span>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-weight: bold; padding-bottom: 10px;">{!$Label.COPADO_TEAM}</div>
+            <a style="padding: 0px 3px 0px 3px; text-decoration: none;" href="https://www.facebook.com/CopadoSolutions">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/FacebookIcon.png" width="25px" height="25px" />
+            </a>
+            <a style="padding: 0px 3px 0px 3px; text-decoration: none;" href="https://www.linkedin.com/company/copado-solutions-s.l">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/LinkedinIcon.png" width="25px" height="25px" />
+            </a>
+            <a style="margin: 0px 3px 0px 3px; text-decoration: none;" href="https://www.twitter.com/CopadoSolutions">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/TwitterIcon.png" width="25px" height="25px" />
+            </a>
+            <a style="margin: 0px 3px 0px 3px; text-decoration: none;" href="https://www.youtube.com/channel/UCo2IXZej8qNyIbbWWCG9z3Q">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/YoutubeIcon.png" width="25px" height="25px" />
+            </a>
+            <a style="margin: 0px 3px 0px 3px; text-decoration: none;" href="https://www.copado.com">
+                <img src="https://copado.secure.force.com/resource/EmailTemplates/Images/CopadoIcon.png" width="25px" height="25px" />
+            </a>
+        </div>
+    </div>
+</apex:component>

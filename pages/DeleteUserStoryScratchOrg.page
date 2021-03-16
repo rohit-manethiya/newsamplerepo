@@ -1,0 +1,9 @@
+<apex:page standardController="User_Story__c" extensions="ScratchOrgStatusCtrl" lightningStyleSheets="true">
+    <apex:slds />
+    <c:WizardUtils />
+    <c:IncludeStaticsResourceComponent addJquery="true"/>
+    <apex:form styleClass="slds-scope">
+        <c:ScreenLocker msg="{!$Label.LOADING}"/>
+        <c:ScratchOrgStatus orgId="{!User_Story__c.Org_Credential__c}"/>
+    </apex:form>
+</apex:page>

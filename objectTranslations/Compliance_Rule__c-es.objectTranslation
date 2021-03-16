@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Compliance Rule</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Compliance Rules</value>
+    </caseValues>
+    <fieldSets>
+        <label><!-- Criteria Page Fields --></label>
+        <name>Criteria_Page_Fields</name>
+    </fieldSets>
+    <fields>
+        <help><!-- Action to be performed automatically by Copado --></help>
+        <label><!-- Action --></label>
+        <name>Action__c</name>
+    </fields>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <help><!-- The message that will be displayed when this rule is triggered. --></help>
+        <label><!-- Error Message --></label>
+        <name>Error_Message__c</name>
+    </fields>
+    <fields>
+        <help><!-- Criteria filter query --></help>
+        <label><!-- Filter Criteria --></label>
+        <name>Filter_Criteria__c</name>
+    </fields>
+    <fields>
+        <help><!-- Automatically updated by copado when saving managing criteria --></help>
+        <label><!-- Is Valid --></label>
+        <name>Is_Valid__c</name>
+    </fields>
+    <fields>
+        <label><!-- Last Validation Date/time --></label>
+        <name>Last_Validation_Date_time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Last Validation Status Message --></label>
+        <name>Last_Validation_Status_Message__c</name>
+    </fields>
+    <fields>
+        <help><!-- Operator between Record Count Criteria and Record Count --></help>
+        <label><!-- Matching Criteria --></label>
+        <name>Matching_Criteria__c</name>
+        <picklistValues>
+            <masterLabel>Equals</masterLabel>
+            <translation><!-- Equals --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Greater Than</masterLabel>
+            <translation><!-- Greater Than --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Greater or Equal</masterLabel>
+            <translation><!-- Greater or Equal --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Less Than</masterLabel>
+            <translation><!-- Less Than --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Less or Equal</masterLabel>
+            <translation><!-- Less or Equal --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Not Equals</masterLabel>
+            <translation><!-- Not Equals --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Metadata Type --></label>
+        <name>Metadata_Type__c</name>
+    </fields>
+    <fields>
+        <label><!-- Record Count Criteria --></label>
+        <name>Record_Count_Criteria__c</name>
+        <picklistValues>
+            <masterLabel>Number of groups</masterLabel>
+            <translation><!-- Number of groups --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Number of returned values to assert. --></help>
+        <label><!-- Record Count --></label>
+        <name>Record_Count__c</name>
+    </fields>
+    <fields>
+        <label><!-- Risk Details --></label>
+        <name>Risk_Details__c</name>
+    </fields>
+    <fields>
+        <help><!-- Field to report on the Lightning Platform, Copado Doesn&apos;t action over this field --></help>
+        <label><!-- Severity --></label>
+        <name>Severity__c</name>
+    </fields>
+    <gender>Neuter</gender>
+    <recordTypes>
+        <description><!-- Use this record type to define scan rules run by Copado. --></description>
+        <label><!-- Copado --></label>
+        <name>Copado</name>
+    </recordTypes>
+    <recordTypes>
+        <description><!-- Use this record type to define scan rules for 3rd party systems. --></description>
+        <label><!-- Other --></label>
+        <name>Other</name>
+    </recordTypes>
+    <validationRules>
+        <errorMessage><!-- Matching Criteria, Record Count and Record Count Criteria are required fields. --></errorMessage>
+        <name>Required_Criteria_Fields</name>
+    </validationRules>
+    <webLinks>
+        <label><!-- Manage_Criteria --></label>
+        <name>Manage_Criteria</name>
+    </webLinks>
+</CustomObjectTranslation>

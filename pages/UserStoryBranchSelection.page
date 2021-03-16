@@ -1,0 +1,48 @@
+<!--
+ - Created by mertyalti on 30/07/2018.
+ -->
+
+<apex:page id="UserStoryBranchSelection" standardController="User_Story__c" lightningStylesheets="true" showChat="false" extensions="Settings,JsRemotingController">
+    <c:IncludeStaticsResourceComponent addJQuery="true" />
+    <apex:form >
+        <c:SObjectSummaryComponent userStory="{!User_Story__c}" columnsHeader="2" />
+        <c:ManageRepositoryBranches repoId="{!IF(User_Story__c.Project__c != null, User_Story__c.Project__r.Deployment_Flow__r.Git_Repository__c, IF(User_Story__c.Release__c != null,User_Story__c.Release__r.Project__r.Deployment_Flow__r.Git_Repository__c,null))}" />
+
+        <script>
+
+            var selectBranch = function(branchName) {
+                var ns = '{!JSENCODE(namespace)}';
+                var core = ns ? window[ns.split('__')[0]] : window;
+
+                lockScreen();
+
+                var recordId = "{!JSENCODE(User_Story__c.Id)}";
+                var fieldName = ns+"Base_Branch__c";
+
+                var res = (core).JsRemotingController.selectBranch(
+                    recordId,
+                    fieldName,
+                    branchName,
+                    function( result, event ) {
+                        unlockScreen();
+                        if(result === true){
+                            copadoNavigateToUrl(recordId,"{!URLFOR($Action.User_Story__c.View,User_Story__c.Id)}");
+                        } else {
+                            alert('Branch selection couldn\'t be completed.');
+                        }
+                    }
+                );
+            }
+
+            function copadoNavigateToUrl (id,url) {
+                // lightning/any other way to navigate
+                if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+                    sforce.one.navigateToSObject(id, 'detail');
+                } else {
+                    window.open(url, '_parent');
+                }
+            };
+
+        </script>
+    </apex:form>
+</apex:page>

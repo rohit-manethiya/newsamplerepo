@@ -1,0 +1,154 @@
+<template>
+    <div data-id="RuleManagerAccordion" class="slds-section slds-is-open">
+        <h3 class="slds-section__title slds-var-p-bottom_medium">
+            <button aria-controls="compliance-scope-section" class="slds-button slds-section__title-action" onclick={changeExpandableSection}>
+                <lightning-icon icon-name={switchIconName} size="x-small" alternative-text="switch"></lightning-icon>
+                <span class="slds-section__title-action slds-truncate" title={labels.CCH_CRITERIA_SECTION_TITLE}
+                    >{labels.CCH_CRITERIA_SECTION_TITLE}</span
+                >
+            </button>
+        </h3>
+
+        <div
+            id="compliance-scope-section"
+            class="slds-section__content section__content slds-p-horizontal_large slds-is-relative"
+            style="border-style: solid; border-color: #f2f2f2; border-radius: 10px"
+        >
+            <lightning-record-edit-form object-api-name="Compliance_Rule__c" record-id={recordId}>
+                <lightning-spinner if:true={isLoading} variant="brand" alternative-text="Loading" size="large" class="slds-is-absolute">
+                </lightning-spinner>
+
+                <lightning-layout multiple-rows>
+                    <lightning-layout-item size="6">
+                        <lightning-combobox
+                            name="MetadataTypes"
+                            data-name="MetadataTypes"
+                            label={labels.CCH_METADATA_TYPE_PARAMETER}
+                            value={metadataTypeSelected}
+                            options={metadataTypes}
+                            onchange={handleMetadataTypeChange}
+                            placeholder=""
+                            read-only={isMetadataSelected}
+                        ></lightning-combobox>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="1" class="slds-var-p-top_large slds-var-p-left_small">
+                        <lightning-button label={labels.CCH_RESET} data-name="Reset" onclick={resetData}></lightning-button>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item size="8" class="slds-var-p-top_medium">
+                        <table class="slds-table">
+                            <thead>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td>{labels.CCH_NODE_PARAMETER}</td>
+                                    <td>{labels.CCH_FIELD_PARAMETER}</td>
+                                    <td>{labels.CCH_OPERATOR_PARAMETER}</td>
+                                    <td>{labels.CCH_VALUE_PARAMETER}</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                            </thead>
+                            <template for:each={criterias} for:item="criteria">
+                                <tr key={criteria.Id} data-name="criteriaRow" data-criteria-id={criteria.Id}>
+                                    <td>
+                                        <p style="text-align: center">{criteria.Id}</p>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox
+                                            name="Node"
+                                            data-name="Node"
+                                            options={nodeList}
+                                            label="Node"
+                                            variant="label-hidden"
+                                            value={criteria.node}
+                                            data-criteria-id={criteria.Id}
+                                            onchange={handleNodeChange}
+                                        ></lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox
+                                            name="Field"
+                                            data-name="Field"
+                                            options={criteria.fieldList}
+                                            label="Field"
+                                            variant="label-hidden"
+                                            value={criteria.field}
+                                            data-criteria-id={criteria.Id}
+                                            onchange={handleFieldChange}
+                                        ></lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox
+                                            name="Operator"
+                                            data-name="Operator"
+                                            options={criteria.operatorList}
+                                            label="Operator"
+                                            variant="label-hidden"
+                                            value={criteria.operator}
+                                            data-criteria-id={criteria.Id}
+                                            onchange={handleOperatorChange}
+                                        ></lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-input
+                                            if:false={criteria.isBoolean}
+                                            type={criteria.valueBoxType}
+                                            label="Value"
+                                            data-name="Value"
+                                            variant="label-hidden"
+                                            value={criteria.value}
+                                            data-criteria-id={criteria.Id}
+                                            onchange={handleValueChange}
+                                        ></lightning-input>
+
+                                        <lightning-input
+                                            if:true={criteria.isBoolean}
+                                            type="checkbox"
+                                            label="Value"
+                                            data-name="Value"
+                                            variant="label-hidden"
+                                            value={criteria.value}
+                                            checked={criteria.valueCheckboxValue}
+                                            data-criteria-id={criteria.Id}
+                                            onchange={handleValueChange}
+                                        ></lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-button-icon
+                                            name="DeleteRow"
+                                            icon-name="utility:delete"
+                                            alternative-text="Delete Row"
+                                            title="DeleteRow"
+                                            data-name="DeleteRow"
+                                            data-criteria-id={criteria.Id}
+                                            onclick={removeCriteria}
+                                        ></lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </table>
+
+                        <div class="slds-var-p-top_medium slds-var-p-bottom_medium">
+                            <lightning-button
+                                label={labels.CCH_NEW_ROW}
+                                icon-name="utility:add"
+                                data-name="AddRow"
+                                onclick={addEmptyCriteria}
+                            ></lightning-button>
+                        </div>
+
+                        <div class="slds-form-element slds-var-p-bottom_medium slds-var-p-right_large">
+                            <label class="slds-form-element__label"><span>{labels.CCH_CRITERIA_LOGIC}</span></label>
+                            <div class="slds-form-element__control">
+                                <input class="slds-input" type="text" value={criteriaLogic} onkeyup={handleCriteriaLogicChange} />
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </lightning-record-edit-form>
+        </div>
+        <div class="slds-section__content section__content slds-p-horizontal_large">
+            <button type="button" data-name="Save" onclick={save} class="slds-button slds-button_brand">{labels.CCH_SAVE}</button>
+        </div>
+    </div>
+</template>

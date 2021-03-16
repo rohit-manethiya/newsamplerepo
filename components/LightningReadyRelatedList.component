@@ -1,0 +1,201 @@
+<apex:component controller="LightningReadyRelatedListController">
+
+<apex:attribute name="sObjectList" description="" type="SObject[]" assignTo="{!objectList}"/>
+<apex:attribute name="title" description="" type="String"/>
+<apex:attribute name="sObjectAPI" description="" type="String" required="true" assignTo="{!objectAPI}"/>
+<apex:attribute name="relationName" description="" type="String" required="true" assignTo="{!relName}"/>
+<apex:attribute name="parentsObjectAPI" description="" type="String" required="true" assignTo="{!parentAPI}"/>
+<apex:attribute name="fieldSetName" description="" type="String" assignTo="{!fSetName}"/>
+<apex:attribute name="iterationSize" description="" type="Integer" assignTo="{!initialSize}" default="5"/>
+<apex:attribute name="iconPath" description="" type="String"/>
+<apex:attribute name="viewFieldName" description="" type="String" default="Name"/>
+<apex:attribute name="showButtons" description="" type="Boolean" default="true"/>
+<apex:attribute name="parentId" description="" type="Id" assignTo="{!pId}" required="true"/>
+	<apex:outputPanel rendered="{!($User.UIThemeDisplayed=='Theme4d')}">
+		<apex:form styleClass="slds-form--stacked">                         
+		    <article data-reactroot="" class="slds-card">
+			  <div class="slds-card__header slds-grid">
+			    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+					<div class="slds-media__figure">
+						<span class="slds-icon_container slds-icon-standard-contact">
+							<svg class="slds-icon slds-icon_small" aria-hidden="true">
+								<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,iconPath)}"></use>
+							</svg>
+						</span>
+					</div>
+					<div class="slds-media__body">
+						<h2>
+							<a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="[object Object]">
+								<span class="slds-text-heading_small">{!IF(NOT(ISBLANK(title)),title,objectLabel)} ({!IF(ISNULL(sObjectList) , IF(ISNULL(dataSet),0,dataSet.size) , sObjectList.SIZE)})</span>
+							</a>
+						</h2>
+					</div>
+			        <div class="slds-col slds-no-flex slds-grid slds-align-top ">
+			            <apex:outputPanel styleClass="slds-button-group" html-role="group" rendered="{!AND(NOT(ISNULL(sObjectAPI)),showButtons)}">
+			                <apex:outputLink value="{!URLFOR($Action[sObjectAPI].New)}" styleClass="slds-button slds-button--neutral" >{!$Label.NEW}</apex:outputLink>
+			            </apex:outputPanel>
+			        </div>
+			    </header>
+			  </div>
+			  <div class="slds-card__body ">
+			    <table class="slds-table slds-table_bordered slds-table_resizable-cols slds-table_fixed-layout slds-table_cell-buffer" role="grid">
+			      <thead>
+			        <tr class="slds-text-title_caps">
+			        	<th width="99px">&nbsp;</th>
+			        	<apex:repeat value="{!fieldSet}" var="rf" rendered="{!!ISNULL(fieldSet)}">
+				            <th scope="col" class="slds-is-sortable slds-is-resizable slds-text-title_caps slds-cell-wrap">
+				            	<div class="slds-truncate slds-p-top_medium slds-p-bottom_medium" title="Name">{!rf.Label}</div>
+				            	<div class="slds-resizable">
+						          <input type="range" min="20" max="1000" class="slds-resizable__input slds-assistive-text" tabindex="0"/>
+						          <span class="slds-resizable__handle" draggable="true" onmousedown="CalculateWidth(this, event)" ondrag="SetNewWidth(this, event)" ondragend="return false;">
+						            <span class="slds-resizable__divider"></span>
+						          </span>
+						        </div>
+				            </th>
+			          	</apex:repeat>
+			          	<apex:outputPanel layout="none" rendered="{!ISNULL(fieldSet)}">
+				          	<th scope="col" class="slds-is-sortable slds-is-resizable slds-text-title_caps slds-cell-wrap">
+				          		<div class="slds-truncate" title="Name">Name</div>
+				            	<div class="slds-resizable">
+						          <input type="range" min="20" max="1000" class="slds-resizable__input slds-assistive-text" tabindex="0"/>
+						          <span class="slds-resizable__handle" draggable="true" onmousedown="CalculateWidth(this, event)" ondrag="SetNewWidth(this, event)" ondragend="return false;">
+						            <span class="slds-resizable__divider"></span>
+						          </span>
+						        </div>
+						    </th>
+			          	</apex:outputPanel>
+			        </tr>
+			      </thead>
+			      <tbody>
+			       
+				        <apex:repeat value="{!IF(AND(NOT(ISNULL(sObjectList)), sObjectList.size > 0), sObjectList, dataSet)}" var="jresult" rows="{!iterationSize}">
+				         	<tr class="slds-hint-parent">
+				         		<th width="25px">
+						          	<div id="drp-actions" class="slds-dropdown-trigger slds-dropdown-trigger_click">
+										<button type="button" class="slds-button slds-button_icon slds-button_icon-border-filled actionButton" aria-haspopup="true" title="Show More" onclick="ToggleDropDown(this); return false;">
+											<svg class="slds-button__icon" aria-hidden="true">
+												<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+											</svg>
+											<span class="slds-assistive-text">Show More</span>
+										</button>								
+										<div class="slds-dropdown slds-dropdown_left">
+											<ul class="slds-dropdown__list" role="menu">
+												<li class="slds-dropdown__item" role="presentation">
+													<apex:outputLink value="{!IF(NOT(ISNULL(sObjectAPI)),URLFOR($Action[sObjectAPI].Edit,jresult.Id),'#')}" >
+														<span class="slds-truncate" title="Menu Item One">{!$Label.EDIT}</span>
+													</apex:outputLink>
+												</li>
+												<li class="slds-dropdown__item" role="presentation">
+													<apex:outputLink value="{!IF(NOT(ISNULL(sObjectAPI)),URLFOR($Action[sObjectAPI].Delete,jresult.Id),'#')}" >
+														<span class="slds-truncate" title="Menu Item One">{!$Label.DELETE}</span>
+													</apex:outputLink>
+												</li>						      
+											</ul>
+										</div>
+									</div>
+									<script type="text/javascript">
+											var $j = jQuery.noConflict();
+											ToggleDropDown = function(elem){
+												var item = j$(elem).parent();
+												var isOpen = item.hasClass("slds-is-open");
+												if(isOpen){
+													item.removeClass("slds-is-open");
+												}else{
+													item.addClass("slds-is-open");
+												}
+											}
+											j$('.actionButton').click(function(e) {
+											    e.stopPropagation(); 
+											    return false;        
+											});
+
+											j$(function(){
+												j$(document).click(function(){
+													j$('.actionButton').each(function(){
+														var item = j$(this).parent();
+														var isOpen = item.hasClass("slds-is-open");
+														if(isOpen){
+															item.removeClass("slds-is-open");
+														}
+													});																					
+												});
+											});
+
+										</script>
+					          	</th>
+					          	<apex:repeat value="{!fieldSet}" var="rf" rendered="{!!ISNULL(fieldSetName)}">				          	
+						            <th scope="col">
+						            	<div class="slds-truncate" title="{!jresult[rf]}">
+						            		<apex:outputPanel >
+						            			<c:LightningReadyOutputFields isViewLink="{!IF(rf == IF(AND(LEFT(viewFieldName,LEN(NameSpace))!=NameSpace, RIGHT(viewFieldName,3)='__c'),NameSpace + viewFieldName, viewFieldName),true,false)}" dividerBottom="false" SObject="{!jresult}" Field="{!rf}"></c:LightningReadyOutputFields>
+						            		</apex:outputPanel>
+						            	</div>
+						            </th>
+					          	</apex:repeat>
+					          	<apex:outputPanel layout="none" rendered="{!ISNULL(fieldSetName)}">
+					          		<th scope="col">
+						            	<div class="slds-truncate" title="{!jresult['Name']}">
+						            		<apex:outputPanel >
+						            			<c:LightningReadyOutputFields isViewLink="{!IF('Name' == viewFieldName,true,false)}" dividerBottom="false" SObject="{!jresult}" Field="Name"></c:LightningReadyOutputFields>
+						            		</apex:outputPanel>
+						            	</div>
+						            </th>
+					          	</apex:outputPanel>
+				          	</tr>
+				        </apex:repeat>
+			        
+			      </tbody>
+			    </table>
+			  </div>
+			  <footer class="slds-card__footer slds-p-top_medium slds-p-bottom_medium">
+			  <!-- TODO : FIND A WAY TO OPEN ALL RELATED DATA LIST BY USING SALESFORCE STANDARDS-->
+			  	<apex:outputLink value="/{!objectPrefix}?rlapiid={!relationName}&id={!parentId}" rendered="{!NOT(ISNULL(objectPrefix))}">
+					<span class="slds-truncate" title="Menu Item One">View All</span>
+				</apex:outputLink>
+				<apex:outputLink value="{!ViewAllURL}" rendered="{!ISBLANK(objectPrefix)}">
+					<span class="slds-truncate" title="Menu Item Two">View All</span>
+				</apex:outputLink>
+			  </footer>
+			</article>
+			<script type="text/javascript">
+				var $j = jQuery.noConflict();
+				var mStart = mStart || '';
+				var oWidth = oWidth || '';
+				
+				CalculateWidth = function(elem, e) {
+		            var childObj = $j(elem).children().first();
+		            var parObj = childObj.parents().first();
+		            var count = 1;
+		            
+		            while(parObj.prop("tagName") != 'TH') {
+		                parObj = parObj.parents().first();
+		                count++;
+		            }
+
+		            var mouseStart=e.clientX;
+		            mStart = mouseStart;
+		            oWidth = parObj.outerWidth();
+			    };
+			     
+			    SetNewWidth = function(elem, e) {
+		            var childObj = $j(elem).children().first();
+		            var parObj = childObj.parents().first();
+		            var count = 1;
+		            
+		            while(parObj.prop("tagName") != 'TH') {
+		                parObj = parObj.parents().first();
+		                count++;
+		            }
+
+		            var mouseStart = mStart;
+		            var oldWidth = oWidth
+		            
+		        	if(e.clientX > 0){
+			            var newWidth = e.clientX- parseFloat(mouseStart)+parseFloat(oldWidth);
+			            parObj.width(newWidth);
+			        }
+			    }
+			</script>
+		</apex:form> 
+	</apex:outputPanel>
+</apex:component>

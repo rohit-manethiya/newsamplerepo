@@ -1,0 +1,109 @@
+<apex:component id="CopadoLicenses" controller="CopadoLicensesComponentController" allowDML="true">
+    <style>
+        .answerBox {
+            margin:5px;
+            padding:10px;
+            text-align: left;
+            display: inline-block;
+        }
+    </style>
+    <script>
+        window.onload = function(){
+            checkLicenses();
+        }
+
+        function showPage(){
+            showToast();
+            document.getElementById("mainLicensePanel").style.display = 'block';
+        }
+
+        function closeToast() {
+            $copado('#notify').css("display", "none");
+        }
+        function showToast() {
+            if($copado('[Id$=pagemessage]').html() != ""){
+                $copado('.errorM3').removeClass('errorM3');
+                $copado('.confirmM3').removeClass('confirmM3');
+                $copado('.infoM3').removeClass('infoM3');
+                $copado('.message').removeClass('message');
+                $copado('.msgIcon').removeClass('msgIcon');
+                $copado('#notify').removeAttr("style");
+            }
+        }
+
+        function showLicenseExplanation(answer){
+            if(answer === 'yes'){
+                var explanation = document.getElementById('licenseExplanation').innerHTML = "<b>{!JSINHTMLENCODE($Label.YES)}.</b> {!JSINHTMLENCODE($Label.Pipeline_Copado_License_Assignment_Explanation)}";
+            } else if(answer === 'no'){
+                var explanation = document.getElementById('licenseExplanation').innerHTML = "<b>{!JSINHTMLENCODE($Label.NO)}.</b> {!JSINHTMLENCODE($Label.Pipeline_CCM_License_Assignment_Explanation)}";
+            }
+        }
+
+    </script>
+    <c:CopadoSpinner />
+    <apex:actionFunction name="checkLicenses" action="{!checkUserLicense}" reRender="rerenderNeeded" onComplete="showPage();" />
+    <apex:actionFunction name="updateLicenseToAssign" action="{!updateLicenseToAssign}" reRender="buttonWrapper">
+        <apex:param id="selectedLicenseType" name="selectedLicenseType" value="" assignTo="{!isReleaseManager}" />
+    </apex:actionFunction>
+    <apex:outputPanel id="copadoLicensesMainWrapper">
+        <apex:outputPanel id="copadoLicensesMainPanel" rendered="{!errorMessageJSON == null}">
+            <div id="notify" class="slds-notify_container slds-is-absolute" style="display: none">
+                <div class="slds-notify slds-notify_toast slds-theme_warning" role="status">
+                    <span class="slds-assistive-text">warning</span>
+                    <span class="slds-icon_container slds-icon-utility-warning slds-m-right_small slds-no-flex slds-align-top">
+                        <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#warning')}" />
+                        </svg>
+                        </span>
+                    <div class="slds-notify__content">
+                        <h2 class="slds-text-heading_small "><apex:pageMessages id="pagemessage"/></h2>
+                    </div>
+                    <div class="slds-notify__close">
+                        <button class="slds-button slds-button_icon slds-button_icon-inverse" title="Close" onClick="closeToast(); return false;">
+                            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}" />
+                            </svg>
+                            <span class="slds-assistive-text">{!$Label.CLOSE}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="mainLicensePanel" class="slds-illustration slds-illustration_small" style="display:none;border:1px solid gray;padding:5%;margin:5% 15% 2% 15%;">
+                <div class="slds-text-longform copado-section-header">
+                    <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Copado_License}</h3>
+                    <p class="slds-text-body_regular">{!$Label.Pipeline_Release_Manager_Question}</p>
+                    <p id="licenseExplanation"></p>
+                </div>
+
+                <div style="padding: 0px 25% 0% 25%;" class="copado-section-content">
+                    <div class="answerBox">
+                <span class="slds-radio">
+                  <input type="radio" id="radio-11" name="options" value="yes" onclick="showLicenseExplanation('yes');updateLicenseToAssign(this.value);" />
+                  <label class="slds-radio__label" for="radio-11">
+                    <span class="slds-radio_faux"></span>
+                    <span class="slds-form-element__label">{!$Label.YES}</span>
+                  </label>
+                </span>
+                    </div>
+                    <div class="answerBox">
+                <span class="slds-radio">
+                  <input type="radio" id="radio-12" name="options" value="no" onclick="showLicenseExplanation('no');updateLicenseToAssign(this.value);" />
+                  <label class="slds-radio__label" for="radio-12">
+                    <span class="slds-radio_faux"></span>
+                    <span class="slds-form-element__label">{!$Label.NO}</span>
+                  </label>
+                </span>
+                    </div>
+                </div>
+                <div class="copado-section-footer" style="margin-top:25px">
+                    <apex:outputPanel layout="none" id="buttonWrapper">
+                    <apex:commandButton action="{!assignLicense}" onClick="lockScreen();" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" reRender="copadoLicensesMainWrapper" onComplete="showPage();unlockScreen();"/>
+                    </apex:outputPanel>
+                </div>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel id="copadoLicensesErrorPanel" rendered="{!errorMessageJSON != null}">
+            <c:ErrorHandling messageJSON="{!errorMessageJSON}" />
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

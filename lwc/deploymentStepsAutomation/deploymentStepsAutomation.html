@@ -1,0 +1,17 @@
+<template>
+    <lightning-layout>
+        <lightning-layout-item size="4">
+            <c-copadocore-lookup
+                icon-name="standard:choice"
+                mode="findRecords"
+                label={label.Automation}
+                selected-record={selectedAutomation}
+                object-name="Deployment__c"
+                extra-filter-type="AutomationTemplateFilter"
+                filter-formatting-parameters={filterFormattingParameters}
+                onselectlookupchange={getSelectedId}
+                required>
+            </c-copadocore-lookup>
+        </lightning-layout-item>
+    </lightning-layout>
+</template>

@@ -1,0 +1,176 @@
+<!--
+ - Created by umitcanuckan on 23/08/2018.
+ -->
+
+<apex:component id="ShowAttachmentDetails" controller="ShowAttachmentDetailController" allowDML="true">
+    <apex:attribute name="artifactRecord" type="Artifact__c" description="" assignTo="{!currentRecord}"/>
+    <apex:attribute name="attachmentType" type="String" description="" assignTo="{!attachmentName}"/>
+    <script>
+        function warnUser() {
+            var attSize = "{!attachments.size}";
+            if((attSize != 0 && confirm('You are about to override your current Attachment and this may effect version generation and promotion of existing versions.\nDo you still want to continue to this operation?')) || attSize == 0){
+                lockScreen();
+                createAtt();
+            }
+        }
+    </script><!-- TODO: create and replace with custom labels -->
+    <c:ScreenLocker msg="{!$Label.LOADING} Template" />
+    <c:CopadoHelp sectionText="{!$Label.Definition_Template_Detail}'" sectionTitle="{!$Label.HELP}" />
+    <apex:outputPanel rendered="{!attachmentType == 'sfdx-project.json'}">
+        <apex:pageBlock title="Project Definition" id="theBlock" mode="edit">
+            <apex:pageBlockButtons location="top">
+                <button onClick="warnUser(); return false;" id="gpj" >Generate Project Definition File</button>
+                <apex:actionFunction name="createAtt" action="{!createAttachment}" onComplete="unlockScreen();" immediate="false" reRender="desc,pageMsgs"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Preview Details" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Artifact__c.fields.Name.Label}"/>
+                    <apex:outputPanel layout="none">
+                        <a href="/{!artifactRecord.Id}">
+                            <apex:outputField value="{!artifactRecord.Name}"/>
+                        </a>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Artifact__c.fields.Package_Namespace__c.Label}"/>
+                    <apex:outputField value="{!artifactRecord.Package_Namespace__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Artifact__c.fields.Sfdc_Login_Url__c.Label}"/>
+                    <apex:outputField value="{!artifactRecord.Sfdc_Login_Url__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Artifact__c.fields.Source_Api_Version__c.Label}"/>
+                    <apex:outputField value="{!artifactRecord.Source_Api_Version__c}"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!attachments.size > 0}">
+        <apex:pageBlock title="Current Attachment" id="theAttBlock" mode="edit">
+            <apex:pageBlockSection title="Preview" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >
+                        <table class="list">
+                            <thead class="rich-table-thead">
+                                <tr class="headerRow">
+                                    <th class="headerRow" colspan="2">Org Metadata</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="dataRow odd">
+                                    <td class="dataCell" colspan="1">
+                                        <b>
+                                            <apex:outputLabel value="SFDC Login URL"/>
+                                        </b>
+                                    </td>
+                                    <td class="dataCell" colspan="1">
+                                        <apex:outputText value="{!thisProject.sfdcLoginUrl}"/>
+                                    </td>
+                                </tr>
+                                <tr class="dataRow odd">
+                                    <td class="dataCell" colspan="1">
+                                        <b>
+                                            <apex:outputLabel value="API Version"/>
+                                        </b>
+                                    </td>
+                                    <td class="dataCell" colspan="1">
+                                        <apex:outputText value="{!thisProject.sourceApiVersion}"/>
+                                    </td> 
+                                </tr>
+                                <tr class="dataRow odd">
+                                    <td class="dataCell" colspan="1">
+                                        <b>
+                                            <apex:outputLabel value="Namespace"/>
+                                        </b>
+                                    </td>
+                                    <td class="dataCell" colspan="1">
+                                        <apex:outputText value="{!thisProject.namespace}"/>
+                                    </td>
+                                </tr>
+                                <tr class="dataRow odd">
+                                    <td class="dataCell" colspan="1">
+                                        <b>
+                                            <apex:outputLabel value="Package Directories"/>
+                                        </b>
+                                    </td>
+                                    <td class="dataCell" colspan="1">
+                                        <table class="list">
+                                            <thead>
+                                            <tr class="headerRow">
+                                                <th class="headerRow">Path</th>
+                                                <th class="headerRow">Default</th>
+                                                <th class="headerRow">Definition File</th>
+                                                <th class="headerRow">Package Name</th>
+                                                <th class="headerRow">Version Description</th>
+                                                <th class="headerRow">Version Name</th>
+                                                <th class="headerRow">Version Number</th>
+                                            </tr>
+                                            </thead> 
+                                            <tbody>
+                                            <apex:repeat value="{!thisProject.packageDirectories}" var="pd">
+                                                <tr class="dataRow odd">
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.path}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.defaultArtifact}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.definitionFile}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.packageName}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.versionDescription}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1"> 
+                                                        <apex:outputText value="{!pd.versionName}"/>
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.versionNumber}"/>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr class="dataRow odd">
+                                    <td class="dataCell" colspan="1">
+                                        <b>
+                                            <apex:outputLabel value="Package Aliases"/>
+                                        </b>
+                                    </td>
+                                    <td class="dataCell" colspan="1">
+                                        <table class="list">
+                                            <thead>
+                                            <tr class="headerRow">
+                                                <th colspan="3" class="headerRow">Package Name</th>
+                                                <th colspan="4" class="headerRow">Package Id</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <apex:repeat value="{!thisProject.packageAliases}" var="pd">
+                                                <tr class="dataRow odd">
+                                                     <td class="dataCell" colspan="3">
+                                                        <apex:outputText value="{!pd}"/>
+                                                     </td>
+                                                     <td class="dataCell" colspan="4">
+                                                        <apex:outputText value="{!thisProject.packageAliases[pd]}"/>
+                                                     </td>
+                                                </tr>
+                                            </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:outputPanel>
+</apex:component>

@@ -1,0 +1,12 @@
+<!--
+ - Created by dineshdk on 14/08/2018.
+ -->
+
+<apex:page standardController="OrgDiff__c" readOnly="true" extensions="GenericMDAPIDiffCSV"  contentType="text/csv#ViewOrgDiffCSV.csv" id="ViewOrgDiffCSV"><apex:outputText rendered="{!typeOrgDiffflag}"> <apex:outputText rendered="{!jsonValflag}">{!$Label.SnapshotDiff_Status},{!$Label.SnapshotDiff_Name},{!$Label.OrgDiff_Type},{!$Label.OrgDiff_Last_ModifiedBy},{!$Label.OrgDiff_Last_ModifiedDate},{!$Label.OrgDiff_CreatedById},{!$Label.OrgDiff_Created_Date}</apex:outputText>
+<apex:repeat value="{!jwOrgDiffs}" var="item">
+{!item.s},{!item.n},{!item.t},{!item.b},{!item.d},{!item.cb},{!item.cd}
+</apex:repeat>
+<apex:outputText rendered="{!!jsonValflag}">
+{!$Label.SnapshotDiff_Message}
+</apex:outputText></apex:outputText>
+</apex:page>

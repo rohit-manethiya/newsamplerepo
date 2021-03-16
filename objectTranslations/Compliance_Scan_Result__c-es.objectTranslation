@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Compliance Scan Result</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Compliance Scan Results</value>
+    </caseValues>
+    <fieldSets>
+        <label><!-- Compliance_Result_Tab --></label>
+        <name>Compliance_Result_Tab</name>
+    </fieldSets>
+    <fields>
+        <label><!-- Deployment Step --></label>
+        <name>Deployment_Step__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Deployment --></label>
+        <name>Deployment__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Environment --></label>
+        <name>Environment__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- # Findings --></label>
+        <name>Findings__c</name>
+    </fields>
+    <fields>
+        <label><!-- Git Snapshot --></label>
+        <name>Git_Snapshot__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- The most severe action in the Compliance Findings. --></help>
+        <label><!-- Highest Rule Action --></label>
+        <name>Highest_Rule_Action__c</name>
+    </fields>
+    <fields>
+        <help><!-- Highest Severity of the Compliance Findings. --></help>
+        <label><!-- Highest Severity --></label>
+        <name>Highest_Severity__c</name>
+    </fields>
+    <fields>
+        <label><!-- Org Credential --></label>
+        <name>Org_Credential__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Resolution Details --></label>
+        <name>Resolution_Details__c</name>
+    </fields>
+    <fields>
+        <label><!-- Scan Duration in Minutes --></label>
+        <name>Scan_Duration_in_Minutes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Scan End --></label>
+        <name>Scan_End__c</name>
+    </fields>
+    <fields>
+        <label><!-- Scan Start --></label>
+        <name>Scan_Start__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Completed - Findings detected</masterLabel>
+            <translation><!-- Completed - Findings detected --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Completed - No Findings</masterLabel>
+            <translation><!-- Completed - No Findings --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Completed - Resolved</masterLabel>
+            <translation><!-- Completed - Resolved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Error</masterLabel>
+            <translation><!-- Error --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Progress</masterLabel>
+            <translation><!-- In Progress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Under Investigation</masterLabel>
+            <translation><!-- Under Investigation --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Compliance Scan Results --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+    <recordTypes>
+        <description><!-- This record type is used for scan results produced by Copado. --></description>
+        <label><!-- Copado --></label>
+        <name>Copado</name>
+    </recordTypes>
+    <recordTypes>
+        <description><!-- Use this record type to capture non-Salesforce scan results. --></description>
+        <label><!-- Other --></label>
+        <name>Other</name>
+    </recordTypes>
+</CustomObjectTranslation>

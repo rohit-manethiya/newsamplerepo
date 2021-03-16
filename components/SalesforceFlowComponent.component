@@ -1,0 +1,110 @@
+<apex:component controller="StepEditionController">
+    <apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false" />
+    <c:WizardUtils />
+    <!-- **************************************************************** -->
+    <!-- SALESFORCE FLOW STEP -->
+    <!-- **************************************************************** -->
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+    <c:IncludeStaticsResourceComponent addJQuery="true" />
+    <apex:includeScript value="{!URLFOR($Resource.salesforceFlow) }" />
+    <apex:outputPanel style="display:{!IF(IsFeatureAvailable,'block','none')};">
+        <apex:outputPanel id="js-stepBlock-SalesforceFlow" style="margin-bottom: 55px;">
+            <div class="slds-grid">
+                <div class="slds-col">
+                    <apex:outputPanel layout="none" rendered="{!isEdit}">
+                        <div class="slds-grid slds-gutters">
+                            <apex:outputPanel layout="block" styleClass="slds-form-element slds-col">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>{!$Label.SELECT} {!$Label.SALESFORCE_FLOW}
+                                    <c:HelpText label="{!$Label.SALESFORCE_FLOW_HELPTEXT}"/>
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select id="jsSalesforceFlowName" class="slds-select">
+                                        </select>
+                                        <script type="text/javascript">
+                                            $copado(document).ready(function () {
+                                                salesforceFlow.bindings.bindActions();
+                                                const flowsAvailableForExecution = JSON.parse("{!JSENCODE(flowsAvailableForExecution)}");
+                                                salesforceFlow.createHtmlFlowOptionsElements(flowsAvailableForExecution);
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="block" styleClass="slds-form-element slds-col">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>{!$Label.POST_EXECUTION_ACTION}
+                                    <c:HelpText label="{!$Label.SALESFORCE_FLOW_POSTEXECUTION_HELPTEXT}"/>
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select id="jsSalesforceFlowType" class="slds-select">
+                                            <option class="uiMenuItem uiRadioMenuItem" selected="selected" value="wait">{!$Label.PAUSE_STEP}</option>
+                                            <option class="uiMenuItem uiRadioMenuItem" value="continue">{!$Label.CONTINUE_WITH_DEPLOYMENT}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </div>
+                        <apex:outputPanel layout="block" styleClass="slds-form-element">
+                            <label class="slds-form-element__label">
+                                {!$Label.FLOW_PARAMETERS}
+                                <c:HelpText label="{!$Label.SALESFORCE_FLOW_ADD_PARAMETER_HELPTEXT}"/>
+                            </label>
+                            <div class="slds-form-element__control">
+                                <div id="flowParamWrapper">
+                                    <div id="flowParameters"> </div>
+                                    <div style="clear:both;">
+                                        <button id="btn-js-addFlowParameter" class="btn slds-button slds-button--neutral" onclick="salesforceFlow.param.addRow(); return false;">{!$Label.ADD_FLOW_PARMETER}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+
+                    <apex:outputPanel layout="none" rendered="{!!isEdit}">
+                        <div class="slds-grid slds-gutters">
+                            <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom slds-col">
+                                <label class="slds-form-element__label">
+                                    {!$Label.SELECT} {!$Label.SALESFORCE_FLOW}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select id="jsSalesforceFlowNameView" class="slds-select" disabled="disabled">
+                                        </select>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom slds-col">
+                                <label class="slds-form-element__label">
+                                    {!$Label.POST_EXECUTION_ACTION}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select id="jsSalesforceFlowTypeView" class="slds-select" disabled="disabled">
+                                            <option class="uiMenuItem uiRadioMenuItem" selected="selected" value="wait">{!$Label.PAUSE_STEP}</option>
+                                            <option class="uiMenuItem uiRadioMenuItem" value="continue">{!$Label.CONTINUE_WITH_DEPLOYMENT}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </div>
+                        <apex:outputPanel layout="block" styleClass="slds-form-element slds-has-divider--bottom ">
+                            <label class="slds-form-element__label">
+                                {!$Label.FLOW_PARAMETERS}
+                            </label>
+                            <div class="slds-form-element__control">
+                                <div id="flowParamWrapper">
+                                    <div id="flowParametersView"> </div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </div>
+            </div>
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <!--TODO move to label once we now real message for Feature Flag-->
+    <apex:outputPanel rendered="{!NOT(IsFeatureAvailable)}">This feature is not available, please activate it</apex:outputPanel>
+</apex:component>

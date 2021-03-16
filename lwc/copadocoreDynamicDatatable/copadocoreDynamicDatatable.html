@@ -1,0 +1,64 @@
+<template>
+    <lightning-spinner if:true={showSpinner} variant="brand" alternative-text="Loading" size="large"> </lightning-spinner>
+
+        <!-- TODO: add actions like onsave={handleInlineEditingSave}
+            and enable inline editing for single and multiple rows -->
+
+        <!-- onloadmore event listener added declaratively in the template with
+            conditional rendering due to issues adding/removing it dynamically -->
+
+        <!-- Drag and drop experiences issues if more than one
+            c-copadocore-datatable-extended is added in the same page -->
+
+        <div if:true={implementsDragAndDrop} style={containerStyle}>
+            <c-copadocore-datatable-extended
+                if:true={enableInfiniteLoading}
+                key-field="Id"
+                columns={columns}
+                data={data}
+                show-row-number-column={showRowNumberColumn}
+                hide-checkbox-column={hideCheckboxColumn}
+                resize-column-disabled={resizeColumnDisabled}
+                enable-infinite-loading
+                onrowaction={handleRowAction}
+                onloadmore={loadMoreData}>
+            </c-copadocore-datatable-extended>
+
+            <c-copadocore-datatable-extended
+                if:false={enableInfiniteLoading}
+                key-field="Id"
+                columns={columns}
+                data={data}
+                show-row-number-column={showRowNumberColumn}
+                hide-checkbox-column={hideCheckboxColumn}
+                resize-column-disabled={resizeColumnDisabled}
+                onrowaction={handleRowAction}>
+            </c-copadocore-datatable-extended>
+        </div>
+
+        <div if:false={implementsDragAndDrop} style={containerStyle}>
+            <lightning-datatable
+                if:true={enableInfiniteLoading}
+                key-field="Id"
+                columns={columns}
+                data={data}
+                show-row-number-column={showRowNumberColumn}
+                hide-checkbox-column={hideCheckboxColumn}
+                resize-column-disabled={resizeColumnDisabled}
+                enable-infinite-loading
+                onrowaction={handleRowAction}
+                onloadmore={loadMoreData}>
+            </lightning-datatable>
+
+            <lightning-datatable
+                if:false={enableInfiniteLoading}
+                key-field="Id"
+                columns={columns}
+                data={data}
+                show-row-number-column={showRowNumberColumn}
+                hide-checkbox-column={hideCheckboxColumn}
+                resize-column-disabled={resizeColumnDisabled}
+                onrowaction={handleRowAction}>
+            </lightning-datatable>
+        </div>
+</template>

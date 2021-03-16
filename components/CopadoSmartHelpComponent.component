@@ -1,0 +1,119 @@
+<apex:component controller="CopadoSmartHelpController">
+    <style type="text/css">
+        .copadoTipsContainer {
+            max-height: 70%
+        }
+
+        .copadoTipsContainer .smart-help-container {
+            position: absolute;
+            margin-top: 170px;
+        }
+
+        .copadoTipsContainer .notification-section {
+            position: relative;
+            padding: 4px 0 6px 4px;
+            background: transparent;
+            max-height: 250px;
+            overflow-y: scroll;
+            border: none;
+            border-radius: unset;
+            box-shadow: none;
+        }
+
+        .copadoTipsContainer .body-container {
+            background-color: white;
+            border: 1px solid #a8b7c7;
+            box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.1);
+            border-radius: 0.25rem;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-left: 3px solid #56b9e2;
+            min-height: 60px;
+        }
+
+        .copadoTipsContainer .body-container:hover {
+            background: #d8edff;
+        }
+
+        .copadoTipsContainer .body-container .custom-button {
+            position: relative;
+            width: 1rem;
+            height: 1rem;
+            float: right;
+        }
+    </style>
+    <script type="text/javascript">
+        $copado(function () {
+            setHelp();
+        });
+        var showTip = function (type, val) {
+            if (type) {
+                setTypeTip(type,val);
+            }
+        }
+        var addedTips = function () {
+            if ($copado('#tipSection')) {
+                $copado('#tipSection').animate({
+                    scrollTop: $copado('#tipSection').height()
+                }, 0);
+            }
+        }
+        var removeFromList = function (elem) {
+            $copado(elem).closest('div.body-container').remove();
+            removeTip($copado(elem).attr('data-apiRef'));
+            var tips = $copado('.slds-notification__body').find('div.body-container').length;
+            if (!tips) {
+                $copado('div[id$=copado-tipsContainer]').hide();
+            }
+        }
+    </script>
+
+    <apex:actionFunction action="{!setHelpList}" name="setHelp" reRender="copado-tipsContainer">
+        <apex:param assignTo="{!vfPageName}" value="{!$CurrentPage.name}" name="pageName" />
+    </apex:actionFunction>
+    <apex:actionFunction action="{!setTypeList}" name="setTypeTip" reRender="copado-tipsContainer" oncomplete="addedTips();">
+        <apex:param assignTo="{!tipType}" value="" name="tipType" />
+        <apex:param assignTo="{!tipValue}" value="" name="tipValue" />
+        <apex:param assignTo="{!vfPageName}" value="{!$CurrentPage.name}" name="pageName" />
+    </apex:actionFunction>
+    <apex:actionFunction action="{!removeTip}" name="removeTip" reRender="xxx">
+        <apex:param assignTo="{!tipKey}" value="" name="tipKey" />
+    </apex:actionFunction>
+
+    <apex:outputPanel layout="block" styleClass="copadoTipsContainer" id="copado-tipsContainer">
+        <apex:outputPanel layout="block" styleClass="slds-is-relative" rendered="{!showTips}">
+            <div class="slds-notification-container smart-help-container">
+                <section id="tipSection" aria-describedby="sectionBodyId" class="slds-notification notification-section" role="dialog">
+                    <div class="slds-notification__body" id="sectionBodyId">
+                        <apex:repeat value="{!helpList}" var="helpListItem">
+                            <div class="body-container">
+                                <button data-apiRef="{!helpListItem.apiName}" type="button" class="slds-button slds-button_icon slds-button--icon-container slds-notification__close custom-button"
+                                    title="Dismiss" onclick="removeFromList(this)">
+                                    <svg class="slds-button__icon" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#close')}"
+                                        />
+                                    </svg>
+                                </button>
+                                <div class="slds-media__figure" style="float: left;">
+                                    <span class="slds-icon_container slds-icon-custom-custom57" title="">
+                                        <svg aria-hidden="true" class="slds-icon">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/standard-sprite/svg/symbols.svg#solution')}" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="slds-media__body nBody" style="line-height=1.2;">
+                                    <h2 class="slds-text-heading--x-small slds-m-bottom--xx-small" style="font-size: 0.8rem;">
+                                        <b>{!helpListItem.Label}</b>
+                                    </h2>
+                                    <p style="font-size: 0.73rem;">{!helpListItem.helpText}</p>
+                                    <p><a href="{!helpListItem.helpUrl}">{!helpListItem.helpUrl}</a></p>
+                                    
+                                </div>
+                            </div>
+                        </apex:repeat>
+                    </div>
+                </section>
+            </div>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Environment Variable</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Environment Variables</value>
+    </caseValues>
+    <fields>
+        <label><!-- Environment --></label>
+        <name>Environment__c</name>
+        <relationshipLabel><!-- Environment Variables --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- Use this field to define a Scope for this Environment Variable. For more information, please check our documentation about Environment Variables Scope. --></help>
+        <label><!-- Scope --></label>
+        <name>Scope__c</name>
+    </fields>
+    <fields>
+        <label><!-- Value --></label>
+        <name>Value__c</name>
+    </fields>
+    <gender>Neuter</gender>
+    <validationRules>
+        <errorMessage><!-- Value is required --></errorMessage>
+        <name>Value_is_required</name>
+    </validationRules>
+</CustomObjectTranslation>

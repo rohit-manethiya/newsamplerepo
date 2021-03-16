@@ -1,0 +1,7 @@
+<apex:component access="global">
+    <div style="padding-bottom: 50px;">
+        <div style="height: 6px; width: 100%; background: linear-gradient(296.09deg, #4DE8CA 0%, #00E3CF 29.52%, #00B3EE 70.53%, #00B3EF 100%);"></div>
+        <img style="display: block; margin: auto; padding-top: 30px;" src="https://copado.secure.force.com/resource/EmailTemplates/Images/CopadoLogo.png"
+            height="38px" width="142px" />
+    </div>
+</apex:component>

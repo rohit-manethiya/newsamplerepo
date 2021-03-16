@@ -1,0 +1,27 @@
+<apex:component id="DW_Header">
+    <apex:attribute name="currentStep" type="Integer" required="true" default="0" description="The current step number" />
+    <apex:attribute name="stepNameList" type="String[]" required="true" description="All possible step values" />
+    <div class="co-progress-bar">
+        <div class="slds-progress">
+            <ol class="slds-progress__list">
+                <apex:variable var="counter" value="{!0}" />
+                <apex:repeat value="{!stepNameList}" var="stepName">
+                    <li class="slds-progress__item {!IF(currentStep == counter, 'slds-is-active', IF(currentStep > counter, 'slds-is-completed', ''))}">
+                        <button type="button" class="slds-button slds-progress__marker {!IF(currentStep > counter, 'slds-button_icon slds-progress__marker_icon stepCompleted', '')}" disabled="disabled"></button>
+                        <apex:outputPanel layout="none" rendered="{!currentStep == counter}">
+                            <div class="slds-popover slds-popover_tooltip slds-nubbin_bottom indicator-progress-tooltip" role="tooltip" id="step-{!counter}-tooltip">
+                                <div class="slds-popover__body tooltip">{!stepName}</div>
+                            </div>
+                        </apex:outputPanel>
+                    </li>
+                    <apex:variable var="counter" value="{!counter + 1}" />
+                </apex:repeat>
+            </ol>
+            <div class="slds-progress-bar slds-progress-bar_x-small" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{!currentStep}" role="progressbar">
+                <span class="slds-progress-bar__value" style="width:{!(100/(stepNameList.size - 1)) * currentStep}%">
+                </span>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

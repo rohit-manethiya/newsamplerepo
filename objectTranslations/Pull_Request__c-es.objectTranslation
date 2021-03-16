@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Pull Request</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Pull Requests</value>
+    </caseValues>
+    <fields>
+        <label><!-- Assignees --></label>
+        <name>Assignees__c</name>
+    </fields>
+    <fields>
+        <label><!-- Changed Files --></label>
+        <name>Changed_Files__c</name>
+    </fields>
+    <fields>
+        <label><!-- Closed At --></label>
+        <name>Closed_At__c</name>
+    </fields>
+    <fields>
+        <label><!-- Commits --></label>
+        <name>Commits__c</name>
+    </fields>
+    <fields>
+        <label><!-- External Id --></label>
+        <name>External_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Mergeable --></label>
+        <name>Mergeable__c</name>
+    </fields>
+    <fields>
+        <label><!-- Merged At --></label>
+        <name>Merged_At__c</name>
+    </fields>
+    <fields>
+        <label><!-- Merged By --></label>
+        <name>Merged_By__c</name>
+    </fields>
+    <fields>
+        <label><!-- Merged --></label>
+        <name>Merged__c</name>
+    </fields>
+    <fields>
+        <label><!-- Request Number --></label>
+        <name>Request_Number__c</name>
+    </fields>
+    <fields>
+        <label><!-- Requested Reviewers --></label>
+        <name>Requested_Reviewers__c</name>
+    </fields>
+    <fields>
+        <label><!-- State --></label>
+        <name>State__c</name>
+    </fields>
+    <fields>
+        <label><!-- Target Branch --></label>
+        <name>Target_Branch__c</name>
+    </fields>
+    <fields>
+        <label><!-- URL Link --></label>
+        <name>URL_Link__c</name>
+    </fields>
+    <fields>
+        <label><!-- Url --></label>
+        <name>Url__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Avatar Url --></label>
+        <name>User_Avatar_Url__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Avatar --></label>
+        <name>User_Avatar__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Pull Requests --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Username --></label>
+        <name>Username__c</name>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

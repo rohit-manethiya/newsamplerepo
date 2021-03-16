@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Filter</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Filters</value>
+    </caseValues>
+    <fields>
+        <label><!-- Owner --></label>
+        <name>Owner__c</name>
+        <relationshipLabel><!-- Filters --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Parameters --></label>
+        <name>Parameters__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pipeline --></label>
+        <name>Pipeline__c</name>
+        <relationshipLabel><!-- Filters --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Share With --></label>
+        <name>Share_With__c</name>
+        <picklistValues>
+            <masterLabel>All</masterLabel>
+            <translation><!-- All --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Me</masterLabel>
+            <translation><!-- Me --></translation>
+        </picklistValues>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

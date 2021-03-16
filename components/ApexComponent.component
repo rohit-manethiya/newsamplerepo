@@ -1,0 +1,24 @@
+<apex:component controller="StepEditionController">
+    <apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false"/>
+    <apex:outputPanel id="js-stepBlock-Apex" >
+        <div class="slds-grid">
+            <div class="slds-col">
+                <apex:outputPanel layout="block" styleClass="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                    <label class="slds-form-element__label" for="jsapex">
+                        Apex Script
+                    </label>
+                    <div class="slds-form-element__control">
+                        <apex:outputPanel layout="none" rendered="{!isEdit}">
+                            <textarea id="jsapex" rows="9" class="js-apex" html-placeholder="System.debug('Write your awesome Apex code here!');" style="width:95%;" >&nbsp;&nbsp;&nbsp;&nbsp;</textarea>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!!isEdit}">
+                            <span class="{!IF(isEdit,'','slds-form-element__static')}" style="width:95%">
+                                <apex:outputText id="jsapexView" styleClass="js-apex" style="width:95%;display: inline-table;" ></apex:outputText>
+                            </span>
+                        </apex:outputPanel>
+                    </div>
+                </apex:outputPanel>
+            </div>
+        </div>
+    </apex:outputPanel>
+</apex:component>

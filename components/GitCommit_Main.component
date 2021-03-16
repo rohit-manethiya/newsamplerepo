@@ -1,0 +1,67 @@
+<apex:component controller="GitCommit_MainController" allowDML="true">
+
+    <apex:attribute name="pController"
+                    type="GitCommit_PageBase"
+                    assignTo="{!pageController}"
+                    required="true"
+                    description="The controller for the page." />
+
+    <apex:outputPanel id="theHeader">
+        <apex:outputPanel layout="none" styleClass="demo-only" style="height: 4rem;" rendered="{!PageMessageSize != 0}">
+            <div id="divToast" class="slds-notify_container slds-is-relative">
+                <apex:repeat value="{!pageController.pageMessagesMap}" var="severity">
+                    <div class="slds-notify slds-notify_toast slds-theme_{!severity}" role="status">
+                        <span class="slds-assistive-text"></span>
+                        <span class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+                            <span class="slds-icon_container slds-icon__svg--default {!severity}ToastIcon"></span>
+                        </span>
+                        <div class="slds-notify__content">
+                            <apex:repeat value="{!pageController.pageMessagesMap[severity]}" var="messages">
+                                <h2 class="slds-text-heading_small ">{!messages}</h2>
+                            </apex:repeat>
+                        </div>
+                        <div class="slds-notify__close">
+                            <button type="button" class="slds-button slds-button_icon slds-button_icon-inverse" title="{!$Label.CLOSE}" onclick="$copado('[id=divToast]').addClass('slds-hide');">
+                                <span class="slds-icon_container slds-icon__svg--default closeToastIcon"></span>
+                            </button>
+                        </div>
+                    </div>
+                </apex:repeat>
+            </div>
+        </apex:outputPanel>
+    </apex:outputPanel>
+
+
+    <!-- GIT COMMIT INTERMEDIARY -->
+    <apex:outputPanel layout="none" rendered="{!OR(AND(pageController.snapshotList.size > 1, pageController.snapshot.Id == null), pageController.showCreateDXBranchPrompt)}">
+        <c:GitCommit_Intermediary pController="{!pageController}" />
+    </apex:outputPanel>
+    <!-- / GIT COMMIT INTERMEDIARY -->
+
+    <apex:outputPanel layout="none" rendered="{!AND(pageController.snapshot.Id != null, !pageController.showCreateDXBranchPrompt)}">
+        <!-- GIT COMMIT HEADER -->
+        <c:GitCommit_Header pController="{!pageController}" />
+        <!-- / GIT COMMIT HEADER -->
+
+        <!-- GIT COMMIT OPERATIONS -->
+        <c:GitCommit_Operations pController="{!pageController}" />
+        <!-- / GIT COMMIT OPERATIONS -->
+
+        <!-- GIT COMMIT ADVANCED -->
+        <c:GitCommit_Advanced pController="{!pageController}" />
+        <!-- / GIT COMMIT ADVANCED -->
+
+        <!-- GIT US & SNAPSHOT COMMIT GRID -->
+        <apex:outputPanel layout="none" rendered="{!AND(pageController.variant != 'dxcommit', pageController.variant != 'vlocitycommit')}">
+            <c:GitCommit_Grid pController="{!pageController}" />
+        </apex:outputPanel>
+        <!-- / GIT US & SNAPSHOT COMMIT GRID -->
+
+        <!-- GIT DX COMMIT GRID -->
+        <apex:outputPanel layout="none" rendered="{!pageController.variant == 'dxcommit'}">
+            <c:GitCommitDx_Grid pController="{!pageController}" />
+        </apex:outputPanel>
+        <!-- / GIT DX COMMIT GRID -->
+    </apex:outputPanel>
+
+</apex:component>

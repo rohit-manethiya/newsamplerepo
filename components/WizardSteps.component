@@ -1,0 +1,97 @@
+<apex:component id="WizardSteps" access="public" allowDML="false">
+    <apex:attribute name="currentStep" type="Integer" required="false" default="1" description="The current step number" />
+    <apex:attribute name="isError" type="Boolean" required="false" default="false" description="Show error on progress if error" />
+    <div class="slds-progress" style="margin-top:50px;">
+        <ol class="slds-progress__list">
+            <li class="{!IF(currentStep == 1,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 1,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 1,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 1, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step1" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 1}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" title="" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 1}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 1, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError" title="" disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+            <li class="{!IF(currentStep == 2,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 2,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 2,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 2, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step2" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 2}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" title="" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 2}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 2, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError" title="" disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+            <li class="{!IF(currentStep == 3,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 3,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 3,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 3, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step3" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 3}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" title="" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 3}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 3, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError" title="" disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+            <li class="{!IF(currentStep == 4,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 4,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 4,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 4, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step4" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 4}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" title="" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 4}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 4, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError" title="" disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+            <li class="{!IF(currentStep == 5,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 5,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 5,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 5, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step5" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 5}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 5}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 5, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError"  disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+            <li class="{!IF(currentStep == 6,IF(isError, 'slds-progress__item slds-has-error','slds-progress__item slds-is-active'),IF(currentStep > 6,'slds-progress__item slds-is-completed','slds-progress__item'))}" style="{!IF(currentStep == 6,'display:inline !important;','')}">
+                <apex:outputPanel rendered="{!AND(currentStep == 6, NOT(isError))}">
+                    <button class="slds-button slds-progress__marker" aria-describedby="step6" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep > 6}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepCompleted" title="Finish" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!currentStep < 6}">
+                    <button class="slds-button slds-progress__marker" disabled="true"></button>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!AND(currentStep == 6, isError)}">
+                    <button class="slds-button slds-button_icon slds-button_icon slds-progress__marker slds-progress__marker_icon stepError" title="Finish" disabled="true"></button>
+                </apex:outputPanel>
+            </li>
+        </ol>
+        <div class="slds-progress-bar slds-progress-bar_x-small" aria-valuemin="1" aria-valuemax="6" aria-valuenow="{!currentStep}" role="progressbar">
+        <span class="slds-progress-bar__value" style="width:{!(currentStep-1)*20}%">
+        </span>
+        </div>
+    </div>
+
+</apex:component>

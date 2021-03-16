@@ -1,0 +1,198 @@
+<apex:component >
+<apex:attribute name="diffId" type="String" description="Org Diff Id"/>
+<apex:pageBlock >
+    <apex:pageblockButtons id="removeCacheContainer" >
+        <apex:commandLink style="display:none;" value="{!$Label.CACHE_REFRESHED_NOW}"  onclick="return rock.removeCached();" rerender="opDummy" id="removeCache"/>
+&nbsp;&nbsp;
+        <apex:commandButton style="display:none;" value="{!$Label.Metadata_Diff_CSV}" onClick="csvDownload();return false;" id="csvBtn"/>
+    </apex:pageblockButtons>
+    <div id="jqxgrid"></div>
+</apex:pageBlock>
+      <script>
+      $copado(document).ready(function(){
+                  //Buttons To middle No PBtitle
+                  if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+                  var mTitle = $copado('.pbTitle')[0];
+                  if(mTitle){
+                    mTitle.remove();
+                    var tdBlock = $copado($copado('[id$=removeCacheContainer]')[0]);
+                    if(tdBlock){
+                        tdBlock.css( "text-align", "center" );
+                    }
+                  }
+              }
+            });
+          var loadingHTML = '<center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center>';
+          $copado('#jqxgrid').html(loadingHTML);
+      </script>
+      <style>
+         .green:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .green:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: #b6ff00;
+        }
+        .yellow:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .yellow:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: yellow;
+        }
+        .red:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .red:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: #e83636;
+        }
+      </style>
+    <c:IncludeJqxResourceComponent addJqxAlljs="true" addJqxBasecss="true"/>
+       <script>
+        /**
+         * Redirect to visualforce page to download CSV file which contains the Org difference
+         */
+       function csvDownload(){
+          self.location = "{!JSENCODE(URLFOR($Page.ViewOrgDiffCSV, null, ['id'=diffId,'currentPage'='ViewOrgDiffCSV']))}";
+         }
+        //namespace
+       var rock = rock || {};
+       rock.removeCache = $copado('[id$=removeCache]');
+       rock.csvBtn = $copado('[id$=csvBtn]');
+       rock.jqxGrid = $copado('#jqxgrid');
+       rock.createCacheDeleteButton = function(date){
+           if(!rock.removeCache) return;
+            if(!date){
+                 rock.removeCache.hide();
+            }else{
+
+                rock.removeCache.html(rock.removeCache.html().replace('__DATE__',date).replace('__METATYPE__','')).show();
+            }
+        };
+       rock.removeCached = function(){
+           if(rock.csvBtn) rock.csvBtn.hide();
+           if(rock.removeCache) rock.removeCache.hide();
+           //hide
+           rock.jqxGrid.html(loadingHTML);
+           //reload
+           init(true);
+           return false;
+        };
+        
+        //config grid
+       rock.startGrid = function (data) {
+            if(!data) {
+                rock.jqxGrid.html("{!JSENCODE($Label.SnapshotDiff_Message)}");
+                return;
+            }
+            if(rock.csvBtn) rock.csvBtn.show();
+            //normalize data
+            var len = data.length;
+            try{
+                var theme = 'base',
+                    lmById = [],
+                    lmByDate = [],
+                    cById = [],
+                    cByDate = [],
+                    types = [],
+                source = {
+                    localdata: data,
+                    datafields: [
+                        { name: 's', type: 'string' },
+                        { name: 't', type: 'string' },
+                        { name: 'n', type: 'string' },
+                        { name: 'b', type: 'string' },
+                        { name: 'd', type: 'string' },
+                        { name: 'cb', type: 'string' },
+                        { name: 'cd', type: 'string' }
+                    ],
+                    datatype: "array",
+                    updaterow: function (rowid, rowdata, commit) {
+                        data[rowid] = rowdata;
+                        commit(true);
+                    }
+                },
+                cellsrenderer = function (row, column, value, defaultHtml) {
+                    var color = false;
+                    if (value == 'delete' ) {
+                      color = '#FFC6C6';
+                    }else if (value == 'update' ) {
+                      color = '#FFFFE3';
+                    }else if (value == 'create'){
+                      color = '#CCFFCC'
+                    }
+
+                    if(color){
+                      var element = $copado(defaultHtml);
+                      element.css({ 'background-color': color, 'text-align': 'center'});
+                      return element[0].outerHTML;
+                    }
+                    return defaultHtml;
+                },
+                //adapter wrapper
+                dataAdapter = new $copado.jqx.dataAdapter(source),
+                //keep jquery pointer for performance query
+                $grid = $copado('<div>');
+                rock.jqxGrid.html($grid);
+                rock.datasource = source;
+                
+                for(var i = 0; i<data.length; i++){
+                    if(!types.includes(data[i].t)){
+                        types.push(data[i].t)
+                    }
+                    if(!lmById.includes(data[i].b)){
+                        lmById.push(data[i].b)
+                    }
+                    if(!lmByDate.includes(data[i].d)){
+                        lmByDate.push(data[i].d)
+                    }
+                    if(!cById.includes(data[i].cb)){
+                        cById.push(data[i].cb)
+                    }
+                    if(!cByDate.includes(data[i].cd)){
+                        cByDate.push(data[i].cd)
+                    }
+                }
+
+                $grid.jqxGrid({
+                    width: '100%',
+                    source: dataAdapter,
+                    showfilterrow: true,
+                    filterable: true,
+                    theme: theme,
+                    editable: true,
+                    selectionmode: 'none',
+                    enablebrowserselection: true,
+                    pageable: true,
+                    pagesizeoptions: ['10', '20', '50','100','500'],
+                    pagesize: 20,
+                    sortable: true,
+                    columnsresize: true,
+                    localization: localizationobj,
+                    columns: [
+                      {text: '{!$ObjectType.Step__c.Fields.Status__c.Label}', filtertype: 'checkedlist', datafield: 's', width: 120 ,cellsrenderer: cellsrenderer},
+                      {text: '{!$Label.NAME}', filtertype: 'textbox', filtercondition: 'contains', editable:false, datafield: 'n', width: 400},
+                      {text: '{!$Label.TYPE}', filterItems: types.sort(), datafield: 't', filtertype: 'checkedlist',editable:false ,  columntype: 'textbox',  width: 200},
+                      {text: '{!$ObjectType.Step__c.Fields.LastModifiedById.Label}', filterItems: lmById.sort(), filtertype: 'checkedlist', editable:false, datafield: 'b', width: 150},
+                      {text: '{!$ObjectType.Step__c.Fields.LastModifiedDate.Label}', filterItems: lmByDate.sort(), filtertype: 'checkedlist', editable:false, datafield: 'd', width: 120},
+                      {text: '{!$ObjectType.Step__c.Fields.CreatedById.Label}', filterItems: cById.sort(), filtertype: 'checkedlist', editable:false, datafield: 'cb', width: 150},
+                      {text: '{!$ObjectType.Step__c.Fields.CreatedDate.Label}', filterItems: cByDate.sort(), filtertype: 'checkedlist', editable:false, datafield: 'cd', width: 120}
+                    ]
+                });
+
+            }catch(e){
+                console.error(e)
+            }
+        };
+          
+       function init(force){   
+           //start component
+           dw.u.getCachedRemote({
+               url:rock.config.diff_url,
+               name:'OrgDiff',
+               parentId: '{!JSENCODE(diffId)}',
+               force: force,
+               success:function(metaOrgData, cachedDate){
+                    rock.createCacheDeleteButton(cachedDate);
+                    rock.startGrid(metaOrgData);
+               },
+               error: function(r){
+                   //console.log('Error: ',r)
+               }
+           }); 
+        }
+       init(false);
+       </script>
+</apex:component>

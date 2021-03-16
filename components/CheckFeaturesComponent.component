@@ -1,0 +1,58 @@
+<apex:component controller="CheckFeaturesController">
+	<c:IncludeStaticsResourceComponent addJquery="true" />
+
+	<div class="fixedSetupMsg" style="display:none;" id="setupMsg">
+		<apex:pageMessage title="<b>{!$Label.SETUP_PROCESS_NOT_COMPLETED}</b>" detail="{!errorMessage}" escape="false" severity="error"
+		 strength="3" id="js-msg-SETUP" />
+	</div>
+
+	<script type="text/javascript">
+		try {
+			$copado(function () {
+				var _ns = '{!JSENCODE(namespace)}';
+				var core = _ns ? window[_ns.split('__')[0]] : window;
+				//call async this remote method to improve the performance.
+				setTimeout(function () {
+					(core).CheckFeaturesController.isApplicationRegistered(function (appIsRegistered, e) {
+						if (appIsRegistered) {
+							(core).CheckFeaturesController.checkSetup(function (hasOrgCredential, e) {
+								if (!hasOrgCredential) {
+									showSetupError();
+								}
+							});
+						} else {
+							showSetupError();
+						}
+					});
+				}, 333);
+
+				setTimeout(function () {
+					(core).CheckFeaturesController.checkFeatures(function () { console.log('features checked') });
+				}, 666);
+
+				setTimeout(function () {
+					(core).CheckFeaturesController.checkLicenses(function () { console.log('licenses checked') });
+				}, 666);
+			});
+		} catch (e) {
+			console.log('mute remote checkFeatures error:', e);
+		}
+
+		function showSetupError() {
+			var $m = $copado('[id*="js-msg-SETUP"].messageText');
+			$m.html(
+				$m.html().replace('__ORG_CREDENTIALS_URL__', '{!URLFOR($Action.Org__c.List, $ObjectType.Org__c)}')
+					.replace('__APPHOME_URL__', '{!URLFOR($Page.appHome)}')
+			);
+			$copado('.fixedSetupMsg').fadeIn('slow');
+		}
+	</script>
+	<style type="text/css">
+		.fixedSetupMsg {
+			position: fixed;
+			top: 10px;
+			left: 30%;
+			z-index: 9999;
+		}
+	</style>
+</apex:component>

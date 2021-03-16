@@ -1,0 +1,188 @@
+<apex:component controller="JobsManager">
+<!--
+matchingKeys: list of ";" separated values to watch ( each value is the one on Copado_Notification__c.Matching_Key__c )
+ -->
+    <apex:attribute name="matchingKeys"
+                    description="semicolon-separated string of matching notifications"
+                    type="String"
+                    assignTo="{!matchingKeysString}"/>
+        <c:IncludeStaticsResourceComponent addJQuery="true" addDVcss="true" addCometdjs="true" addJCometdjs="true" addJSON2js="true"/>
+        <apex:includeScript value="{!URLFOR($Resource.utilsV2) }"/>
+        <apex:includeScript value="{!URLFOR($Resource.copadoStreamingService) }" />
+        <c:IncludeConnectionJsComponent />
+
+        <script type="text/javascript">
+            $copado(document).ready(function(){
+                _jobsManagerExtractBranchName();
+            });
+            // call this function to mark the start of a job.
+            // It returns the attachment, to to give back to the Status manager, for example
+            function globalJobsManagerStart(parentId, type, key) {
+                var payload = JSON.stringify({
+                    isFinished: false,
+                    type: type,
+                    matchingKeysString: key,
+                    status: "Sending callout"
+                });
+                var so = new sforce.SObject("Attachment");
+                so.ParentId = parentId;
+                so.Name = 'PROGRESS_STATUS_COPADO';
+                so.Body = Base64.encode(payload);
+                var result = sforce.connection.create([so]);
+                so.Id = result[0].id;
+                console.info("globalJobsManagerStart()", type, parentId, key, payload, result);
+                return so;
+            }
+            var _jobsManagerExtractBranchName = function(){
+                $copado('.branch').each(function(){
+                    var title = $copado(this).text();
+                    console.assert(title.length > 0,'_jobsManagerExtractBranchName () empty key');
+                    var li = title.indexOf(title.split('-')[2])
+                    if(li >- 1) {
+                        $copado(this).text(title.substring(li,title.length))
+                    }else {
+                        $copado(this).text('');
+                    }
+
+                });
+            }
+            $copado( function(){
+                console.debug('JobsManager keys={!matchingKeysString}');
+                $copado(function() {
+                    $copado.cometd.subscribe('/topic/CopadoNotifications', function(message) {
+                        // NR: added the setTimeout to detatch readStream, otherwise exceptions will be always ignored, invisible.
+                        setTimeout(function() {
+                            refreshJobList();
+                        },1);
+                    });
+                });
+            });
+        </script>
+
+    <style type="text/css">
+        @keyframes jobsManFlash {
+            from {opacity: 0.2;}
+            to {opacity: 1;}
+        }
+        @-webkit-keyframes jobsManFlash {
+            from {opacity: 0.2;}
+            to {opacity: 1;}
+        }
+        .JM_runningTasks {
+            table-layout: fixed;
+            width: 100%;
+            border: 3px solid transparent;
+
+        }
+        .JM_processesRunning {
+            padding-right: 0px;
+            border: 3px solid transparent;
+            margin-bottom: 10px;
+
+        }
+        .JM_processesRunning th, .JM_processesRunning td {
+            padding: 5px;
+            padding-top: 0px;
+            padding-right: 0px;
+        }
+        .JM_warning{
+            color: #ed1040;
+            font-weight: 900;
+            font-size: 14pt;
+        }
+        .JM_wrapper{
+            border: 4px dashed #ed1040;
+            border-collapse: collapse;
+            border-radius: 10px;
+            margin-bottom: 3px;
+            background-color: #f8f8f8;
+        }
+        .JM_blinkIcon {
+            animation: jobsManFlash 2s infinite;
+            -webkit-animation: jobsManFlash 2s infinite;
+            float: left;
+            padding: 5px;
+        }
+    </style>
+    <center>
+    <div style="display:none">JobsManager.matchingKeys={!matchingKeysString}</div>
+
+    <apex:outputPanel layout="block" id="listing" rendered="{!$User.UIThemeDisplayed=='Theme3'}">
+        <apex:actionFunction name="refreshJobList"  reRender="listing,messageWrapper" oncomplete="_jobsManagerExtractBranchName();"/>
+
+        <apex:outputPanel layout="block" id="messageWrapper" styleClass="JM_wrapper" rendered="{!hasRunningTasks}">
+            <p class="warning" style="padding: 1px;"><apex:image height="40" width="40" value="{!URLFOR($Resource.Statics,'img/icons/logo-icon.png')}" styleClass="JM_blinkIcon"/>{!$Label.JOB_MANAGER_MESSAGE}</p>
+
+            <apex:dataTable value="{!runningTasks}" var="task"
+            rowClasses="odd,even" styleClass="JM_runningTasks JM_processesRunning" id="runningTasksTable" style="border-radius: 20px">
+                <apex:column >
+                    <apex:facet name="header">{!$Label.TASK_NAME}</apex:facet>
+                    <a href="{!URLFOR($Action.Copado_Notification__c.View, task.Id)}"><apex:outputField value="{!task.Type__c}"/></a>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">{!$Label.BRANCH}</apex:facet>
+                    <a href="{!URLFOR($Action.Copado_Notification__c.View, task.Id)}" class="branch"><apex:outputText value="{!task.Matching_Key__c}"/></a>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">{!$Label.STATUS}</apex:facet>
+                    <apex:outputField value="{!task.status__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">{!$Label.DATE}</apex:facet>
+                     <apex:outputField value="{!task.LastModifiedDate}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">{!$Label.OWNER_ALIAS}</apex:facet>
+                     <apex:outputField value="{!task.LastModifiedBy.Alias}"/>
+                </apex:column>
+            </apex:dataTable>
+
+        </apex:outputPanel>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="block" id="listing_Lightning" rendered="{!NOT($User.UIThemeDisplayed=='Theme3')}">
+        <apex:actionFunction name="refreshJobList"  reRender="listing,messageWrapper" oncomplete="_jobsManagerExtractBranchName();"/>
+        <apex:outputPanel layout="block" styleClass="JM_wrapper slds-grid" style="box-shadow: 10px 10px 5px darkgrey;border-radius: 0;border: 1px solid black; padding: 5px;" id="messageWrapper_Lightning" rendered="{!hasRunningTasks}">
+            <div class="slds-col">
+                <h2 id="modal-heading-01" class="slds-text-heading_medium" style="color: #ff0000;">
+                    <apex:image height="40" width="40" value="{!URLFOR($Resource.Statics,'img/icons/logo-icon.png')}" styleClass="JM_blinkIcon"/>{!$Label.JOB_MANAGER_MESSAGE}
+                </h2>
+                
+                <table class="slds-table slds-table_resizable-cols slds-table_fixed-layout slds-table_bordered slds-table_striped" role="grid" id="listingTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                &nbsp; {!$Label.TASK_NAME}
+                            </th>
+                            <th>
+                                {!$Label.BRANCH}
+                            </th>
+                            <th>
+                                {!$Label.STATUS}
+                            </th>
+                            <th>
+                                {!$Label.DATE}
+                            </th>
+                            <th>
+                                {!$Label.OWNER_ALIAS}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:repeat value="{!runningTasks}" var="task">
+                            <tr>
+                                <td><a href="{!URLFOR($Action.Copado_Notification__c.View, task.Id)}"><apex:outputField value="{!task.Type__c}"/></a></td>
+                                <td><a href="{!URLFOR($Action.Copado_Notification__c.View, task.Id)}" class="branch"><apex:outputText value="{!task.Matching_Key__c}"/></a></td>
+                                <td><apex:outputField value="{!task.status__c}"/></td>
+                                <td><apex:outputField value="{!task.LastModifiedDate}"/></td>
+                                <td><apex:outputField value="{!task.LastModifiedBy.Alias}"/></td>
+                            </tr>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+            </div>
+
+        </apex:outputPanel>
+    </apex:outputPanel>
+     </center>
+</apex:component>

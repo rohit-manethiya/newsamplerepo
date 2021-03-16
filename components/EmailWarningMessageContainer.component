@@ -1,0 +1,10 @@
+<apex:component access="global">
+    <apex:attribute name="emailContext" type="String" description="Context of the email" />
+    <apex:attribute name="errorMessage" type="String" description="The content of the message displayed" />
+    <div style="width: 625px; border-radius: 3px; border-left: 3px solid rgba(253,169,75,0.65); background-color: #FFFBE6; margin: auto;">
+        <apex:outputText style="color: #524539; font-size: 12px; letter-spacing: 0; line-height: 20px; padding: 15px 30px; display: block;" escape="false" value="{!$Label.EMAIL_WARNING_MESSAGE}">
+            <apex:param value="{!emailContext}" />
+            <apex:param value="{!errorMessage}" />
+        </apex:outputText>
+    </div>
+</apex:component>

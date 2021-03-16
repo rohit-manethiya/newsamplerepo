@@ -1,0 +1,499 @@
+<apex:component id="OrgAuthentication" controller="OrgAuthenticationComponentController" allowDML="true">
+    <c:CopadoSpinner />
+    <style>
+    /* This CSS overrides standard css from JQUERY to adapt ui to sfdc design*/
+
+        .custom-combobox {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .custom-combobox-toggle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            margin-left: -1px;
+            padding: 0;
+        }
+        .custom-combobox-input {
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+        .ui-state-default{
+            background-color: white;
+        }
+
+        .ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight {
+            /*border: 1px solid #dad55e;*/
+            border: 1px solid #053787;
+            /*background: #fffa90;*/
+            background: #053787;
+            /*color: #777620;*/
+            color: white;
+        }
+        .ui-button {
+            border: 1px solid #c5c5c5;
+            border-top-color: rgb(197, 197, 197);
+            border-top-style: solid;
+            border-top-width: 1px;
+            border-right-color: rgb(197, 197, 197);
+            border-right-style: solid;
+            border-right-width: 1px;
+            border-bottom-color: rgb(197, 197, 197);
+            border-bottom-style: solid;
+            border-bottom-width: 1px;
+            border-image-source: initial;
+            border-image-slice: initial;
+            border-image-width: initial;
+            border-image-outset: initial;
+            border-image-repeat: initial;
+        }
+        
+        /* try to center and refactor the yes/no question that has apex-generated html */
+        .productionOrgConfirmation {
+        	padding-top: 1.3em;
+        	text-align: center;
+        }
+        .productionOrgConfirmation table[role="presentation"] {
+        	width: auto;
+        }
+        .productionOrgConfirmation fieldset {
+        	margin: auto;
+        	display: inline-block;
+        }
+        .productionOrgConfirmation td {
+        	padding: 0 1em 0 1em;
+        }
+
+    </style>
+
+    <script>
+        $copado(document).ready(function(){
+            lockScreen();
+            pageRedirect();
+        });
+
+        function closeToast() {
+            $copado('#notify').css("display", "none");
+        }
+        function showToast() {
+            if($copado('[Id$=pagemessage]').html() != ""){
+                $copado('.errorM3').removeClass('errorM3');
+                $copado('.confirmM3').removeClass('confirmM3');
+                $copado('.infoM3').removeClass('infoM3');
+                $copado('.message').removeClass('message');
+                $copado('.msgIcon').removeClass('msgIcon');
+                $copado('#notify').removeAttr("style");
+            }
+        }
+
+    </script>
+
+    <apex:outputPanel id="jqueryCombobox">
+            <script>
+
+             function renderOrgCredCombobox() {
+                $copado.widget( "custom.combobox", {
+                  _create: function() {
+                    this.wrapper = $copado( "<span>" )
+                      .addClass( "custom-combobox" )
+                      .insertAfter( this.element );
+
+                    this.element.hide();
+                    this._createAutocomplete();
+                    this._createShowAllButton();
+                  },
+
+                  _createAutocomplete: function() {
+
+                    var newEnvironmentSelected = '{!JSENCODE(newEnvironmentSelected)}';
+                    var checkSelection = newEnvironmentSelected.split("##")[1] ? newEnvironmentSelected.split("##")[1] : newEnvironmentSelected;
+                    var selected = this.element.children( ":selected" ),
+
+                    value = checkSelection ? checkSelection : selected.val() ? selected.text() : "";
+
+                    this.input = $copado( "<input>" )
+                      .appendTo( this.wrapper )
+                      .val( value )
+                      .attr( "title", "" )
+                      .attr( "id", "autoCompInp" )
+                      .attr( "required", "true" )
+                      .attr( "value", "{!JSENCODE(environmentId)}")
+                      .html("{!JSENCODE(environmentName)}")
+                      .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left" )
+                      .autocomplete({
+                        delay: 0,
+                        minLength: 0,
+                        source: $copado.proxy( this, "_source" )
+                      })
+                      .tooltip({
+                        classes: {
+                          "ui-tooltip": "ui-state-highlight"
+                        }
+                      });
+
+                    this._on( this.input, {
+                      autocompleteselect: function( event, ui ) {
+                        ui.item.option.selected = true;
+                        this._trigger( "select", event, {
+                          item: ui.item.option
+                        });
+                        lockScreen();
+                        assignOnSelect(ui.item.option.value);
+                      },
+
+                      autocompletechange: "_removeIfInvalid"
+                    });
+                  },
+
+                  _createShowAllButton: function() {
+                    var input = this.input,
+                      wasOpen = false;
+
+                    $copado( "<a>" )
+                      .attr( "tabIndex", -1 )
+                      .attr( "title", "Show All Items" )
+                      .tooltip()
+                      .appendTo( this.wrapper )
+                      .button({
+                        icons: {
+                          primary: "ui-icon-triangle-1-s"
+                        },
+                        text: false
+                      })
+                      .removeClass( "ui-corner-all" )
+                      .addClass( "custom-combobox-toggle ui-corner-right" )
+                      .on( "mousedown", function() {
+                        wasOpen = input.autocomplete( "widget" ).is( ":visible" );
+                      })
+                      .on( "click", function() {
+                        input.trigger( "focus" );
+
+                        // Close if already visible
+                        if ( wasOpen ) {
+                          return;
+                        }
+
+                        // Pass empty string as value to search for, displaying all results
+                        input.autocomplete( "search", "" );
+                      });
+                  },
+
+                  _source: function( request, response ) {
+                    var matcher = new RegExp( $copado.ui.autocomplete.escapeRegex(request.term), "i" );
+                    response( this.element.children( "option" ).map(function() {
+                      var text = $copado( this ).text();
+                      if ( this.value && ( !request.term || matcher.test(text) ) )
+                        return {
+                          label: text,
+                          value: text,
+                          option: this
+                        };
+                    }) );
+                  },
+
+                  _removeIfInvalid: function( event, ui ) {
+
+                    // Selected an item, nothing to do
+                    if ( ui.item ) {
+                      return;
+                    }
+
+                    // Search for a match (case-insensitive)
+                    var value = this.input.val(),
+                      valueLowerCase = value.toLowerCase(),
+                      valid = false;
+                    this.element.children( "option" ).each(function() {
+                      if ( $copado( this ).text().toLowerCase() === valueLowerCase ) {
+                        this.selected = valid = true;
+                        return false;
+                      }
+                    });
+
+                    // Found a match, nothing to do
+                    if ( valid ) {
+                      return;
+                    }
+
+                    // Remove invalid value
+                    this.input
+                      //.val( "" )
+                      //.attr( "title", value + " didn't match any item, click on Authenticate to add new connection" )
+                      //.tooltip( "open" );
+                    //this.element.val( "" );
+                    this._delay(function() {
+                      this.input.tooltip( "close" ).attr( "title", "" );
+                    }, 2500 );
+                    this.input.autocomplete( "instance" ).term = "";
+                    lockScreen();
+                    assignOnSelect(value);
+                  },
+
+                  _destroy: function() {
+                    this.wrapper.remove();
+                    this.element.show();
+                  }
+                });
+
+                $copado( "#combobox" ).combobox();
+                $copado( "#toggle" ).on( "click", function() {
+                 $copado( "#combobox" ).toggle();
+                });
+             }
+
+        </script>
+    </apex:outputPanel>
+
+    <apex:actionFunction name="pageRedirect" action="{!pageRedirectOnLoad}" reRender="OrgAuthenticationComponent" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);renderOrgCredCombobox();showToast();unlockScreen();" />
+    <apex:actionFunction name="checkOrgValidations" action="{!checkOrgValidation}" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);showToast();unlockScreen();" reRender="OrgAuthenticationComponent,pagemessage"/>
+    <apex:actionFunction name="assignOnSelect" action="{!checkAndAssignEnvironment}" reRender="OrgAuthenticationComponent, jqueryCombobox" onComplete="renderOrgCredCombobox(); unlockScreen();">
+        <apex:param value="" name="newOrgCredentailId" assignTo="{!newEnvironmentSelected}"/>
+    </apex:actionFunction>
+
+    <apex:outputPanel layout="block" id="OrgAuthenticationComponent">
+        <div id="notify" class="slds-notify_container slds-is-absolute" style="display: none">
+            <div class="slds-notify slds-notify_toast slds-theme_warning" role="status">
+                <span class="slds-assistive-text">warning</span>
+                <span class="slds-icon_container slds-icon-utility-warning slds-m-right_small slds-no-flex slds-align-top" title="{!$Label.WARNING}">
+                        <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#warning')}" />
+                        </svg>
+                        </span>
+                <div class="slds-notify__content">
+                    <h2 class="slds-text-heading_small ">
+                        <apex:pageMessages id="pagemessage" />
+                    </h2>
+                </div>
+                <div class="slds-notify__close">
+                    <button class="slds-button slds-button_icon slds-button_icon-inverse" title="{!$Label.CLOSE}" onClick="closeToast(); return false;">
+                        <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}" />
+                        </svg>
+                        <span class="slds-assistive-text">{!$Label.CLOSE}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <apex:outputPanel layout="none" rendered="{!errorMessageJSON == null}">
+            <div class="slds-illustration slds-illustration_small" style="border:1px solid gray;padding:5%;margin:5% 15% 10% 15%;">
+                <apex:outputPanel layout="block" rendered="{!currentOrgAuthenticateStep == 'createOrgCredential'}">
+                    <div class="slds-text-heading_large slds-text-align_center">{!$Label.Pipeline_New_Environment_Connection}</div>
+                    <p class="slds-text-align_center" style="margin-top: 20px;">{!$Label.Pipeline_New_Environment_Connection_Explanation}</p>
+
+                    <div class="slds-form-element slds-form-element_edit slds-hint-parent" style="margin-top: 20px;">
+                        <span class="slds-form-element__label">{!$ObjectType.Environment__c.fields.Name.label}</span>
+                        <div class="slds-form-element__control">
+                            <select class="slds-input" id="combobox">
+                                <option value=""></option>
+                                <apex:repeat value="{!Environments}" var="env">
+                                    <option value="{!env.Id}##{!env.Name}">{!env.Name}</option>
+                                </apex:repeat>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="slds-form-element slds-form-element_edit slds-hint-parent">
+                        <span class="slds-form-element__label">{!$ObjectType.Environment__c.fields.Type__c.label}</span>
+                        <div class="slds-form-element__control">
+                            <apex:inputField styleClass="slds-input" value="{!orgCredential.Org_Type__c}" style="width: auto;">
+                                <apex:actionSupport event="onchange" reRender="envCreatePanel" oncomplete="assignOnSelect('{!JSENCODE(newEnvironmentSelected)}');"/>
+                            </apex:inputField>
+                        </div>
+                    </div>
+
+                    <apex:outputPanel styleClass="slds-form-element slds-form-element_edit slds-hint-parent" layout="none" rendered="{!orgCredential.Org_Type__c == 'Custom Domain'}">
+                        <span class="slds-form-element__label">{!$ObjectType.Org__c.fields.Custom_Domain__c.label}</span>
+                        <div class="slds-form-element__control">
+                            <apex:inputField styleClass="slds-input" value="{!orgCredential.Custom_Domain__c}" style="width: auto;"/>
+                        </div>
+                    </apex:outputPanel>
+
+                    <apex:commandLink action="{!doOauth}" styleClass="slds-button slds-button_brand" value="{!$Label.Set_Oauth_Authentication}" style="margin-top: 20px;" onClick="lockScreen();" rendered="{!isCredentialNewOrExisting  == 'isnew'}" target="_parent" />
+                    <apex:commandButton action="{!setStep}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" style="margin-top: 20px;" onClick="$copado('#autoCompInp').val().length>0 ? lockScreen() : ''" rendered="{!isCredentialNewOrExisting == null}"/>
+                    <apex:commandButton action="{!createNewEnvironmentConnection}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" style="margin-top: 20px;" onClick="lockScreen();" rendered="{!isCredentialNewOrExisting == 'existing'}" />
+
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" rendered="{!currentOrgAuthenticateStep == 'authOrg'}">
+
+                    <div class="slds-text-longform copado-section-header">
+                        <apex:outputPanel layout="none" rendered="{!environmentName != null}">
+                            <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Set_Oauth_Authentication} {!environmentName}</h3>
+                            <p class="slds-text-body_regular">{!$Label.Pipeline_Please_Login_For_Environment} {!environmentName}</p>
+                            <apex:outputPanel layout="none" rendered="{!isDirectDiagramAuthentication == 'true'}">
+                                <div class="slds-form-element slds-form-element_edit slds-hint-parent">
+                                    <span class="slds-form-element__label">{!$ObjectType.Environment__c.fields.Type__c.label}</span>
+                                    <div class="slds-form-element__control">
+                                        <apex:inputField styleClass="slds-input" value="{!orgCredential.Org_Type__c}" style="width: auto;"/>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!environmentName == null}">
+                            <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Authenticate_Production}</h3>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(wizardFirstStep,environmentName == null,!wrongOrgCredential)}">
+                            <p class="slds-text-body_regular">{!$Label.Pipeline_Please_Login_For_Environment} {!$Label.Pipeline_Main_Org_Production}</p>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(wizardFirstStep,environmentName == null,wrongOrgCredential)}">
+                            <p class="slds-text-body_regular">{!$Label.Pipeline_Username_Doesnt_Match_Production} <b>{!$User.Username}</b>
+                            </p>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(!wizardFirstStep,environmentName == null)}">
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col">
+                                    <span>{!$Label.Pipeline_Is_User_For_Production}</span><br/>
+                                    <span><b>{!$User.Username}</b></span>
+                                </div>
+                            </div>
+                            <div class="productionOrgConfirmation">
+                                    <apex:selectRadio value="{!selectedOperation}">
+                                        <apex:selectOptions value="{!items}" />
+                                        <apex:actionSupport event="onchange" onSubmit="lockScreen();" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);showToast();unlockScreen();" reRender="OrgAuthenticationComponent,pagemessage"/>
+                                    </apex:selectRadio>
+                                </div>
+                        </apex:outputPanel>
+                    </div>
+                    <div style="padding: 0 25% 0 25%;" class="copado-section-content">
+                        <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/salesforce-logo.png')}" style="height: 75px;" />
+                        <br />
+                        <apex:outputPanel layout="none" rendered="{!AND(orgCredential.Id == null,wizardFirstStep)}">
+                            <p class="slds-text-body_regular">{!$User.Username}</p>
+                            <br />
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!OR(AND(selectedOperation == 'No',!wizardFirstStep),wizardFirstStep,environmentName != null)}">
+                            <apex:commandLink action="{!doOauth}" onClick="lockScreen();" styleClass="slds-button slds-button_brand" value="{!$Label.Set_Oauth_Authentication}" target="_parent" />
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(selectedOperation == 'Yes',!wizardFirstStep,environmentName == null)}">
+                            <apex:commandButton action="{!setStep}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" onClick="lockScreen();" onComplete="checkOrgValidations();" />
+                        </apex:outputPanel>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" rendered="{!currentOrgAuthenticateStep == 'orgvalidation'}">
+                    <div class="slds-text-longform copado-section-header">
+                        <apex:outputPanel layout="none" rendered="{!OR(oauthStage != null,newOrg != null)}">
+                            <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Set_Oauth_Authentication} {!orgCredential.Name}</h3>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!AND(oauthStage == null,newOrg == null)}">
+                            <h3 class="slds-text-heading_large" style="margin-bottom:25px;">Authenticate your Production Org Connection</h3>
+                        </apex:outputPanel>
+                        <p class="slds-text-body_regular">{!validationMessage}</p>
+                    </div>
+                    <div style="padding: 0px 25% 0% 25%;" class="copado-section-content">
+                        <apex:image value="{!URLFOR($Resource.SetupDashboardIcons, 'PipelineSvgIcons/salesforce-logo.png')}" style="height: 75px;" />
+                        <br />
+                        <p class="slds-text-body_regular">
+                            <span class="slds-icon_container slds-icon__svg--default {!IF(validOrg, "approvalWizardIcon", "errorWizardIcon")}"></span>
+                            {!orgCredential.Username__c}
+                        </p>
+                        <br />
+                    </div>
+                    <div class="copado-section-footer">
+                        <apex:outputPanel layout="none" rendered="{!!validOrg}">
+                            <apex:commandLink action="{!doOauth}" onClick="lockScreen();" styleClass="slds-button slds-button_brand" value="{!$Label.Set_Oauth_Authentication}" target="_parent" />
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!validOrg}">
+                            <apex:commandButton action="{!setStep}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" onClick="lockScreen();" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);unlockScreen();" reRender="OrgAuthenticationComponent,pagemessage" />
+                        </apex:outputPanel>
+                    </div>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" rendered="{!currentOrgAuthenticateStep == 'environmentsetup'}">
+                    <div class="slds-text-longform copado-section-header">
+                        <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Environment_Setup}</h3>
+                    </div>
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-size_1-of-2 wizardTextAlign" style="border-right:1px solid;">
+                            <div class="slds-box_x-small slds-m-around_x-small slds-p-around_x-small">
+                                <p class="slds-text-body_regular">{!$Label.Pipeline_Working_On_Environments_Setting}</p>
+                                <c:SetupWizardSvg svgName="WizardStart" />
+                            </div>
+                        </div>
+                        <apex:outputPanel layout="block" styleClass="slds-size_1-of-2 wizardTextAlign" id="rightPanelOnly">
+                            <apex:actionPoller action="{!runAction}" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);showToast();" reRender="rightPanelOnly,pagemessage" interval="5" rendered="{!!actionWrapper.stopCreatingBranchesPoller}"/>
+                            <apex:actionPoller action="{!runAction}" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);showToast();" reRender="rightPanelOnly,continueButton,pagemessage" interval="5" rendered="{!!actionWrapper.stopCreatingRecordsPoller}"/>
+                            <apex:actionPoller action="{!runAction}" onComplete="applyRenderSVG(svgButtonsId,['approvalWizardIcon', 'errorWizardIcon']);showToast();" reRender="rightPanelOnly,continueButton,pagemessage,OrgAuthenticationComponent" interval="15" rendered="{!!actionWrapper.stopTakingSnapshotPoller}"/>
+                            <apex:actionPoller reRender="OrgAuthenticationComponent" interval="5" rendered="{!errorMessageJSON != null}"/>
+                            <div class="slds-box_x-small slds-m-around_x-small slds-p-around_x-small">
+                                <apex:repeat value="{!actionNameStatusMap}" var="actionName">
+                                    <apex:outputPanel layout="none" rendered="{!actionName == 'CreateBranch'}">
+                                        <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                            <div class="slds-media__figure">
+                                                <div class="slds-input__icon-group">
+                                                    <span class="slds-icon_container slds-icon__svg--default approvalWizardIcon"></span>
+                                                </div>
+                                            </div>
+                                            <div class="slds-media__body" style="margin-left:5px;">
+                                                <p>{!$Label.Pipeline_Creating_Branches}</p>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+
+                                    <apex:outputPanel layout="none" rendered="{!actionName == 'RecordsCreated'}">
+                                        <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                            <div class="slds-media__figure">
+                                                <div class="slds-input__icon-group">
+                                                    <apex:outputPanel layout="none" rendered="{!AND(actionNameStatusMap[actionName] == 'InProgress',!actionWrapper.stopCreatingRecordsPoller)}">
+                                                        <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_x-small slds-input__spinner">
+                                                            <div class="slds-spinner__dot-a"></div>
+                                                            <div class="slds-spinner__dot-b"></div>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!AND(actionNameStatusMap[actionName] == 'Done',actionWrapper.stopCreatingRecordsPoller)}">
+                                                        <span class="slds-icon_container slds-icon__svg--default approvalWizardIcon"></span>
+                                                    </apex:outputPanel>
+                                                </div>
+                                            </div>
+                                            <div class="slds-media__body" style="margin-left:5px;">
+                                                <p>&nbsp;&nbsp;{!$Label.Pipeline_Creating_Records}</p>
+                                            </div>
+                                        </div>
+                                    </apex:outputPanel>
+
+                                    <apex:outputPanel layout="none" rendered="{!actionName == 'TakeSnapshot'}">
+                                        <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                            <div class="slds-media__figure">
+                                                <div class="slds-input__icon-group">
+                                                    <apex:outputPanel layout="none" rendered="{!AND(actionNameStatusMap[actionName] == 'InProgress',!actionWrapper.stopTakingSnapshotPoller)}">
+                                                        <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_x-small slds-input__spinner">
+                                                            <div class="slds-spinner__dot-a"></div>
+                                                            <div class="slds-spinner__dot-b"></div>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!AND(actionNameStatusMap[actionName] == 'Done',actionWrapper.stopTakingSnapshotPoller)}">
+                                                        <span class="slds-icon_container slds-icon__svg--default approvalWizardIcon"></span>
+                                                    </apex:outputPanel>
+                                                </div>
+
+                                            </div>
+                                            <apex:outputPanel layout="none" styleClass="slds-media__body" style="margin-left:5px;" rendered="{!setupWizardSettings.Git_Snapshot_Id__c == null}">
+                                                <p>&nbsp;&nbsp;{!$Label.Pipeline_Taking_Production_Snapshot}</p>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel layout="none" styleClass="slds-media__body" style="margin-left:5px;" rendered="{!setupWizardSettings.Git_Snapshot_Id__c != null}">
+                                                <p>&nbsp;&nbsp;<apex:commandLink action="{!goToSnapshot}" value="{!$Label.Pipeline_Taking_Production_Snapshot}" target="_blank" />
+                                                </p>
+                                            </apex:outputPanel>
+                                        </div>
+                                    </apex:outputPanel>
+                                </apex:repeat>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    <apex:outputPanel styleClass="copado-section-footer" id="continueButton">
+                        <apex:commandButton action="{!goToNextComponent}" styleClass="slds-button slds-button_brand" value="{!$Label.CONTINUE}" onClick="lockScreen();" reRender="OrgAuthenticationComponent,pagemessage" style="margin-top:25px" />
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!errorMessageJSON != null}" id="errorPanel">
+            <c:ErrorHandling messageJSON="{!errorMessageJSON}" />
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="slds-align_absolute-center" id="footerButtons" style="margin-top: -5%;" rendered="{!currentOrgAuthenticateStep == 'createOrgCredential'}">
+            <apex:commandButton styleClass="slds-button" action="{!goToDiagram}" value="{!$Label.Cancel}" html-formnovalidate="formnovalidate"/>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

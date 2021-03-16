@@ -1,0 +1,45 @@
+<template>
+    <lightning-spinner if:true={showSpinner} variant="brand" alternative-text="Loading" size="large"> </lightning-spinner>
+
+    <c-deployment-steps-modal
+        current-deployment-id={recordId}
+        selected-step-id={selectedStepId}
+        selected-step-name={selectedStepName}
+        selected-step-type={selectedStepType}
+        onrefreshdata={handleRefreshData}
+        onrestoreoriginalvalues={handleRestoreOriginalValues}>
+    </c-deployment-steps-modal>
+
+    <div class={displayIllustrationClass}>
+        <c-copadocore-illustration name="Desert" size="medium" message={label.No_Steps_Yet}> </c-copadocore-illustration>
+        <lightning-button class="slds-m-vertical_medium slds-align_absolute-center" label={label.Add_New_Step}
+            title={label.Add_New_Step} onclick={handleCreateStep}></lightning-button>
+    </div>
+
+    <div class={displayTableClass}>
+        <c-related-list-delete-popup onrecorddeleted={handleRecordDeleted}> </c-related-list-delete-popup>
+        <c-related-list
+            record-id={recordId}
+            related-list="Step__c"
+            fieldset="Deployment_Steps"
+            relationship-field="Deployment__c"
+            order-by="Order__c ASC NULLS LAST, CreatedDate"
+            record-size="10"
+            height="300px"
+            header-icon="custom:custom67"
+            actions={actions}
+            show-row-number-column
+            hide-checkbox-column
+            resize-column-disabled
+            enable-infinite-loading
+            hide-default-columns-actions
+            custom-handle-new-enabled
+            implements-drag-and-drop
+            custom-handle-row-action-enabled
+            oncreaterecord={handleCreateStep}
+            onretrievedrows={handleRetrievedRows}
+            ondroprow={handleDropRow}
+            onrowaction={handleRowAction}>
+        </c-related-list>
+    </div>
+</template>

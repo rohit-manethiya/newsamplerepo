@@ -1,0 +1,109 @@
+<apex:component controller="Settings">
+    <!--
+    onclick="showWebHook('test.com'); return false;"
+    This component requires jquery to be added to the visualforce page as $copado
+
+	The following code needs to be added to the visualforce page
+	extensions = JsRemotingController
+	In the Head section <c:ShowWebhook url="webhook/ci" recordId="xxx" />
+	<button id="btnShowHookUrl" value="Show Hook URL" onclick="showWebhook(); return false;">Show Hook URL</button>
+    -->
+    <apex:attribute name="recordId" description="record Id" type="String" required="true" />
+    <apex:attribute name="url" description="relative url" type="String" required="true" />
+    <apex:includeScript value="{!URLFOR($Resource.utilsV2) }" />
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }"/>
+    <c:IncludeStaticsResourceComponent addSLcss="true" />
+    <c:WizardUtils id="wizardUtils" />
+    
+    <head>
+        <c:IncludeConnectionJsComponent />
+        <apex:stylesheet value="{!IF($User.UIThemeDisplayed == 'Theme4d',URLFOR($Resource.CopadoLightningCSS),'')}" />
+        <style>
+            #webhookWrapper{
+                float:left;
+                width: 100%;
+                margin:auto;
+            }
+        </style>
+    </head>    
+
+    <div id="wh-popup" class="copadoScreenLocker" style="display:none;">
+        <span id="webhookWrapper" class="copadoScreenLockerContent" style="width:75%; height:75%; overflow:auto;">
+            <apex:pageBlock id="webhook_pb" mode="edit">
+                <apex:pageblockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Webhook URL</apex:outputPanel>
+                        <apex:outputPanel >
+                            <input type="text" id="webhookUrl" size="100" text="Loading..." readonly="true"/>
+                            <button id="btnCopy" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}">Copy to clipboard</button>
+                            <button id="btnCancel" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="hideWebhook();">Close</button>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel ></apex:outputPanel>
+                        <span id="js-status"></span>
+                    </apex:pageBlockSectionItem>
+                </apex:pageblockSection>
+            </apex:pageBlock>
+        </span>
+    </div>
+    
+    <script>
+        function showWebhook(){
+            var recordId = '{!JSENCODE(recordId)}';
+            var serverurl = '{!JSENCODE(urlBase)}';
+            var apikey = '{!JSENCODE(mySettings.API_Key__c)}';
+            
+            var result = serverurl +'{!JSENCODE(url)}/'+recordId+'?api_key='+apikey;
+            
+            //create api key if blank.
+            if(apikey.length==0){
+                var ns = '{!JSENCODE(namespace)}';
+                console.info("ns: "+ns, JsRemoting);
+                JsRemoting.apiKey.createKey(ns,
+                    function(apikey){
+                        result = serverurl +'{!JSENCODE(url)}/'+recordId+'?api_key='+apikey;
+                        doShow(result);  
+                    }, function(event){
+                        alert('Exception: '+event.message);
+                    }, function(event){
+                        alert('Error: '+event.message);
+                    }
+                );
+            }
+            else{
+            	doShow(result);
+            }
+        }
+        function doShow(result){
+            document.getElementById('webhookUrl').readOnly = false;
+        	$copado('#webhookUrl').val(result);
+            document.getElementById('webhookUrl').readOnly = true;
+            document.getElementById('wh-popup').style.display='block';
+        }
+        function hideWebhook(){
+            document.getElementById('wh-popup').style.display='none';
+            $copado('#js-status').text('');
+        }
+
+    var copybtn = document.querySelector('#btnCopy');
+    
+    copybtn.addEventListener('click', function(event) {
+        document.getElementById('webhookUrl').readOnly = false;
+        $copado('#webhookUrl').select();
+        try {
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'successful' : 'unsuccessful';
+            var txt = 'Webhook URL copy ' + msg;
+            console.log(txt);
+            $copado('#js-status').text(txt);
+        }
+        catch (err) {
+            alert('Unable to copy');
+        }
+        document.getElementById('webhookUrl').readOnly = true;
+    })
+  
+    
+    </script>
+</apex:component>

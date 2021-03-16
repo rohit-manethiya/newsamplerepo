@@ -1,0 +1,5 @@
+<apex:page standardController="Selenium_Test_Group__c" extensions="SeleniumTestGroupExtension" action="{!runGroup}">
+    <apex:pageMessages >
+    </apex:pageMessages>
+    <button style="margin-left: 20px;" onclick="location.href = '/{!grp.Id}'">{!$Label.Goback2SeleniumGroup}</button>
+</apex:page>

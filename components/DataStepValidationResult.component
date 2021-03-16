@@ -1,0 +1,78 @@
+<apex:component controller="DataStepValidationResultCtlr">
+    <apex:slds />
+    <apex:includeLightning />
+    <c:IncludeStaticsResourceComponent addJQuery="true" addUIjs="true" addUIcss="true" />
+    <apex:includeScript value="{!$Resource.DataStepValidationResult_javascript}" />
+    <apex:includeScript value="{!URLFOR($Resource.DataTables10,'DataTables10/datatables.min.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.DataTables10,'DataTables10/datatables.min.css')}" />
+    <apex:stylesheet value="{!$Resource.DataStepValidationResult_custom_css}" />
+    <script>
+        var globalSldsResourcePath = '{!URLFOR($Asset.SLDS)}';
+    </script>
+
+    <apex:attribute name="stepId" description="" type="Id" assignTo="{!dataStepId}" />
+
+    <apex:actionFunction name="setStepIdInDataStepValidationResultCtrl" action="{!setStepId}" rerender="resultsPanel">
+        <apex:param name="stepId" value="" />
+    </apex:actionFunction>
+    <apex:actionFunction name="refreshAttachmentInDataStepValidationResultCtrl" action="{!refreshAttachment}" rerender="resultsPanel">
+    </apex:actionFunction>
+
+    <apex:outputpanel id="resultsPanel">
+        <apex:outputpanel rendered="{!validationStatus != null}">
+            <div class="resultsMessageContainer">
+                <apex:image value="{!URLFOR($Resource.DTS_images, validationStatusIcon)}" styleClass="resultsIcon" />
+                <span class="resultsMessage">{!validationResultMessage}</span>
+                <div class="resultsLink">
+                    <apex:commandLink rendered="{!validationStatus == 'error'}" status="status" reRender="validationErrorsTablePanel" onclick="lockScreen();"
+                        oncomplete="unlockScreen();openModal();refreshDataTable();return false;">
+                        <span>{!$Label.Show_Warnings}</span>
+                    </apex:commandLink>
+                </div>
+            </div>
+        </apex:outputpanel>
+    </apex:outputpanel>
+
+    <div id="myModal" class="modal slds-scope">
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-labelledby="modal-heading-01"
+            aria-modal="true" aria-describedby="modal-content-id-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">{!$Label.Warnings}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <div id="validation-errors-content" class="slds-tabs_default__content" role="tabpanel">
+                        <apex:outputPanel layout="block" styleClass="table-wrapper" id="validationErrorsPanel">
+                            <div class="table">
+                                <apex:outputPanel layout="block" id="validationErrorsTablePanel">
+                                    <table id="validationErrorsTable" class="stripe">
+                                        <thead>
+                                            <tr>
+                                                <th>{!$Label.USDependency_Environment}</th>
+                                                <th>{!$Label.OBJECT}</th>
+                                                <th>{!$Label.MESSAGE}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <apex:repeat value="{!validationErrors}" var="validationError">
+                                                <tr>
+                                                    <td>{!validationError.environment}</td>
+                                                    <td>{!validationError.objectName}</td>
+                                                    <td>{!validationError.message}</td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <commandbutton class="slds-button slds-button_neutral" onclick="closeModal(); return false;">{!$Label.CLOSE}</commandbutton>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</apex:component>

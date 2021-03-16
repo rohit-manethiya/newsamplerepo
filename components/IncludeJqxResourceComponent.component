@@ -1,0 +1,27 @@
+<!--
+ - Created by umitcanuckan, ferhatozsavran on 17/07/2018
+   to be able to control library versions from one place
+ -->
+
+<apex:component layout="none" id="IncludeJqxResourceComponent">
+    <apex:attribute name="addJqxAlljs" type="Boolean" description="Send it as true if you want to add jqx all js to your source." default="false"/>
+    <apex:attribute name="addJqxBasecss" type="Boolean" description="Send it as true if you want to add jqx base css to your source." default="false"/>
+    <apex:attribute name="addJqxEBcss" type="Boolean" description="Send it as true if you want to add jqx Energy Blue css to your source." default="false"/>
+    <apex:attribute name="addJqxWjs" type="Boolean" description="Send it as true if you want to add jqx window js to your source." default="false"/>
+
+    <apex:outputPanel layout="none" rendered="{!addJqxAlljs}">
+        <apex:includeScript value="{!URLFOR($Resource.jqx,'jqx/jqwidgets/jqx-all.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addJqxBasecss}">
+        <apex:stylesheet value="{!URLFOR($Resource.jqx,'jqx/jqwidgets/styles/jqx.base.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addJqxEBcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.jqx,'jqx/jqwidgets/styles/jqx.energyblue.css')}"/>
+    </apex:outputPanel>
+    
+    <apex:outputPanel layout="none" rendered="{!addJqxWjs}">
+        <apex:includeScript value="{!URLFOR($Resource.jqx, 'jqx/jqwidgets/jqxwindow.js')}"/>
+    </apex:outputPanel>
+</apex:component>

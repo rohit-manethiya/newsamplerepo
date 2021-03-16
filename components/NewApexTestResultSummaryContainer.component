@@ -1,0 +1,16 @@
+<apex:component access="global">
+    <apex:attribute name="recordId" type="String" description="Apex Test Result Id" />
+    <html>
+    <!-- Salesforce Sans font family is not recognized so we use a similar one -->
+        <body style="margin: 0; padding: 0; color: #030303; font-family: Roboto, Tahoma, Geneva, sans-serif; background-color: #F2F2FA">
+            <div style="width: 800px; margin: auto; padding: 50px;">
+                <div style="background-color: #FFFFFF; box-shadow: 0 2px 10px 0 rgba(125, 125, 125, 0.3);">
+                    <c:EmailTemplateHeader />
+                    <c:NewApexTestResultEmail recordId="{!recordId}"/>
+                    <c:EmailTemplateFooter link="https://docs.copado.com/category/tydms9n9ma-quality-and-compliance" linkName="Quality" />
+                </div>
+                <c:EmailTemplateLegal />
+            </div>
+        </body>
+    </html>
+</apex:component>

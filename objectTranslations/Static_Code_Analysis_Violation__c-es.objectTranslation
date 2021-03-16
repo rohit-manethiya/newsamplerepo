@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Static Code Analysis Violation</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Static Code Analysis Violations</value>
+    </caseValues>
+    <fields>
+        <label><!-- File --></label>
+        <name>File__c</name>
+    </fields>
+    <fields>
+        <label><!-- Info URL --></label>
+        <name>Info_URL_Link__c</name>
+    </fields>
+    <fields>
+        <label><!-- Info URL --></label>
+        <name>Info_URL__c</name>
+    </fields>
+    <fields>
+        <label><!-- Line --></label>
+        <name>Line__c</name>
+    </fields>
+    <fields>
+        <label><!-- Message --></label>
+        <name>Message__c</name>
+    </fields>
+    <fields>
+        <label><!-- Priority --></label>
+        <name>Priority__c</name>
+    </fields>
+    <fields>
+        <label><!-- Resolution --></label>
+        <name>Resolution__c</name>
+        <picklistValues>
+            <masterLabel>False Positive</masterLabel>
+            <translation><!-- False Positive --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Fixed</masterLabel>
+            <translation><!-- Fixed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Removed</masterLabel>
+            <translation><!-- Removed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unresolved</masterLabel>
+            <translation><!-- Unresolved --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Won&apos;t fix</masterLabel>
+            <translation><!-- Won&apos;t fix --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Rule --></label>
+        <name>Rule__c</name>
+    </fields>
+    <fields>
+        <label><!-- Score --></label>
+        <name>Score__c</name>
+    </fields>
+    <fields>
+        <label><!-- Severity --></label>
+        <name>Severity__c</name>
+        <picklistValues>
+            <masterLabel>Blocker</masterLabel>
+            <translation><!-- Blocker --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Critical</masterLabel>
+            <translation><!-- Critical --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Info</masterLabel>
+            <translation><!-- Info --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Major</masterLabel>
+            <translation><!-- Major --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Minor</masterLabel>
+            <translation><!-- Minor --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Static Code Analysis Result --></label>
+        <name>Static_Code_Analysis_Result__c</name>
+        <relationshipLabel><!-- Static Code Analysis Violations --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Closed</masterLabel>
+            <translation><!-- Closed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Confirmed</masterLabel>
+            <translation><!-- Confirmed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open</masterLabel>
+            <translation><!-- Open --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Reopened</masterLabel>
+            <translation><!-- Reopened --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Resolved</masterLabel>
+            <translation><!-- Resolved --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>Bug</masterLabel>
+            <translation><!-- Bug --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Code Smell</masterLabel>
+            <translation><!-- Code Smell --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Vulnerability</masterLabel>
+            <translation><!-- Vulnerability --></translation>
+        </picklistValues>
+    </fields>
+    <gender>Neuter</gender>
+    <recordTypes>
+        <description><!-- Record Type for CodeScan integration. Requires CodeScan licensing. --></description>
+        <label><!-- CodeScan --></label>
+        <name>CodeScan</name>
+    </recordTypes>
+    <recordTypes>
+        <description><!-- Record Type for free of charge PMD integration --></description>
+        <label><!-- PMD --></label>
+        <name>PMD</name>
+    </recordTypes>
+</CustomObjectTranslation>

@@ -1,0 +1,480 @@
+<apex:component controller="ScratchOrgController" allowDML="true">
+    <apex:attribute name="parentPageController" type="ScratchOrgWizardPageBase" assignTo="{!pageController}"
+                    required="true" description="The controller for the parent page." />
+    <apex:attribute name="componentName" type="String" assignTo="{!controllerKey}" description="Component Name" />
+    <apex:attribute name="mode" type="String" assignTo="{!componentMode}"
+                    description="Component mode that will define the default behaviour." required="true"
+                    default="edit" />
+    <apex:attribute name="showActionButtons" type="Boolean" assignTo="{!showButtons}" default="true"
+                    description="Hide or show action buttons" />
+    <apex:attribute name="showAllTemplateButtons" type="Boolean" assignTo="{!showTemplateButtons}" default="true"
+                    description="Hide or show template buttons" />
+    <apex:attribute name="showMessages" type="Boolean" default="true" description="Show page messages" />
+    <apex:attribute name="templateIds" type="String" description="It is used at standard Edit button of the Scratch Org Definition" required="false" assignTo="{!templateId}" />
+    <c:ScreenLocker msg="{!$Label.LOADING} Template" />
+    <c:IncludeCodeMirrorResourceComponent addCMjs="true" addCustomJsonLinter="true"  addCMcss="true" addLintcss="true"/>
+    <apex:outputPanel layout="none" rendered="{!showMessages}">
+        <apex:pageMessages id="definitionMessages"/>
+    </apex:outputPanel>
+    <c:CopadoHelp sectionText="{!$Label.Definition_Template_Detail}'"
+                  sectionTitle="{!$Label.HELP}" />
+    <apex:pageBlock title="Scratch Org Definition" id="theBlock" mode="edit">
+        <apex:actionFunction name="saveTemplate" action="{!newTemplate}" rerender="definitionMessages" onComplete="unlockScreen();setSavedTemplateId();">
+            <apex:param name="jsonfile" value="" assignTo="{!jsonSettingsFeatures}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="updateTemplate" action="{!updateTemplate}" rerender="definitionMessages" onComplete="unlockScreen();">
+            <apex:param name="jsonfile" value="" assignTo="{!jsonSettingsFeatures}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="createScratchOrg" action="{!createOrg}" rerender="definitionMessages" onComplete="unlockScreen();">
+            <apex:param name="jsonfile" value="" assignTo="{!jsonSettingsFeatures}"/>
+        </apex:actionFunction>
+        <apex:pageBlockButtons location="top">
+            <apex:outputPanel layout="block" id="org_btn">
+                <apex:commandLink Styleclass="btn btn-primary btn-block" onclick="lockScreen(); cmapp.validate('create'); return false;" value="{!$Label.DXOperation_CreateSO}" rendered="{!showButtons}"/>
+                <apex:commandLink Styleclass="btn btn-primary btn-block" onclick="lockScreen(); cmapp.validate('new'); return false;" value="{!$Label.Save_As_Template}" rendered="{!AND(showTemplateButtons,showTemplateSaveAsButton)}"/>
+                <apex:commandLink Styleclass="btn btn-primary btn-block" onclick="lockScreen(); cmapp.validate('update'); return false;" value="{!$Label.Update_Template}" rendered="{!AND(templateId != null, AND(showTemplateButtons,showTemplateUpdateButton))}" />
+            </apex:outputPanel>
+        </apex:pageBlockButtons>
+        <apex:outputPanel id="orgTemplate" layout="block">
+            <apex:pageBlockSection showHeader="true" title="{!$Label.Select_Org_Definition_Template}" columns="2" collapsible="false" rendered="{!mode != 'packageDependency'}">
+                <apex:pageBlockSectionItem rendered="{!AND(mode != 'new',mode != 'newStd',mode != 'editStd',mode != 'cloneStd')}">
+                    <apex:outputLabel value="{!$Label.Org_Definition_Template}" />
+                    <apex:outputPanel layout="none">
+                        <input type="hidden" name="OT_INPUT_lkid" id="OT_INPUT_lkid" value="{!templateId}" />
+                        <input type="hidden" name="OT_INPUT_lkold" id="OT_INPUT_lkold" value="" />
+                        <input type="hidden" name="OT_INPUT_lktp" id="OT_INPUT_lktp"
+                               value="{!$ObjectType.Scratch_Org_Definition__c.keyPrefix}" />
+                        <input type="hidden" name="OT_INPUT_lspf" id="OT_INPUT_lspf" value="0" />
+                        <input type="hidden" name="OT_INPUT_lspfsub" id="OT_INPUT_lspfsub" value="0" />
+                        <input type="hidden" name="OT_INPUT_mod" id="OT_INPUT_mod" value="0" />
+                        <span class="lookupInput" style="margin-left: 0;">
+                                <input id="OT_INPUT" maxlength="255" name="OT_INPUT"
+                                       onchange="lockScreen();readTemplate(getElementByIdCS('OT_INPUT_lkid').value);getElementByIdCS('OT_INPUT_mod').value='1';getElementByIdCS('OT_INPUT_lkid').value = ''"
+                                       size="20" tabindex="3" type="text" value="{!templateName}" />
+                                <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DOT_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27OT_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27OT_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                                   id="OT_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3"
+                                   title="Org Credential Lookup (New Window)">
+                                <img src="/img/s.gif" alt="Org Credential Lookup (New Window)" class="lookupIcon"
+                                     onblur="this.className = 'lookupIcon';" onfocus="this.className = 'lookupIconOn';"
+                                     onmouseout="this.className = 'lookupIcon';"
+                                     onmouseover="this.className = 'lookupIconOn';"
+                                     title="Artifacts Lookup (New Window)" />
+                                </a>
+                            </span>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!OR(mode == 'new',mode == 'newStd')}">
+                    <apex:outputLabel value="{!$Label.Org_Definition_Template}" />
+                    <apex:selectList value="{!templateId}" multiselect="false" size="1">
+                        <apex:selectOptions value="{!templatesWithHubId}" />
+                        <apex:actionSupport event="onchange" action="{!readOrgDefinitionFromTemplate}" onSubmit="lockScreen();" onComplete="unlockScreen();" reRender="theBlock,org_desc,opt_desc,org_btn,orgTemplate,definitionMessages" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="templateNameSection">
+                    <apex:outputLabel value="{!$Label.Org_Definition_Template} {!$Label.SprintWall_Name_Header}" for="templateName" />
+                    <apex:inputText tabIndex="1" id="templateName" value="{!templateName}"
+                                    title="{!$Label.Org_Definition_Template} {!$Label.SprintWall_Name_Header}" maxLength="80" />
+                </apex:pageBlockSectionItem>
+
+                <apex:actionFunction name="readTemplate" action="{!readOrgDefinitionFromTemplate}"
+                                     onComplete="unlockScreen();" reRender="org_desc,opt_desc,org_btn,loadJson,orgTemplate,definitionMessages">
+                    <apex:param value="" name="template_Id" assignTo="{!templateId}" id="templateIds" />
+                </apex:actionFunction>
+                <script type="application/javascript">
+                    var setSavedTemplateId = function () {
+                        getElementByIdCS('OT_INPUT_lkid').value = "{!JSENCODE(templateId)}";
+                    }
+                    </script>
+            </apex:pageBlockSection>
+        </apex:outputPanel>
+
+        <apex:pageBlockSection showHeader="true" title="Details" columns="2" collapsible="false" id="org_desc">
+            <apex:pageBlockSectionItem helpText="{!$Label.Dev_Hub_Org}" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Dev_Hub_Org}" tabindex="3" for="hubid" />
+                <apex:panelGroup styleClass="col02 requiredInput" layout="block">
+                    <apex:panelGroup styleClass="requiredBlock" layout="block" />
+                    <apex:selectList disabled="{!OR(AND(mode == 'new', NOT(ISBLANK(devHubOrgId))),AND(mode == 'newStd', NOT(ISBLANK(devHubOrgId))),AND(mode == 'editStd', NOT(ISBLANK(devHubOrgId))),AND(mode == 'template', NOT(ISBLANK(devHubOrgId))))}" value="{!devHubOrgId}"
+                                     multiselect="false" size="1" id="devhubId" required="false" tabIndex="2">
+                        <apex:selectOptions value="{!devHubOptions}" />
+                    </apex:selectList>
+                </apex:panelGroup>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem rendered="{!AND(mode != 'template',mode != 'packageDependency',mode != 'newStd',mode != 'editStd',mode != 'cloneStd')}">
+                <apex:outputLabel value="{!$Label.ORG_NAME}" tabindex="3" for="orgName" />
+                <apex:outputPanel layout="none">
+                    <apex:panelGroup styleClass="col02 requiredInput" layout="block"
+                                     rendered="{!OR(mode == 'wizard',mode == 'new')}">
+                        <apex:panelGroup styleClass="requiredBlock" layout="block" />
+                        <apex:inputText required="false" id="orgName_req" value="{!dxUserStoryName}" />
+                    </apex:panelGroup>
+                    <apex:inputText required="false" id="orgName" value="{!dxUserStoryName}"
+                                    rendered="{!mode == 'edit'}" />
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem rendered="{!OR(mode == 'template',mode == 'newStd',mode == 'editStd',mode == 'cloneStd')}" />
+
+            <apex:pageBlockSectionItem helpText="Default value: 'None. Valid entries are Developer, Enterprise, Group, or Professional'">
+                <apex:outputLabel value="{!$Label.Edition}" tabindex="4" for="edition" />
+                <apex:panelGroup styleClass="col02 requiredInput" layout="block">
+                    <apex:panelGroup styleClass="requiredBlock" layout="block" />
+                    <apex:selectList value="{!orgTemplate.edition}" multiselect="false" size="1" id="edition"
+                                     required="false">
+                        <apex:selectOption itemValue="Developer" itemLabel="Developer" />
+                        <apex:selectOption itemValue="Enterprise" itemLabel="Enterprise" />
+                        <apex:selectOption itemValue="Group" itemLabel="Group" />
+                        <apex:selectOption itemValue="Professional" itemLabel="Professional" />
+                    </apex:selectList>
+                </apex:panelGroup>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem helpText="Min Value: 1 Max Value: 30 Default value: 7" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Duration_in_days}" tabindex="5" for="duration" />
+                <apex:panelGroup styleClass="col02 requiredInput" layout="block">
+                    <apex:panelGroup styleClass="requiredBlock" layout="block" />
+                    <apex:input html-min="1" html-max="30" required="false" id="duration" value="{!duration}" />
+                </apex:panelGroup>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem rendered="{!AND(mode != 'wizard',mode != 'template',mode != 'newStd',mode != 'editStd',mode != 'cloneStd', mode != 'packageDependency')}">
+                <apex:outputLabel value="{!$Label.DEPLOYMENT_FLOW}" />
+                <apex:selectList value="{!selectedPipelineId}" multiselect="false" size="1" required="false">
+                    <apex:actionSupport event="onchange" action="{!populateDeploymentFlowSteps}" onSubmit="lockScreen();" onComplete="unlockScreen();" reRender="org_desc" />
+                    <apex:selectOptions value="{!deploymentFlowOptions}" />
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem rendered="{!AND(mode != 'wizard', mode != 'packageDependency',dfsSelectOptionList != null,dfsSelectOptionList.size>0)}">
+                <apex:outputLabel value="{!$Label.Deployment_Flow_DX_Target_Step}" for="deploymentFlowTargetStep" />
+                <apex:selectList value="{!selectedFlowStepId}" multiselect="false" size="1" required="false">
+                    <apex:selectOptions value="{!dfsSelectOptionList}" />
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+
+        </apex:pageBlockSection>
+
+        <apex:pageBlockSection showHeader="true" title="Options" columns="2" collapsible="true" id="opt_desc">
+
+            <apex:pageBlockSectionItem helpText="Default value: 'Dev Hub's country. Scratch orgs are located in a data center based on the specified country.'" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Country}" tabindex="4" for="country" />
+                <apex:selectList value="{!orgTemplate.country}" size="1" multiselect="false" id="country">
+                    <apex:selectOptions value="{!countryPicklistOptions}"/>
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem helpText="Default value: 'test-unique_identifier@orgName.net'"
+                                       rendered="{!AND(mode != 'template', mode != 'packageDependency', mode != 'newStd', mode != 'editStd', mode != 'cloneStd')}">
+                <apex:outputLabel value="{!$Label.USERNAME}" tabindex="4" for="username" />
+                <apex:inputText required="false" id="username" value="{!orgTemplate.username}" />
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem rendered="{!OR(mode == 'template',mode == 'packageDependency',mode == 'newStd',mode == 'editStd',mode == 'cloneStd')}" />
+
+            <apex:pageBlockSectionItem helpText="Default value: 'Default language for the country'" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Language}" tabindex="7" for="language" />
+                <apex:selectList value="{!orgTemplate.language}" size="1" multiselect="false" id="language">
+                    <apex:selectOption itemLabel="English" itemValue="en_US" />
+                    <apex:selectOption itemLabel="Chinese (Simplified)" itemValue="zh_CN" />
+                    <apex:selectOption itemLabel="Chinese (Traditional)" itemValue="zh_TW" />
+                    <apex:selectOption itemLabel="Danish" itemValue="da" />
+                    <apex:selectOption itemLabel="Dutch" itemValue="nl_NL" />
+                    <apex:selectOption itemLabel="Finnish" itemValue="fi" />
+                    <apex:selectOption itemLabel="French" itemValue="fr" />
+                    <apex:selectOption itemLabel="German" itemValue="de" />
+                    <apex:selectOption itemLabel="Italian" itemValue="it" />
+                    <apex:selectOption itemLabel="Japanese" itemValue="ja" />
+                    <apex:selectOption itemLabel="Korean" itemValue="ko" />
+                    <apex:selectOption itemLabel="Portuguese (Brazil)" itemValue="pt_BR" />
+                    <apex:selectOption itemLabel="Russian" itemValue="ru" />
+                    <apex:selectOption itemLabel="Spanish" itemValue="es" />
+                    <apex:selectOption itemLabel="Swedish" itemValue="sv" />
+                    <apex:selectOption itemLabel="Thai" itemValue="th" />
+                    <apex:selectOption itemLabel="Arabic" itemValue="ar" />
+                    <apex:selectOption itemLabel="Bulgarian" itemValue="bg" />
+                    <apex:selectOption itemLabel="Czech" itemValue="cs" />
+                    <apex:selectOption itemLabel="English (UK)" itemValue="en_GB" />
+                    <apex:selectOption itemLabel="Greek" itemValue="el" />
+                    <apex:selectOption itemLabel="Spanish (Mexico)" itemValue="es_MX" />
+                    <apex:selectOption itemLabel="Hebrew" itemValue="iw" />
+                    <apex:selectOption itemLabel="Hungarian" itemValue="hu" />
+                    <apex:selectOption itemLabel="Indonesian" itemValue="in" />
+                    <apex:selectOption itemLabel="Norwegian" itemValue="no" />
+                    <apex:selectOption itemLabel="Polish" itemValue="pl" />
+                    <apex:selectOption itemLabel="Romanian" itemValue="ro" />
+                    <apex:selectOption itemLabel="Turkish" itemValue="tr" />
+                    <apex:selectOption itemLabel="Ukrainian" itemValue="uk" />
+                    <apex:selectOption itemLabel="Vietnamese" itemValue="vi" />
+                    <apex:selectOption itemLabel="Albanian" itemValue="sq" />
+                    <apex:selectOption itemLabel="Armenian" itemValue="hy" />
+                    <apex:selectOption itemLabel="Basque" itemValue="eu" />
+                    <apex:selectOption itemLabel="Bosnian" itemValue="bs" />
+                    <apex:selectOption itemLabel="Croatian" itemValue="hr" />
+                    <apex:selectOption itemLabel="English (Australia)" itemValue="en_AU" />
+                    <apex:selectOption itemLabel="English (Canada)" itemValue="en_CA" />
+                    <apex:selectOption itemLabel="English (India)" itemValue="en_IN" />
+                    <apex:selectOption itemLabel="English (Malaysia)" itemValue="en_MY" />
+                    <apex:selectOption itemLabel="English (Philippines)" itemValue="en_PH" />
+                    <apex:selectOption itemLabel="Estonian" itemValue="et" />
+                    <apex:selectOption itemLabel="French (Canada)" itemValue="fr_CA" />
+                    <apex:selectOption itemLabel="Georgian" itemValue="ka" />
+                    <apex:selectOption itemLabel="Hindi" itemValue="hi" />
+                    <apex:selectOption itemLabel="Icelandic" itemValue="is" />
+                    <apex:selectOption itemLabel="Irish" itemValue="ga" />
+                    <apex:selectOption itemLabel="Latvian" itemValue="lv" />
+                    <apex:selectOption itemLabel="Lithuanian" itemValue="lt" />
+                    <apex:selectOption itemLabel="Luxembourgish" itemValue="lb" />
+                    <apex:selectOption itemLabel="Macedonian" itemValue="mk" />
+                    <apex:selectOption itemLabel="Malay" itemValue="ms" />
+                    <apex:selectOption itemLabel="Maltese" itemValue="mt" />
+                    <apex:selectOption itemLabel="Moldovan" itemValue="ro_MD" />
+                    <apex:selectOption itemLabel="Montenegrin" itemValue="sh_ME" />
+                    <apex:selectOption itemLabel="Portuguese (European)" itemValue="pt_PT" />
+                    <apex:selectOption itemLabel="Romansh" itemValue="rm" />
+                    <apex:selectOption itemLabel="Serbian (Cyrillic)" itemValue="sr" />
+                    <apex:selectOption itemLabel="Serbian (Latin)" itemValue="sh" />
+                    <apex:selectOption itemLabel="Slovak" itemValue="sk" />
+                    <apex:selectOption itemLabel="Slovenian" itemValue="sl" />
+                    <apex:selectOption itemLabel="Tagalog" itemValue="tl" />
+                    <apex:selectOption itemLabel="Urdu" itemValue="ur" />
+                    <apex:selectOption itemLabel="Welsh" itemValue="cy" />
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem helpText="Default value: 'Email address of the Dev Hub user making the scratch org creation request'" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Admin_Email}" tabindex="8" for="adminEmail" />
+                <apex:outputText id="adminEmail" value="{!$User.Email}" />
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem helpText="Default value: '2000-character free-form text field.You can view or edit the description in the Dev Hub.'" rendered="{!mode != 'packageDependency'}">
+                <apex:outputLabel value="{!$Label.Description}" tabindex="7" for="description" />
+                <apex:inputTextarea cols="60" rows="8" richText="false" required="false" id="description"
+                                    value="{!orgTemplate.description}" />
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Sample_Data}" tabindex="6" for="hassampledata" />
+                <apex:inputCheckbox value="{!orgTemplate.hasSampleData}" id="hassampledata" />
+            </apex:pageBlockSectionItem>
+
+        </apex:pageBlockSection>
+        <apex:pageBlockSection showHeader="true" title="Definition" id="jsonDefinition" columns="1">
+            <apex:outputPanel layout="block" id="jsonModal" >
+                <textarea id="jsonEditor" ></textarea>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+
+        <script type="text/javascript">
+                var cmapp;
+
+                /**
+                 * Application class for json editor operations
+                 */
+                class Application {
+                    /**
+                    * Initializes the editor and defines code object for getter and setter functions
+                    * @see initEditor
+                    */
+                    constructor() {
+                        const form = this.form = document.getElementById("jsonEditor");
+                        this.initEditor();
+                        Object.defineProperty(this, 'code', {
+                            get() {
+                                return this.editor.getValue();
+                            },
+                            set(v) {
+                                this.editor.setValue(v);
+                            }
+                        });
+                    }
+                    /**
+                     * initializes CodeMirror editor
+                     * @see CodeMirror
+                     */
+                    initEditor() {
+                        this.editor = CodeMirror.fromTextArea(this.form, {
+                            lineNumbers: true,
+                            mode: "application/json",
+                            gutters: ["CodeMirror-lint-markers"],
+                            lint: true
+                        });
+                        this.editor.on($copado('#jsonEditor'), "keydown", function(e) { if(e.target.classList.contains("KeyDown") && e.keyCode == 13 ) { e.preventDefault();alert('bbb') }})
+                        return this;
+                    }
+                    /**
+                    * Make lint marker to display json SYNTAX errors
+                    */
+                    makeMarker(lineNumber,labels) {
+                        if(!this && !this.editor) return;
+                        console.info('Editor found.. Creating marker for syntax error');
+                        // Create a gutter container elem
+                        var gutterElt = document.createElement("div");
+                        gutterElt.className = "CodeMirror-gutter-elt custom-gutter";
+                        gutterElt.style.left = "0px";
+                        gutterElt.style.width = "16px";
+                        // Create lint error element with marker
+                        var errorMarker = document.createElement("div");
+                        errorMarker.className = "CodeMirror-lint-marker-error custom-error";
+                        // Create tooltip span to show error messages
+                        var errorMessage = document.createElement("span");
+                        errorMessage.className = "custom-tip";
+                        errorMessage.innerHTML = labels;
+                        //Get and store current curser position and set cursor to the end of the code
+                        var currentPosition = this.editor.getCursor();
+                        this.editor.setCursor(cmapp.editor.lineCount(), 0);
+                        var lineElements = document.getElementsByClassName('CodeMirror-code')[0];
+                        var lines = lineElements.querySelectorAll("div.CodeMirror-gutter-wrapper");
+                        if(!lines) return;
+        
+                        var allLines= Array.from(lines);
+                        try{
+                            allLines[lineNumber].appendChild(gutterElt);
+                            gutterElt.appendChild(errorMarker);
+                            errorMarker.appendChild(errorMessage);
+                        } catch(err) {
+                            console.error('Couldnt append lint error to the line:',lineNumber);
+                        }
+                        //Focus back into the editor and set cursor to the original position back
+                        this.editor.focus();
+                        this.editor.setCursor(currentPosition);
+                    }
+                    /**
+                    * Validates the json syntax by usin jsonlint variable as a decision
+                    * mechanism.
+                    * @see jsonlint
+                    * @see notify
+                    * @see highlightErrorLine
+                    */
+                    validate(mode) {
+                        var currentPosition = this.editor.getCursor();
+                        let lineMatches;
+                        const { code } = this;
+
+                        try {
+                            document.querySelectorAll(".CodeMirror-gutter-elt.custom-gutter").forEach(e => e.remove());
+                            jsonlint.parse(code); // decisioner
+                            // if parse is ok set console info OK
+                            this.notify(true, 'Valid JSON');
+                            //Remove all previous error gutters
+                            var gutters = $copado('.custom-gutter');
+                            if(gutters.length > 0) {
+                                gutters.remove();
+                            }
+                            if(mode === 'new') {
+                                saveTemplate(cmapp.code);
+                            } else if(mode === 'update') {
+                                updateTemplate(cmapp.code);
+                            } else if(mode === 'create') {
+                                createScratchOrg(cmapp.code);
+                            } else if(mode === 'validate') {
+                                nextStepOrgTemplate(cmapp.code);
+                            }
+                        } catch (e) {
+                            unlockScreen();
+                            // Get line number from error message
+                            lineMatches = e.message.match(/line ([0-9]*)/);
+                            //Create error marker from highlightErrorLine method
+                            if (lineMatches && lineMatches.length > 1) {
+                                this.highlightErrorLine(lineMatches[1] - 1,e.message);
+                            }
+                            // Set error in console info
+                            this.notify(false, e.message);
+                            this.editor.focus();
+                            this.editor.setCursor(currentPosition);
+                        }
+
+                        return this;
+                    }
+                    /**
+                    * Place holder method for future notifications
+                    */
+                    notify(success, text) {
+                        console.info('notify json status: ',success,text);
+                        return this;
+                    }
+                    /**
+                    * Mark error lines and call makeMarker for linter
+                    */
+                    highlightErrorLine(line,message) {
+                        if (typeof line === 'number') {
+                            setTimeout(function() {
+                               cmapp.makeMarker(line,message);
+                            }, 100);
+                            this.editor.setCursor(line);
+                        } else if (this.errorLine) {
+                            setTimeout(function() {
+                               cmapp.makeMarker(cmapp.errorLine,message);
+                            }, 100);
+                            //After adding marker to the current error lines remove the line info for multi error handling
+                            this.errorLine = null;
+                        }
+                        return this;
+                    }
+                };
+
+                setTimeout(function() {
+                	var cmInstance = document.querySelector('.CodeMirror');
+                    if(!cmInstance) {
+                        cmapp = new Application();
+                    }
+                }, 100);
+                if(!cmapp) cmapp = new Application();
+
+        </script>
+        <apex:outputPanel id="loadJson" layout="block">
+            <script type="text/javascript">
+                setTimeout(function() {
+                    var objParsed;
+                if('{!JSENCODE(jsonSettingsFeatures)}'){
+                    var jsonObj = '{!JSENCODE(jsonSettingsFeatures)}';
+                        objParsed = JSON.parse(jsonObj);
+                    } else {
+                        objParsed = {"features":[],"settings":{}};
+                    }
+                    cmapp.code = JSON.stringify(objParsed,null,2);
+                }, 500);
+            </script>
+        </apex:outputPanel>
+        <style>
+            .custom-error {
+              position: relative;
+              display: inline-block;
+              border-bottom: 1px dotted black;
+            }
+
+            .custom-error .custom-tip {
+              visibility: hidden;
+              width: 120px;
+              background-color: #555;
+              color: #fff;
+              text-align: center;
+              border-radius: 6px;
+              padding: 5px 0;
+              position: absolute;
+              z-index: 9999;
+              left: 50%;
+              margin-left: 20px;
+              opacity: 0;
+              transition: opacity 0.3s;
+            }
+
+            .custom-error .custom-tip::after {
+              content: "";
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              margin-left: -5px;
+              border-width: 5px;
+              border-style: solid;
+              border-color: #555 transparent transparent transparent;
+            }
+
+            .custom-error:hover .custom-tip {
+              visibility: visible;
+              opacity: 1;
+              overflow: display;
+            }
+        </style>
+    </apex:pageBlock>
+</apex:component>

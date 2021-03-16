@@ -1,0 +1,161 @@
+<apex:component id="cmp" controller="Settings">
+    <apex:attribute name="minCodeCoverage" type="Integer" required="true" description="min code coverage" />
+    <apex:attribute name="attachmentId" type="String" required="true"  description="attachmentId" />
+    <apex:attribute name="userStoryId" type="String" required="false"  description="userStoryId" />
+    <apex:attribute name="orgId" type="String" required="false"  description="orgId" />
+    <apex:attribute name="envId" type="String" required="false"  description="envId" />
+    <apex:attribute name="userStory" type="SObject" required="false"  description="userStory" assignTo="{!userStoryObj}"/>
+    
+    <apex:outputText rendered="{! (!ISBLANK(userStoryId)) && ISBLANK(userStoryObj['org_Credential__c']) }" >
+        <div id="warningNoOrgCredential" >
+            <apex:pageMessage severity="INFO" title="{!$Label.USERSTORY_HAS_NO_ORG_CREDENTIAL_TITLE}" summary="{!$Label.USERSTORY_HAS_NO_ORG_CREDENTIAL_SUMMARY}" strength="3" />
+        </div>
+    </apex:outputText>
+
+    <head>
+        <c:IncludeStaticsResourceComponent addJquery="true" addUIjs="true" addCometdjs="true" addJSON2js="true" addJcometdjs="true" addUIcss="true" addATRcss="true" addWizardcss="true"/>
+        <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true"/>
+        
+        <apex:includeScript value="{!URLFOR($Resource.statusManager) }" />
+        <apex:includeScript value="{!URLFOR($Resource.utilsV2) }"/>
+        <apex:includeScript value="{!URLFOR($Resource.copadoStreamingService) }" />
+
+        <style> 
+                #jqxTabs .apexp .bPageBlock.apexDefaultPageBlock .pbBody {margin:0;}
+                #divPBbuttonsLoading { display:inline;}
+                .jqx-tabs-content {font-family: Arial,Helvetica,sans-serif; }
+        </style>
+        <c:IncludeConnectionJsComponent />
+
+        <script>
+            var loadingHtml = '<div style="margin:30px 0 30px 0;"><center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center></div>';
+           
+            var copadoApp = {
+                ns: '{!JSENCODE(namespace)}',
+                attachmentId: '{!JSENCODE(attachmentId)}',
+                userStoryId: '{!JSENCODE(userStoryId)}',
+                orgId: '{!JSENCODE(orgId)}',
+                herokuServer: '{!JSENCODE(herokuServer)}',
+                urlBase: '{!JSENCODE(urlBase)}',
+                urlParameters: '{!JSENCODE(urlParameters)}',
+                minCodeCoverage: parseInt('{!minCodeCoverage}') || 0, 
+                userStoryObj: {!userStoryAsJSON},
+                envId: '{!JSENCODE(envId)}' // can be null
+            };
+        </script>
+        <script id="apexTestResultJS" src="{!URLFOR($Resource.apexTestResult) }" />
+    </head>
+    
+    <apex:outputText rendered="{! !((!ISBLANK(userStoryId)) && ISBLANK(userStoryObj['org_Credential__c'])) }" >
+
+        <div id="loadingDiv"><center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center></div>
+    
+        <c:ScreenLocker msg="{!$Label.LOADING}" />    
+        <div id="globalWrapper" style="display:none;">
+            <div id="jqxTabs">
+                <ul>
+                    <li style="margin-left: 30px;">{!$Label.SUMMARY}</li>
+                    <li>{!$Label.CLASS_COVERAGE}</li>
+                    <li>{!$Label.TRIGGER_COVERAGE}</li>
+                    <li>{!$Label.METHODS}</li>
+                </ul>
+                <div style="overflow: hidden;">
+                    <div id="summaryUserStory" style="display:none;">
+                        <div id="warningNoTestToShow" style="display:none;">
+                            <apex:pageMessage severity="INFO" title="{!$Label.USERSTORY_HAS_NO_TEST_RESULTS_TITLE}" summary="{!$Label.USERSTORY_HAS_NO_TEST_RESULTS_SUMMARY}" strength="3" />
+                        </div>
+                        <apex:pageBlock >
+                            <apex:pageBlockButtons location="top">
+                                <input id="btnRunTests" type="button" value="{!$Label.RUN_APEX_TESTS}" onclick="loadRunTestTab();" class="btn" />
+                                <apex:outputPanel layout="none" rendered="{!userStoryId != null}">
+                                    <a href="{!URLFOR($Action.User_Story__c.View,userStoryId)}" class="btn" title="{!$Label.Go_Back}" style="text-decoration: none;{!IF($User.UIThemeDisplayed == 'Theme3','padding: 4px 3px;','')}">
+                                        <span class="slds-assistive-text">{!$Label.Go_Back}</span>
+                                    </a>
+                                </apex:outputPanel>
+                                <div id="divPBbuttonsLoading" style="display:none;"><img src="/img/loading.gif" /></div>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection >
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="{!$Label.USER_STORY_COVERAGE}"/>
+                                    <div class="jstxt_userStoryCoverage"> </div>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="{!$Label.DURATION}" />
+                                    <div class="jstxt_Duration"> </div>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="{!$Label.TESTS_PASSED}" />
+                                    <div class="jstxt_TestsPassed"> </div>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </div>
+                    <div id="summaryOrg" style="display:none;">
+                        <div id="errorMessage" style="display:none;">
+                            <apex:pageMessage severity="INFO" summary="{!$Label.RUN_ALL_TESTS_TO_LOAD_TEST_RESULTS_FOR_ORG}" strength="3" />
+                        </div>
+                        <div id="pbWrapper">
+                            <apex:pageBlock >
+                                <apex:pageBlockSection >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.TOTAL_ORG_COVERAGE}" />
+                                        <div class="jstxt_Coverage"> </div>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.DURATION}" />
+                                        <div class="jstxt_Duration"> </div>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.TESTS_PASSED}" />
+                                        <div class="jstxt_TestsPassed"> </div>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+                        </div>
+                    </div>
+                </div>
+                <div style="overflow: hidden;"><apex:pageBlock ><div id="jqxgrid_classCoverage"> </div></apex:pageBlock></div>
+                <div style="overflow: hidden;"><apex:pageBlock ><div id="jqxgrid_triggerCoverage"> </div></apex:pageBlock></div>
+                <div style="overflow: hidden;"><apex:pageBlock ><div id="jqxgrid_testMethods"> </div></apex:pageBlock></div>
+                <script>
+                    function loadRunTestTab(){
+                        var yes = apexTestResult.runApexTests();
+                        if(yes){
+                            $copado('#divPBbuttonsLoading').css("display", "inline");
+                            $copado('#btnRunTests').attr('value', copadoLabels.RUNNING_APEX_TESTS);
+                            $copado('.jstxt_userStoryCoverage').empty();
+                            $copado('.jstxt_TestsPassed').empty();
+                            $copado('.jstxt_Duration').empty();
+                            $copado('#btnRunTests').attr('disabled', true);
+                        }
+                    }
+                </script>           
+            </div>
+        </div>
+    
+        <script type="text/javascript">
+            apexTestResult.ns = copadoApp.ns;
+            apexTestResult.init();
+    
+           '{!JSENCODE(userStoryId)}' && $copado( function(){
+              copadoStreamingService.ns = copadoApp.ns;
+              copadoStreamingService.init();
+              statusManager.ns = copadoApp.ns;
+              statusManager.herokuServer = '{!JSENCODE(herokuServer)}';
+              statusManager.urlParameters = '{!JSENCODE(urlParameters)}';
+              statusManager.sessionId = __sfdcSessionId;
+              statusManager.parentId = '{!JSENCODE(userStoryId)}';
+              statusManager.waitTimeout = 10000;
+              
+              statusManager.initFunction = function(){  };
+              statusManager.successFunction = function(){
+                  location.reload(false);
+              };
+    
+              setTimeout(function(){
+                  statusManager.initialise();
+              },2000);          
+            });
+        </script>
+    </apex:outputText>
+</apex:component>

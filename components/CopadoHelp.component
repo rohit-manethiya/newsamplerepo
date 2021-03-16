@@ -1,0 +1,43 @@
+<apex:component >
+	<!--
+	 // Copado Help component
+	 // Component that adds a collapsible section with a text and an external link.
+	 // @version 1.0
+	 // @author David VENEGAS
+	 //
+	 // If there are more than one Help sections in a page, it is possible that only one section is collapsible. 
+	 // Call the helpSectionBinding function in the page to bind all Help sections to make them collapsible.
+	 // @see ResolveConflict.page
+	-->
+
+	<!-- ATTRIBUTES -->
+	<apex:attribute name="sectionTitle" type="String" description="Section title. When clicked it displays the text" />
+	<apex:attribute name="sectionText" type="String" description="Help text to display" required="true" />
+	<apex:attribute name="sectionLink" type="String" description="Optional link for the More Information Here." />
+	<apex:attribute name="sectionLinkTitle" type="String" description="Title of the link. Defaults to: More Information Here" />
+	<apex:attribute name="sectionOpen" type="Boolean" description="Determine if the section is always open. Defaults to false." />
+	<apex:attribute name="styleAttributes" type="String" description="CSS custom styling." />
+	<!-- / ATTRIBUTES -->
+
+	<!-- SECTION -->
+	<div class="slds-scope" style="{!styleAttributes}">
+		<div class="slds-section {!IF(sectionOpen, 'slds-is-open','')}" style="margin-top:0px;">
+			<h3 class="slds-section__title">
+				<button type="button" class="slds-button slds-section__title-action" onclick="$copado(this).parent().parent().toggleClass('slds-is-open');">
+					<svg class="slds-section__title-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+						<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#switch')}" />
+					</svg>
+					<span class="slds-truncate" title="{!IF(ISBLANK(sectionTitle),$Label.HELP,sectionTitle)}">{!IF(ISBLANK(sectionTitle),$Label.HELP,sectionTitle)}</span>
+				</button>
+			</h3>
+			<div class="slds-section__content">
+				<p>
+					<apex:outputText escape="false" value="{!sectionText}" />&nbsp;
+					<apex:outputLink rendered="{!!ISBLANK(sectionLink)}" value="{!sectionLink}" target="_blank">{!IF(ISBLANK(sectionLinkTitle),$Label.MORE_INFORMATION_HERE,sectionLinkTitle)}</apex:outputLink>.
+				</p>
+				<br/>
+			</div>
+		</div>
+	</div>
+	<!-- / SECTION -->
+</apex:component>

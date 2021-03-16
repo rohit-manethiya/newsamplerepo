@@ -1,0 +1,33 @@
+<template>
+    <lightning-layout>
+        <lightning-layout-item padding="around-small" size="6">
+            <lightning-combobox
+                value={selectedFilterValue}
+                placeholder="Select Field"
+                options={mainFilterOptions}
+                onchange={handleMainPicklistChange}
+                variant="label-hidden"
+            ></lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small" size="5">
+            <template if:true={showSecondFilterPicklist}>
+                <lightning-combobox
+                    value={selectedSecondFilterValue}
+                    placeholder="Select Field"
+                    options={secondFilterOptions}
+                    onchange={handleSecondPicklistChange}
+                    variant="label-hidden"
+                ></lightning-combobox>
+            </template>
+        </lightning-layout-item>
+        <lightning-layout-item padding="around-small" size="1">
+            <lightning-button-icon
+                icon-name="utility:delete"
+                alternative-text="Delete"
+                class="slds-m-left_xx-small"
+                title="Delete"
+                onclick={handleRemovePicklistValues}
+            ></lightning-button-icon>
+        </lightning-layout-item>
+    </lightning-layout>
+</template>

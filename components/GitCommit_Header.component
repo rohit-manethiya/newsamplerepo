@@ -1,0 +1,140 @@
+<apex:component id="GitCommit_Header" controller="GitCommit_HeaderController" allowDML="true">
+
+    <apex:attribute name="pController"
+                    type="GitCommit_PageBase"
+                    assignTo="{!pageController}"
+                    required="true"
+                    description="The controller for the page." />
+
+    <!--<apex:attribute name="ckey"
+                    type="String"
+                    assignTo="{!componentKey}"
+                    description="The key given to this component so the page can easily get access to it" />-->
+
+    <style>
+        .editIcon {
+            color: lightgrey;
+        }
+        .noBorder {
+            border: none !important;
+        }
+        .informationIcon {
+            color: #3593c6;
+        }
+        .slds-scope .slds-button_neutral, .slds-scope .slds-button--neutral {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+    </style>
+
+    <apex:outputPanel id="headerComponent" layout="block" styleClass="slds-form" html-role="list" rendered="{!pageController.userHasAccess}">
+        <div id="headerDiv" class="slds-form__row">
+            <div class="slds-col">
+                <div class="slds-form__item" role="listitem">
+                    <div class="slds-form-element slds-form-element_edit slds-form-element_stacked slds-hint-parent">
+                        <span class="slds-form-element__label">
+                            <div class="slds-text-heading_large">
+                                {!pageController.pageHeaderText}
+                            </div>
+                        </span>
+                        <div class="slds-form-element__control">
+                            <div class="slds-form-element__static">
+                                <div class="slds-text-heading_small">
+                                    <span title="Org Name">{!pageController.snapshot.Org__r.Name} ></span>
+                                    <span title="Repository Name">{!pageController.snapshot.Git_Repository__r.Name} /</span>
+                                    <span title="Branch Name">{!pageController.snapshot.Branch__c}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-col">
+                <apex:outputPanel layout="block" styleClass="slds-form__item" html-role="listitem" id="buttonPanel" style="margin-top:10px;float: right;">
+                    <button type="button" id="ccancelCommit" class="slds-button slds-button_neutral" style="height: min-content; color:#3593c6; overflow: hidden !important; text-overflow: ellipsis;white-space: nowrap !important;" onclick="lockScreen();returnToRecord();" title="{!$Label.Cancel}" >{!$Label.Cancel}</button>
+                    <apex:outputPanel layout="none" rendered="{!AND(pageController.variant == 'dxcommit')}">
+                        <button type="button" id="checkorgstatus" class="slds-button slds-button_neutral" style="height: min-content; color:#3593c6; overflow: hidden !important; text-overflow: ellipsis;white-space: nowrap !important;" onclick="copadoGitCommit_config.checkStatusRedirect();" title="{!$Label.Check_Org_Status}" >{!$Label.Check_Org_Status}</button>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!AND($Permission.Edit_User_Story_Commit_Base_Branch,pageController.operationItem.showAdvancedSection,pageController.userStory.Id != null)}">
+                        <button type="button" id="copadoAdvance" class="slds-button slds-button_neutral" style="height: min-content; color:#3593c6; overflow: hidden !important; text-overflow: ellipsis;white-space: nowrap !important;" onclick="toggleDiv();" title="{!$Label.ADVANCED}" >{!$Label.ADVANCED}</button>
+                    </apex:outputPanel>
+                    <button type="button" id="copadoCommit" class="slds-button slds-button_neutral" style="height: min-content; color: #ffffff; overflow: hidden !important; text-overflow: ellipsis;white-space: nowrap !important; background-color: #3593c6 !important;" onclick="lockScreen();gitCommitCommons.startCommit();" title="{!IF(ISBLANK(pageController.operationItem.operationButtonLabel),$Label.COMMIT_NOW,pageController.operationItem.operationButtonLabel)}" >{!IF(ISBLANK(pageController.operationItem.operationButtonLabel),$Label.COMMIT_NOW,pageController.operationItem.operationButtonLabel)}</button>
+                </apex:outputPanel>
+            </div>
+        </div>
+
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_5-of-5">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_1-of-5" style="margin-bottom: 10px;">
+                        <div class="slds-form-element slds-form-element_edit slds-form-element_readonly slds-form-element_stacked slds-hint-parent" style="width: 90%;">
+                            <span class="slds-form-element__label">{!$Label.GIT_OPERATION}</span>
+                            <div class="slds-form-element__icon">
+                                <button class="slds-button slds-button_icon" aria-describedby="help" onmouseover="$copado('#helpGitOperationType').css('display','block')" onmouseout="$copado('#helpGitOperationType').css('display','none')">
+                                    <span class="slds-icon_container slds-icon__svg--default informationIcon"></span>
+                                </button>
+                                <div class="slds-popover slds-popover_walkthrough slds-popover_feature slds-nubbin_left" role="tooltip" id="helpGitOperationType" style="display: none; position: absolute; top: -30px; left: 25px; width: 240px;">
+                                    <div class="slds-popover__body">{!$Label.Git_Operation_Help_Text}</div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__static" style="min-height:32px;">
+                                    <apex:selectList value="{!pageController.selectedGitOperation}" id="operationType" style="min-height:32px;" size="1" multiselect="false" styleClass="noBorder slds-select">
+                                        <apex:selectOptions value="{!availableOperationList}" />
+                                        <apex:actionSupport event="onchange" action="{!updateOperationItem}" rerender="gitOperationSections,buttonPanel" onSubmit="lockScreen();" onComplete="unlockScreen();gitCommitCommons.changeOperation('{!JSENCODE(pageController.selectedGitOperation)}')" />
+                                    </apex:selectList>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_2-of-5" style="margin-bottom: 10px;">
+                        <div class="slds-form-element slds-form-element_edit slds-form-element_readonly slds-form-element_stacked slds-hint-parent" style="width: 90%;">
+                            <span class="slds-form-element__label"><abbr class="slds-required" title="Required">* </abbr>{!$ObjectType.Git_Org_Commit__c.fields.Commit_Message__c.Label}</span>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__static">
+                                    <apex:inputText id="copadoCommitMessage" value="{!commitMessage}" styleClass="slds-input slds-input_bare" title="{!commitMessage}" />
+                                </div>
+                                <span class="slds-icon_container slds-icon__svg--default editIcon"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <apex:repeat value="{!$ObjectType.Git_Backup__c.FieldSets.Git_Commit_Header}" var="snapshotField" rendered="{!pageController.snapshot.Id != null}">
+                        <div class="slds-col slds-size_1-of-5" style="margin-bottom: 10px;">
+                            <div class="slds-form-element slds-form-element_edit slds-form-element_stacked slds-hint-parent" style="width: 90%;">
+                                <span class="slds-form-element__label">{!snapshotField.Label}</span>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-form-element__static">
+                                        <apex:outputField value="{!pageController.snapshot[snapshotField]}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:repeat>
+
+                    <apex:repeat value="{!$ObjectType.User_Story__c.FieldSets.Git_Commit_Header}" var="userStoryField" rendered="{!pageController.userStory.Id != null}">
+                        <div class="slds-col slds-size_1-of-5" style="margin-bottom: 10px;">
+                            <div class="slds-form-element slds-form-element_edit slds-form-element_stacked slds-hint-parent" style="width: 90%;">
+                                <span class="slds-form-element__label">{!userStoryField.Label}</span>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-form-element__static">
+                                        <apex:outputField value="{!pageController.userStory[userStoryField]}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:repeat>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+
+    <apex:actionFunction name="goToWaitingForPage" action="{!goToWaitingForPage}" reRender="tempRerender">
+        <apex:param name="commitId" value="" />
+    </apex:actionFunction>
+
+    <apex:actionFunction name="deleteUSMetadata" action="{!deleteMetadataIndex}" reRender="tempRerender" />
+
+</apex:component>

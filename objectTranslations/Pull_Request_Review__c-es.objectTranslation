@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Pull Request Review</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Pull Request Reviews</value>
+    </caseValues>
+    <fields>
+        <label><!-- Body --></label>
+        <name>Body__c</name>
+    </fields>
+    <fields>
+        <label><!-- Pull Request --></label>
+        <name>Pull_Request__c</name>
+        <relationshipLabel><!-- Pull Request Reviews --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Review Action --></label>
+        <name>Review_Action__c</name>
+    </fields>
+    <fields>
+        <label><!-- Review Id --></label>
+        <name>Review_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- URL Link --></label>
+        <name>URL_Link__c</name>
+    </fields>
+    <fields>
+        <label><!-- Url --></label>
+        <name>Url__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Avatar Url --></label>
+        <name>User_Avatar_Url__c</name>
+    </fields>
+    <fields>
+        <label><!-- User Avatar --></label>
+        <name>User_Avatar__c</name>
+    </fields>
+    <fields>
+        <label><!-- Username --></label>
+        <name>Username__c</name>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

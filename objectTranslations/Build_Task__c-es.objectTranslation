@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Build Task</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Build Tasks</value>
+    </caseValues>
+    <fields>
+        <label><!-- Continuous Integration --></label>
+        <name>Continuous_Integration__c</name>
+        <relationshipLabel><!-- Build Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Deployment --></label>
+        <name>Deployment__c</name>
+        <relationshipLabel><!-- Build Tasks --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Duration --></label>
+        <name>Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Start Time --></label>
+        <name>Start_Time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Failed</masterLabel>
+            <translation><!-- Failed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Progress</masterLabel>
+            <translation><!-- In Progress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Success</masterLabel>
+            <translation><!-- Success --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Type --></label>
+        <name>Type__c</name>
+        <picklistValues>
+            <masterLabel>Deploy</masterLabel>
+            <translation><!-- Deploy --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Validate</masterLabel>
+            <translation><!-- Validate --></translation>
+        </picklistValues>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

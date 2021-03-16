@@ -1,0 +1,123 @@
+<apex:component layout="block" id="DataTemplateTaskComponent" controller="DataTemplateTaskComponentController">
+    <apex:attribute name="dataJson" description="" type="String" />
+    <apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false" />
+    <apex:outputPanel layout="none" rendered="{!!isEdit}">
+        <c:IncludeStaticsResourceComponent addJQuery="true" />
+        <apex:outputPanel id="js-stepBlock-DataTemplateView">
+            <div class="slds-grid">
+                <div class="slds-col" style="flex: unset;width: 52.5%;">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$Label.Data_Template}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="headerDataTemplate" style="font-weight: bold;"></span>
+                                <apex:outputPanel id="opentemplate" style="display:none;">
+                                    <apex:commandLink onClick="return false;" id="open-template-link">
+                                        <apex:image value="{!URLFOR($Resource.DTS_images,'lookup.png')}" style="width: 20px;padding-top: 5px;margin-left: 5px;"/>
+                                    </apex:commandLink>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <apex:outputPanel id="openRelationshipDiagram" style="display:none;width: 47.5%;">
+                    <div class="slds-col">
+                        <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                            <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                                <span class="slds-form-element__label">{!$Label.Relationship_Diagram}</span>
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                    <apex:commandLink onClick="return false;" id="relationship-diagram-link">
+                                        <apex:image value="{!URLFOR($Resource.DTS_images,'relationship.svg')}" style="vertical-align: baseline;"/>
+                                        {!$Label.Relationship_Diagram}
+                                    </apex:commandLink>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </apex:outputPanel>
+            </div>
+
+            <div class="slds-grid">
+                <div class="slds-col" style="flex: unset;width: 52.5%;">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$ObjectType.Data_Template__c.fields.Template_Source_Org__c.Label}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="sourceOrg" style="font-weight: bold;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slds-col">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$Label.Total_Related_Objects}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="totalObjects" style="font-weight: bold;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-grid">
+                <div class="slds-col" style="flex: unset;width: 52.5%;">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$ObjectType.Data_Template__c.fields.Batch_Size__c.Label}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="batchSize" style="font-weight: bold;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slds-col">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$ObjectType.Data_Template__c.fields.Max_Record_Limit__c.Label}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="maxRecordLimit" style="font-weight: bold;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-grid">
+                <div class="slds-col">
+                    <div class="slds-has-flexi-truncate slds-p-horizontal_x-small full forcePageBlockItem forcePageBlockItemView" role="listitem">
+                        <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}">
+                            <span class="slds-form-element__label">{!$Label.Template_Filter}</span>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <span id="objectFilter" style="font-weight: bold;"></span> 
+                                <apex:commandLink onClick="return false;" id="open-override-filter-link">
+                                    <span id="editFilterIconText" style="font-weight: bold;"></span> 
+                                    <apex:image value="{!URLFOR($Resource.DTS_images,'ic-edit.svg')}" style="margin-left: 5px;"/>
+                                </apex:commandLink>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <apex:outputPanel layout="none" rendered="{!isEdit}">
+        <apex:outputPanel id="js-stepBlock-DataTemplate">
+            <div class="slds-grid">
+                <div class="slds-col" style="padding-right:0px;flex: unset;width: 50%;">
+                    <div class="slds-form-element {!IF(!isEdit,'slds-has-divider--bottom','')}" style="width:98.5%;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <span class="slds-form-element__label">{!$Label.Data_Template}</span>
+                        <div class="slds-form-element__control">
+                            <span class="slds-form-element__static lookupInput">
+
+                                <apex:inputField value="{!lookupAux.Data_Template__c}" id="auxDataTemplateId" />
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

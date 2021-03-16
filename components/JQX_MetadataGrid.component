@@ -1,0 +1,55 @@
+<apex:component id="jqx_metadataGrid">
+    <apex:attribute name="title" type="String" required="false" default="Select Metadata" description="title" />
+    <apex:attribute name="refreshMetadata" type="Boolean" required="false" default="false" description="show or hide refresh metadata action" />
+    <apex:attribute name="bigMetadata" type="Boolean" required="false" default="false" description="show or hide big metadata selector" />
+    <apex:attribute name="tabs" type="Boolean" required="false" default="false" description="show or hide tabs" />
+
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" />
+    <c:IncludeConnectionJsComponent />
+    <apex:includeScript value="{!URLFOR($Resource.metadataGrid3) }" />
+
+    <apex:outputPanel layout="block" id="metadataDiv" styleClass="slds-form__row metadata-div slds-hidden">
+        <div class="slds-form__item metadata-div-title" role="listitem">
+            <div class="slds-text-heading_medium">{!title}</div>
+        </div>
+        <div class="slds-float--right metadata-div-refresh" role="listitem">
+            <apex:outputPanel layout="none" rendered="{!refreshMetadata}">
+                <a onclick="return jqx.refreshCache();" id="removeCache" title="{!$Label.Refresh_Metadata}">
+                    <span class="slds-icon_container slds-icon__svg&#45;&#45;default refreshIcon"></span>
+                    {!$Label.Refresh_Metadata}
+                </a>
+            </apex:outputPanel>
+        </div>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none">
+        <div class="jqx-table" id="metadataGrid">
+            <apex:outputPanel layout="none" rendered="{!tabs}">
+                <div class='mg2_tabs slds-hidden'>
+                    <ul class="tabs" >
+                        <li>{!$Label.All_Metadata}</li>
+                        <li>{!$Label.Selected_Metadata}</li>
+                    </ul>
+                    <div class="metadata-filter">
+                        <apex:outputPanel layout="none" rendered="{!bigMetadata}">
+                            <div class="mg2_scaleFilterFrame scale-filter-frame hide" style="padding: 5px;">
+                                <label class="mg2_mtFilter">{!$Label.Metadata_Type_Filter}</label>&nbsp;
+                                <apex:commandLink value="({!$Label.REFRESH})"  onclick="return jqx.grid.refreshMetadataTypes();" rerender="noneedtorender" id="removeMTCache"/>
+                                <div class="mg2_scaleFilter scale-filter"></div>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    <div><!-- empty div, needed as content for the second tabs --></div>
+                </div>
+            </apex:outputPanel>
+            <div class="mg2_jqxgrid" style="height: 300px;">
+                <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_medium slds-input__spinner">
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+            </div>
+        </div>
+
+    </apex:outputPanel>
+
+</apex:component>

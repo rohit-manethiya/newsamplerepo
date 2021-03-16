@@ -1,0 +1,69 @@
+<template>
+    <div class="slds-form-element">
+        <label class="slds-form-element__label">
+            <template if:true={isRequired}>
+                <abbr title="required" class="slds-required">*</abbr>
+            </template>
+            {label}
+        </label>
+        <template if:true={hasTooltip}>
+            <lightning-helptext content={tooltipInfo}></lightning-helptext>
+        </template>
+        <template if:false={selectedRecord}>
+            <div class="slds-form-element__control">
+                <div class="slds-combobox_container">
+                    <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click slds-is-open"
+                        aria-expanded="true" aria-haspopup="listbox" role="combobox">
+                        <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+                            role="none">
+                            <lightning-input variant="label-hidden" value={searchKey} type="search"
+                                onchange={handleChange} placeholder={placeholder} disabled={disabled}
+                                required={required} is-loading={isLoadingData}>
+                            </lightning-input>
+                        </div>
+                        <template if:true={hasRecords}>
+                            <div class="slds-dropdown slds-dropdown_length-with-icon slds-dropdown_fluid lookup-dropdown"
+                                role="listbox">
+                                <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                    <template for:each={records} for:item="record">
+                                        <li key={record.Id} role="presentation" class="slds-listbox__item">
+                                            <div class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
+                                                aria-selected="true" data-target-id={record.Id} role="option"
+                                                onclick={handleClick}>
+                                                <span class="slds-media__figure slds-listbox__option-icon">
+                                                    <lightning-icon icon-name={iconName} size="small"></lightning-icon>
+                                                </span>
+                                                <span class="slds-media__body slds-m-top_x-small">
+                                                    <span
+                                                        class="slds-listbox__option-text slds-listbox__option-text_entity">
+                                                        {record.Name}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template if:true={selectedRecord}>
+            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_left-right" role="none">
+                <span class="slds-icon_container slds-combobox__input-entity-icon">
+                    <lightning-icon icon-name={iconName}></lightning-icon>
+                </span>
+                <input class="slds-input slds-combobox__input slds-combobox__input-value" role="textbox" type="text"
+                    value={selectedRecord.Name} disabled />
+                <template if:false={disabled}>
+                    <button class="icon_container slds-button slds-button_icon slds-input__icon slds-input__icon_right"
+                        title={Label.Remove_Selected_Option} onclick={handleRemove}>
+                        <lightning-icon icon-name="utility:close" size="x-small"
+                            alternative-text={Label.Remove_Selected_Option}></lightning-icon>
+                    </button>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

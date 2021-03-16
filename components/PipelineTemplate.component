@@ -1,0 +1,74 @@
+<apex:component id="PipelineTemplates" controller="PipelineTemplateComponentController" allowDML="true">
+    <c:CopadoSpinner />
+    <style>
+        .activeButton {
+            border-bottom: none !important;
+            border-top: 3px solid grey !important;
+        }
+
+        .copadoButton {
+          overflow: hidden !important;
+          text-overflow: ellipsis;
+          white-space: nowrap !important;
+        }
+
+    </style>
+    <script>
+        function toggleCurrentButton(currentButton){
+            var oldSelectedButtons = document.getElementsByName('templateButton');
+            for(var index = 0; index < oldSelectedButtons.length; index++){
+                oldSelectedButtons[index].classList.remove('activeButton');
+            }
+            currentButton.classList.add('activeButton');
+            currentButton.blur();
+        }
+
+    </script>
+    <apex:outputPanel layout="block" id="PipelineTemplateComponent">
+        <apex:outputPanel layout="none" rendered="{!errorMessageJSON == null}">
+            <div class="slds-illustration slds-illustration_small" style="border:1px solid gray;padding:5%;margin:5% 15% 2% 15%;">
+                <div class="slds-text-longform copado-section-header">
+                    <h3 class="slds-text-heading_large" style="margin-bottom:25px;">{!$Label.Pipeline_Select_A_Template}</h3>
+                    <p class="slds-text-body_regular">{!$Label.Pipeline_Select_A_Template_Description}</p>
+                </div>
+                <div style="padding: 0px 25% 0% 25%;" class="copado-section-content">
+                    <apex:actionFunction name="switchType" action="{!processSelectedTemplateType}" reRender="templateDiagramContainer" onComplete="unlockScreen();">
+                        <apex:param value="" name="currentType" assignTo="{!currentType}" />
+                    </apex:actionFunction>
+                    <div class="slds-button-group" style="width:100%;margin-bottom:20px;" role="group">
+                        <button name="templateButton" class="slds-button slds-button_neutral copadoButton" style="width:33%;" onclick="lockScreen();switchType('BASIC'); toggleCurrentButton(this);" type="button">BASIC</button>
+                        <button name="templateButton" class="slds-button slds-button_neutral copadoButton activeButton" style="width:33%" onclick="lockScreen();switchType('STANDARD'); toggleCurrentButton(this);" type="button">STANDARD</button>
+                        <button name="templateButton" class="slds-button slds-button_neutral copadoButton" style="width:33%" onclick="lockScreen();switchType('ADVANCED'); toggleCurrentButton(this);" type="button">ADVANCED</button>
+                    </div>
+                </div>
+                <div class="copado-full-section" style="padding: 0px; width:100%; position:relative;">
+
+                    <apex:outputPanel id="templateDiagramContainer" layout="block">
+                        <apex:outputPanel layout="block" id="basic-diagram" rendered="{!currentType == 'BASIC'}">
+                            <apex:image value="{!URLFOR($Resource.BasicTemplate)}" />
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="block" id="standard-diagram" rendered="{!currentType == 'STANDARD'}">
+                            <apex:image value="{!URLFOR($Resource.StandardTemplate)}" />
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="block" id="advance-diagram" rendered="{!currentType == 'ADVANCED'}">
+                            <apex:image value="{!URLFOR($Resource.AdvanceTemplate)}" />
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </div>
+                <div class="copado-section-footer" style="margin-top:25px">
+                    <apex:commandButton onClick="lockScreen();" action="{!selectTemplate}" onComplete="unlockScreen();" styleClass="slds-button slds-button_brand" value="{!$Label.SELECT}" />
+                </div>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel layout="none" rendered="{!errorMessageJSON != null}">
+            <c:ErrorHandling messageJSON="{!errorMessageJSON}" />
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <div class="slds-align_absolute-center">
+        <apex:commandButton styleClass="slds-button" action="{!goToPreviousComponent}" value="{!$Label.Go_Back}" onClick="lockScreen();" />
+        <apex:outputText style="margin-left:5px;margin-right:4px;" value="{!$Label.OR}" />
+        <apex:commandButton styleClass="slds-button" action="{!goToHomePage}" value="{!$Label.SAVE_AND_CLOSE}" />
+        <apex:outputText style="margin-left:5px;margin-right:4px;" value="{!$Label.OR}" />
+        <apex:commandButton styleClass="slds-button" onClick="lockScreen();" action="{!skipTemplates}" value="{!$Label.SKIP}" />
+    </div>
+</apex:component>

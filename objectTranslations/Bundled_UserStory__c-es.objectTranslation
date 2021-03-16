@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Bundled User Story</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Bundled_UserStories</value>
+    </caseValues>
+    <fieldSets>
+        <label><!-- Bundle --></label>
+        <name>Bundle</name>
+    </fieldSets>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- User Story Bundle --></label>
+        <name>User_Story_Bundle__c</name>
+        <relationshipLabel><!-- Bundled_UserStories --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Bundled_UserStories --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

@@ -1,0 +1,130 @@
+<!--
+ - Created by umitcanuckan, ferhatozsavran on 16/07/2018
+   to be able to control library versions from one place
+ -->
+<apex:component layout="none" id="IncludeStaticsResourceComponent">
+    <apex:attribute name="addJQuery" type="Boolean" description="Send it as true if you want to add jquery min js to your source." default="false"/>
+    <apex:attribute name="addUIjs" type="Boolean" description="Send it as true if you want to add jqueryUI js to your source." default="false"/>
+    <apex:attribute name="addUIcss" type="Boolean" description="Send it as true if you want to add jqueryUI css to your source." default="false"/>
+    <apex:attribute name="addETjs" type="Boolean" description="Send it as true if you want to add jquery Easytabs js to your source" default="false"/>
+    <apex:attribute name="addCometdjs" type="Boolean" description="Send it as true if you want to add Cometd js to your source" default="false"/>
+    <apex:attribute name="addJSON2js" type="Boolean" description="Send it as true if you want to add JSON2 js to your source" default="false"/>
+    <apex:attribute name="addJCometdjs" type="Boolean" description="Send it as true if you want to add jquery Cometd js to your source" default="false"/>
+    <apex:attribute name="addCirclifuljs" type="Boolean" description="Send it as true if you want to add circliful js to your source" default="false"/>
+    <apex:attribute name="addCirclifulcss" type="Boolean" description="Send it as true if you want to add jquery circliful css to your source" default="false"/>
+    <apex:attribute name="addFAcss" type="Boolean" description="Send it as true if you want to add font awesome css to your source" default="false"/>
+    <apex:attribute name="addDScss" type="Boolean" description="Send it as true if you want to add deploymentStatus css to your source" default="false"/>
+    <apex:attribute name="addEVMcss" type="Boolean" description="Send it as true if you want to add EnvVarsManager css to your source" default="false"/>
+    <apex:attribute name="addATRcss" type="Boolean" description="Send it as true if you want to add ApexTestResult css to your source" default="false"/>
+    <apex:attribute name="addWizardcss" type="Boolean" description="Send it as true if you want to add Wizard css to your source" default="false"/>
+    <apex:attribute name="addSLcss" type="Boolean" description="Send it as true if you want to add screenLocker css to your source" default="false"/>
+    <apex:attribute name="addFLjs" type="Boolean" description="Send it as true if you want to add featherlight js to your source" default="false"/>
+    <apex:attribute name="addFLcss" type="Boolean" description="Send it as true if you want to add featherlight css to your source" default="false"/>
+    <apex:attribute name="addSortjs" type="Boolean" description="Send it as true if you want to add jquery sortable js to your source" default="false"/>
+    <apex:attribute name="addPScss" type="Boolean" description="Send it as true if you want to add permSets css to your source" default="false"/>
+    <apex:attribute name="addDLjs" type="Boolean" description="Send it as true if you want to add DiffLib js to your source" default="false"/>
+    <apex:attribute name="addDVjs" type="Boolean" description="Send it as true if you want to add diffview js to your source" default="false"/>
+    <apex:attribute name="addDVcss" type="Boolean" description="Send it as true if you want to add diffview css to your source" default="false"/>
+    <apex:attribute name="addJSzipjs" type="Boolean" description="Send it as true if you want to add jszip js to your source" default="false"/>
+    <apex:attribute name="addSMcss" type="Boolean" description="Send it as true if you want to add Selenium Manager css to your source" default="false"/>
+
+    <apex:outputPanel layout="none" rendered="{!addJQuery}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/libs/jquery.min.3.3.1.js')}" />
+
+        <script type="text/javascript">
+            var $copado = $copado || jQuery.noConflict();
+        </script>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addUIjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/libs/jquery-ui.min.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addUIcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/jquery-ui.css')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addETjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/libs/jquery.easytabs.min.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addCometdjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/Cometd.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addJSON2js}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/json2.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addJCometdjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/jquery.cometd.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addCirclifuljs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/jquery.circliful.min.js')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addCirclifulcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/jquery.circliful.css')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addFAcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/font-awesome.min.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addDScss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/deploymentStatus.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addEVMcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/EnvVarsManager.css')}"/>
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addATRcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/ApexTestResult.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addWizardcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/wizard.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addSLcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/screenLocker.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addFLjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/featherlight.min.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addFLcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/featherlight.min.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addSortjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/libs/jquery-sortable.0.9.13.min.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addPScss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/PermSets.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addDLjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/difflib.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addDVjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics,'js/diffview.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addDVcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/DiffView.css')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addJSzipjs}">
+        <apex:includeScript value="{!URLFOR($Resource.Statics, 'js/jszip.js')}" />
+    </apex:outputPanel>
+
+    <apex:outputPanel layout="none" rendered="{!addSMcss}">
+        <apex:stylesheet value="{!URLFOR($Resource.Statics,'css/SeleniumManager.css')}" />
+    </apex:outputPanel>
+</apex:component>

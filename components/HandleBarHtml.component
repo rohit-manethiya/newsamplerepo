@@ -1,0 +1,130 @@
+<!--
+ - Created by umitcanuckan on 10/07/2018.
+ -->
+
+<apex:component layout="none" id="HandleBarHtml" controller="WorkManager">
+    <div class="slds-panel slds-grid slds-grid_vertical slds-nowrap mh4tablesln" style="margin-right: 12px;flex: unset;">
+        <div class="slds-form slds-form_stacked slds-grow slds-scrollable_y mh4tables">
+            <div class="slds-panel__section slds-border_bottom">
+                <div class="slds-media">
+                    <div class="slds-media__body" style="border-radius: 3px;">
+                        <div class="slds-button-group slds-m-top_small slds-float_left" role="group">
+                            <ul>
+                                <li id="btn-columns">
+                                    <div class="slds-dropdown-trigger slds-dropdown-trigger_click" style="display: flex !important;">
+                                        <button class="slds-button slds-button_icon " title="Show/Hide Columns" aria-haspopup="true" onclick="$copado(this).parent().toggleClass('slds-is-open');main.fs.sc(this); return false;" style="width: 20px; height: 20px;">
+                                            <svg class="slds-button__icon" aria-hidden="true">
+                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+                                            </svg>
+                                            <span class="slds-assistive-text">Show More</span>
+                                        </button>
+
+                                        <div class="slds-dropdown slds-dropdown_left slds-dropdown_small" style="">
+                                            <ul class="slds-dropdown__list" role="menu">
+                                                <apex:variable value="{!0}" var="i"/>
+                                                <apex:repeat value="{!$ObjectType.User_Story__c.FieldSets.Work_Manager_Columns}" var="f">
+                                                    <apex:variable var="i" value="{!i+1}"/>
+                                                    <li data-order="{!i}" role="presentation" data-id="{!f.FieldPath}">
+                                                        <a href="javascript:void(0);" role="menuitemcheckbox" aria-checked="true" tabindex="0">
+                                                            <span class="slds-truncate" onclick="main.fs.shc(this);" title="Menu Item One">
+                                                                <svg style="visibility:hidden;" data-id="{!f.FieldPath}" class="slds-icon slds-icon_selected slds-icon_x-small slds-icon-text-default slds-m-right_x-small" aria-hidden="true">
+                                                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                                                </svg>{!f.label}
+                                                            </span>
+                                                        </a>
+                                                    </li>
+                                                </apex:repeat>
+                                                <li style="height: 0;margin: .5rem 0;overflow: hidden;border-top: 1px solid #e9ecef;"/>
+                                                <li role="presentation" data-id="Enable WIP">
+                                                    <a href="javascript:void(0);" role="menuitemcheckbox" aria-checked="true" tabindex="0">
+                                                        <span class="slds-truncate" style="font-weight:800" onclick="main.fs.shc(this);main.fs.cmm();" title="Enable WIP">
+                                                            <svg style="visibility:hidden;" data-id="Enable WIP" class="slds-icon slds-icon_selected slds-icon_x-small slds-icon-text-default slds-m-right_x-small" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                                            </svg>Enable WIP
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="slds-button-group slds-m-top_small slds-float_right mmpanel" role="group" style="padding-right: 2px;">
+                            <input type="text" id="min" value="Min:{{min}}" class="mm" placeholder="Min:" onkeypress="main.fs.pd(event);" onfocus="main.fs.piv(this);" onfocusout="main.fs.cv(this);" style="padding:0px !important;width:70px !important;border:0px;visibility:hidden;"/>
+                            <input type="text" id="max" value="Max:{{max}}" class="mm" placeholder="Max:" onkeypress="main.fs.pd(event);" onfocus="main.fs.piv(this);" onfocusout="main.fs.cv(this);" style="padding:0px !important;width:70px !important;border:0px;visibility:hidden;"/>
+                            <button class="close-button" onclick="main.fs.rp(this); return false;">&#10006;</button>
+                        </div>
+                        <h2 class="slds-truncate slds-text-heading_small handle_panel " style="text-align: center; line-height: unset;margin-top: 10px;">
+                            <a style="font-size: 1em;" onclick="return false;">{{tableHeader}}</a><span title="List size" style="color:#0070d2;font-size: smaller;">  ({{usList.length}})</span>
+                        </h2>
+                        <input class="searchInput slds-input" onkeyup="main.fs.sf(this)" style="width: 100%; min-height: 0px; height: 24px !important; color: rgb(0, 0, 0);" value="" placeholder="Search..."/>
+                    </div>
+                </div>
+                <div class="slds-panel__section">
+                    <table class="slds-table slds-table_bordered">
+                        <thead>
+                        <tr class="slds-text-title_caps">
+                            <th scope="col">
+                                <div class="slds-truncate" title="select">
+                                    <!--<input type="checkbox" class="checkbox-container slds-checkbox slds-checkbox_faux"/>-->
+                                </div>
+                            </th>
+                            <apex:variable value="{!0}" var="i"/>
+                            <th scope="col"  data-col="name" data-api="name" onclick="main.fs.sco(this);" style="cursor:pointer;">
+                                <div class="slds-truncate" title="Name">Name
+                                    <svg class="slds-button__icon downs" aria-hidden="true" style="display:none;">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#chevrondown')}"></use>
+                                    </svg>
+                                    <svg class="slds-button__icon ups" aria-hidden="true" style="display:none;">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#chevronup')}"></use>
+                                    </svg>
+                                </div>
+
+                            </th>
+                            <apex:repeat value="{!$ObjectType.User_Story__c.FieldSets.Work_Manager_Columns}" var="ch">
+                                <apex:variable var="i" value="{!i+1}"/>
+                                <th class="toAdjust" scope="col" style="display:none;cursor:pointer;" data-order="{!i}" data-api="{!ch.FieldPath}" onclick="main.fs.sco(this);">
+                                    <div class="slds-truncate" title="{!ch.label}">{!ch.label}
+                                        <svg class="slds-button__icon downs" aria-hidden="true" style="display:none;">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#chevrondown')}"></use>
+                                        </svg>
+                                        <svg class="slds-button__icon ups" aria-hidden="true" style="display:none;">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/utility-sprite/svg/symbols.svg#chevronup')}"></use>
+                                        </svg>
+                                    </div>
+                                </th>
+                            </apex:repeat>
+                        </tr>
+                        </thead>
+                        <tbody class="tbodys2each" style="min-height:36px !important;">
+                        {{#each usList}}
+                        <tr class="sortable" data-rid="{{this.usItem.Id}}">
+                            <apex:variable value="{!0}" var="i"/>
+                            <td scope="row">
+                                <div class="slds-truncate"><a title="Edit" href="{!IF($User.UIThemeDisplayed == 'Theme4d','/one/one.app#/alohaRedirect','')}/{{this.usItem.Id}}/e?saveURL=apex/{!JSENCODE(ns)}WorkManager&cancelURL=apex/{!JSENCODE(ns)}WorkManager">
+                                       Edit</a>
+                                </div>
+                            </td>
+                            <td scope="row"><a target="_blank" href="/{{this.usItem.Id}}">{{this.usItem.Name}}</a></td>
+                            <apex:repeat value="{!$ObjectType.User_Story__c.FieldSets.Work_Manager_Columns}" var="ch">
+                                <apex:variable var="i" value="{!i+1}"/>
+                                <apex:outputPanel layout="none" rendered="{!ch.Type == 'reference'}">
+
+                                    <td style="display:none;" scope="row" class="maxW" title="{{this.usItem.{!ch.FieldPath}}}" data-api="{!ch.FieldPath}" data-order="{!i}"><a target="_blank" href="/{{this.usItem.{!ch.FieldPath}}}">{{this.usItem.{!SUBSTITUTE(ch.FieldPath,'__c','__r.Name')}}}</a></td>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!ch.Type != 'reference'}">
+                                    <td scope="row" style="display:none;" class="maxW" title="{{this.usItem.{!ch.FieldPath}}}" data-api="{!ch.FieldPath}" data-order="{!i}">{{this.usItem.{!ch.FieldPath}}}</td>
+                                </apex:outputPanel>
+                            </apex:repeat>
+                        </tr>
+                        {{/each}}
+                        <tr class="sortable hidenshow" style="opacity:0;line-height:1px;"><td style="padding:0px;" colspan="10"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

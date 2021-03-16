@@ -1,0 +1,356 @@
+<apex:component id="ScratchOrgCompletion" controller="ScratchOrgCompletionController" allowDML="true">
+    <apex:attribute name="parentPageController" type="ScratchOrgWizardPageBase" assignTo="{!pageController}" required="true"
+        description="The controller for the parent page." />
+    <apex:attribute name="componentName" type="String" assignTo="{!controllerKey}" description="Component Name" />
+    <apex:attribute name="showActionButtons" type="Boolean" assignTo="{!showButtons}" default="false" description="Hide or show action buttons"
+    />
+    <apex:attribute name="mode" type="String" assignTo="{!componentMode}" description="Component mode that will define the default behaviour."
+        required="true" default="edit" />
+    <apex:attribute name="tr" type="Test_Run__c" assignTo="{!tRun}" description="If Component is Called from Test Runs" />
+
+    <apex:inputHidden value="{!selectedPermissions}" id="permSets" />
+    <apex:pageMessage id="completionMessages" severity="confirm" title="Scratch Org Creation Job Queued" summary="{!completionMessage}"
+        strength="3" rendered="{!!ISBLANK(completionMessage)}" />
+    <apex:includeScript value="{!URLFOR($Resource.utils) }" />
+
+    <c:CopadoHelp sectionText="{!$Label.ScratchOrgCompletion_Help}" sectionTitle="{!$Label.HELP}" sectionOpen="false" />
+    <apex:pageBlock id="finalSetup" title="Setup" rendered="{!showSetup}">
+        <apex:pageBlockSection title="Pipeline" showHeader="true" collapsible="true" columns="2" rendered="{!showDeploymentFlow}">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel title="Pipeline" value="Pipeline" for="depFlow" />
+                <apex:outputText value="{!deploymentFlowName}" />
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel title="Select Pipeline DX Target" value="Select Pipeline DX Target" for="depFlowStep" />
+                <apex:selectList value="{!selectedStep}" size="1" multiSelect="false" title="Select Pipeline DX Target">
+                    <apex:selectOptions value="{!dxTargetFlowSteps}" />
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection title="{!$Label.DX_Permission_Set_Assignment}" showHeader="true" collapsible="true" columns="1" id="permSetSection"
+            rendered="{!showPermissionsPanel}">
+            <apex:outputPanel layout="none">
+                <div id="metadataGrid2">
+                    <div class='mg2_tabs'>
+                        <ul style="margin-left: 20px;">
+                            <li>All Metadata</li>
+                            <li>Selected Metadata</li>
+                        </ul>
+                        <div>
+                            <div class="mg2_scaleFilterFrame" style="padding: 5px; display: none;">
+                                <label class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+                                <apex:commandLink value="({!$Label.REFRESH})" onclick="return metadataGrid2.refreshMetadataTypes();" rerender="opDummy" id="removeMTCache"
+                                />
+                                <div class="mg2_scaleFilter" style="margin-bottom: 10px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <!-- empty div, needed as content for the two tabs -->
+                        </div>
+                    </div>
+                    <div class="mg2_jqxgrid">
+                        <center>
+                            <img src="/img/loading.gif" />
+                            <i>
+                                <span id="retry-label">{!$Label.LOADING}</span>
+                            </i>
+                        </center>
+                    </div>
+                </div>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <apex:pageBlock id="reviewBlock" title="{!$Label.DX_Review_Scratch_Org_Structure}" mode="detail">
+        <apex:pageBlockButtons location="top">
+            <apex:commandButton action="{!createFullScratchOrg}" reRender="completionMessages" value="{!$Label.Create_Test_Scratch_Org}"
+                rendered="{!showActionButtons}" />
+        </apex:pageBlockButtons>
+        <table style="width:100%;">
+            <tr>
+                <td style="width: 50%;">
+                    <table class="list">
+                        <thead class="rich-table-thead">
+                            <tr class="headerRow">
+                                <th class="headerRow" scope="col" colspan="2">Org Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Org Name" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.orgName}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Country" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.country}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="User Name" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.username}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Admin Email" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.adminEmail}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="SFDC Edition" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.edition}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Description" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.description}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Language" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!orgDefinition.language}" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td style="width: 50%;position: absolute;">
+                    <table class="list">
+                        <thead class="rich-table-thead">
+                            <tr class="headerRow">
+                                <th class="headerRow" colspan="2">Org Metadata</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="SFDC Login URL" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!artifactProject.sfdcLoginUrl}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="API Version" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!artifactProject.sourceApiVersion}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Namespace" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <apex:outputText value="{!artifactProject.namespace}" />
+                                </td>
+                            </tr>
+                            <tr class="dataRow odd">
+                                <td class="dataCell" colspan="1">
+                                    <b>
+                                        <apex:outputLabel value="Package Directories" />
+                                    </b>
+                                </td>
+                                <td class="dataCell" colspan="1">
+                                    <table class="list">
+                                        <thead>
+                                            <tr class="headerRow">
+                                                <th class="headerRow">Path</th>
+                                                <th class="headerRow">Default</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <apex:repeat value="{!artifactProject.packageDirectories}" var="pd">
+                                                <tr class="dataRow odd">
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.path}" />
+                                                    </td>
+                                                    <td class="dataCell" colspan="1">
+                                                        <apex:outputText value="{!pd.defaultArtifact}" />
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <table class="list">
+            <thead class="rich-table-thead">
+                <tr class="headerRow">
+                    <th class="headerRow" colspan="2">Features and Settings</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="dataRow odd">
+                    <td class="dataCell" colspan="1">
+                        <textarea id="jsonEditor"></textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </apex:pageBlock>
+    <c:IncludeCodeMirrorResourceComponent addCMjs="true" addActiveLinejs="true" addCommentjs="true" addCMcss="true" />
+    <script type="text/javascript">
+        var reviewapp;
+        /**
+         * Application class for json editor operations
+         */
+
+        class Application {
+            /**
+            * Initializes the editor and defines code object for getter and setter functions
+            * @see initEditor
+            */
+            constructor() {
+                const form = this.form = document.getElementById("jsonEditor");
+                this.initEditor()
+                Object.defineProperty(this, 'code', {
+                    get() {
+                        return this.editor.getValue();
+                    },
+                    set(v) {
+                        this.editor.setValue(v);
+                    }
+                });
+            }
+            /**
+             * initializes CodeMirror editor
+             * @see CodeMirror
+             */
+            initEditor() {
+                this.editor = CodeMirror.fromTextArea(this.form, {
+                    lineNumbers: true,
+                    mode: "application/json",
+                    readOnly: true
+
+                });
+                return this;
+            }
+        }
+        setTimeout(function () {
+            var cmInstance = document.querySelector('.CodeMirror');
+            if (!cmInstance) {
+                initCodeMirrorApp();
+            }
+        }, 100);
+        if (!reviewApp) {
+            initCodeMirrorApp();
+        }
+
+        function initCodeMirrorApp() {
+            reviewapp = new Application();
+
+            if ('{!JSENCODE(JSONFileDefinition)}') { //Really need to test properly
+                reviewapp.code = JSON.stringify(JSON.parse('{!JSENCODE(JSONFileDefinition)}'), null, 2); //Was not complaining, should we apply JSENCODE or not?
+            }
+        }
+
+    </script>
+    <script src="{!URLFOR($Resource.metadataGrid2) }" />
+    <script src="{!URLFOR($Resource.ScratchOrg) }"></script>
+    <script>
+        var _configPerm = {
+            data: {
+                id: '',
+                orgId: '',
+                envId: ''
+            },
+            attachmentName: 'ArtifactMetaData',
+            viewType: 0,
+            contextSize: 10,
+            leftContent: '',
+            rightContent: '',
+            gridMode: 'DXpermissionSet',
+            dxGridType: 'artifacts'
+        };
+        (function () {
+            if (globalSelectedArtifacts.length !== 0) {
+                copadoDX.init(_configPerm, false, false);
+                copadoDX.loadArtifactMetadata(globalSelectedArtifacts, _config.attachmentName, true, 'PermissionSet');
+                var permissionSets = [];
+                metadataGridDX.eltGrid.on('cellvaluechanged', function (event) {
+                    var t = metadataGridDX.eltGrid.jqxGrid('getrowdata', event.args.rowindex);
+
+                    if (event.args.datafield == 's' && t.s === true) {
+                        permissionSets.push(t);
+                    } else if (event.args.datafield == 's' && t.s === false) {
+                        var index = permissionSets.indexOf(t);
+                        if (index >= 0) {
+                            permissionSets.splice(index, 1);
+                        }
+                    }
+                    console.log('permissionSets', permissionSets);
+                    $copado('[Id$="permSetsPage"]').val(copadoDX.csvPermissions(permissionSets));
+                });
+                return;
+            } else if (allMetadata && allMetadata.length !== 0) {
+                copadoDX.init(_configPerm, false, false);
+                metadataGridDX.loadSelectedMetaDataJSON(copadoDX.filterGridMetadata(allMetadata, 't', 'PermissionSet'));
+                var permissionSets = [];
+                metadataGridDX.eltGrid.on('cellvaluechanged', function (event) {
+                    var t = metadataGridDX.eltGrid.jqxGrid('getrowdata', event.args.rowindex);
+
+                    if (event.args.datafield == 's' && t.s === true) {
+                        permissionSets.push(t);
+                    } else if (event.args.datafield == 's' && t.s === false) {
+                        var index = permissionSets.indexOf(t);
+                        if (index >= 0) {
+                            permissionSets.splice(index, 1);
+                        }
+                    }
+                    console.log('permissionSets', permissionSets);
+                    //assignCSVPerms(copadoDX.csvPermissions(permissionSets));
+                    $copado('[Id$="permSetsPage"]').val(copadoDX.csvPermissions(permissionSets));
+                });
+                return;
+            }
+            $copado('[Id$="permSetSection"]').css('display', 'none'); // If there is no metadata loaded than there is no permission set to display so remove permission set assignment section from the page
+        })();
+    </script>
+</apex:component>

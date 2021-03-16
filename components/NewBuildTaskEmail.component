@@ -1,0 +1,58 @@
+<apex:component id="cmp" controller="NewBuildTaskEmailController" access="global">
+    <apex:attribute name="btId" type="String" description="Build Task Id" assignTo="{!buildTaskId}" />
+    <apex:attribute name="ciId" type="String" description="CI record Id" assignTo="{!continuousIntegrationId}" />
+
+    <apex:outputPanel layout="block" style="width: 80%; margin: 0px auto;">
+        <div style="font-size: 13px; padding-bottom: 40px;">
+            <div style="font-size: 25px; padding-bottom: 10px;">{!$Label.BUILD_COMPLETED}</div>
+            <div>{!$Label.DETAILS_EXECUTION_BELOW}</div>
+        </div>
+        <div style="font-size: 13px; padding-bottom: 30px;">
+            <div>
+                <b>{!$ObjectType.Continuous_Integration__c.Label}:</b> {!continuousIntegrationRecord.Name}
+            </div>
+            <div>
+                <b>{!$ObjectType.Build_Task__c.Label}:</b> {!BuildTasks[0].Name}
+            </div>
+            <div>
+                <b>{!$ObjectType.Build_Task__c.fields.Status__c.Label}:</b> {!BuildTasks[0].Status__c}
+            </div>
+            <div>
+                <b>{!$ObjectType.Build_Task__c.fields.Type__c.Label}:</b> {!BuildTasks[0].Type__c}
+            </div>
+            <div>
+                <b>{!$ObjectType.Deployment__c.Label}:</b> <a style="text-decoration: none; color: #579af9;" href="{!podUrl + '/' + BuildTasks[0].Deployment__c}">{!deploymentName}</a>
+            </div>
+        </div>
+        <apex:outputPanel layout="block" rendered="{!statusMessage == ''}">
+            <div style="text-align: left; padding-bottom: 8px;">
+                <b>{!$Label.Result}</b>
+            </div>
+            <table style="border-collapse: collapse; margin-bottom: 30px;">
+                <thead>
+                    <tr>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 70px;">{!$Label.TYPE}</th>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px;">{!$Label.MESSAGE}</th>
+                        <th style="color: #666662; font-size: 13px; font-weight: 500; text-align: left; border-top: 1px solid #dcdcdc; border-bottom: 1px solid #dcdcdc; padding: 10px 10px 10px 0px; min-width: 100px;">{!$Label.COPADO_TIP}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!errorList}" var="error">
+                        <tr>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.type}</td>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.message}</td>
+                            <td style="color: #3E3E3C; border-bottom: 1px solid #dcdcdc; padding: 8px 10px 15px 0px;">{!error.copadoTip}</td>
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel style="margin-bottom: 40px;" layout="block" rendered="{!AND(statusMessage != '', NOT(AND(BuildTasks[0].Deployment__r.Status__c == 'Completed Successfully', statusMessage == $Label.NO_ERROR_ATTACHMENT_FOUND)))}">
+            <c:EmailWarningMessageContainer emailContext="{!$ObjectType.Build_Task__c.Label}" errorMessage="{!statusMessage}" />
+        </apex:outputPanel>
+        <apex:outputPanel style="text-align: center; padding: 40px 0px;" layout="block" rendered="{!AND(ciId != '', ciId != null)}">
+            <a style="text-decoration: none; border-radius: 4px; background-color: #0070D2; color: #FFFFFF; padding: 7px 15px; font-size: 13px;"
+                href="{!podUrl + '/' + ciId}">{!$Label.TO_CI_DETAILS}</a>
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:component>

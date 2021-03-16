@@ -1,0 +1,10 @@
+.icon-container {
+    text-align: center;
+}
+
+.icon-container lightning-icon {
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    padding: 3px;
+}

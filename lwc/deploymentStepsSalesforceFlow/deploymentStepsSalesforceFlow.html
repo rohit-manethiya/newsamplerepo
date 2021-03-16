@@ -1,0 +1,77 @@
+<template>
+    <div class="slds-size_xx-large">
+        <lightning-layout>
+            <lightning-layout-item class="slds-p-right_medium" size="6">
+                <lightning-combobox class="validValue" name="selectedFlow" label={label.SALESFORCE_FLOW}
+                    value={selectedFlow} placeholder={label.Salesforce_Flow_Placeholder}
+                    options={flowsAvailableForExecution} onchange={handleChange} required></lightning-combobox>
+            </lightning-layout-item>
+            <lightning-layout-item class="slds-p-top_x-large" size="6">
+                <lightning-input type="checkbox" name="pauseStepAfterExecution" label={label.Flow_Step_Pause}
+                    field-level-help={label.Flow_Step_Execution_Action_Option_Helptext} checked={pauseStepAfterExecution}
+                    onchange={handleChange}></lightning-input>
+            </lightning-layout-item>
+        </lightning-layout>
+
+        <lightning-layout class="slds-m-top_large" pull-to-boundary="large">
+            <lightning-layout-item size="8" padding="horizontal-large">
+                <div class="slds-m-bottom_medium">
+                    <span class="slds-p-right_x-small"><b>{label.Salesforce_Flow_Parameters_Title}</b></span>
+                    <lightning-helptext content={label.Salesforce_Flow_Parameters_Helptext}>
+                    </lightning-helptext>
+                </div>
+                <ul>
+                    <template iterator:parameter={parameters}>
+                        <li key={uniqueKey}>
+                            <!-- Labels are rendered only for first item -->
+                            <lightning-layout if:true={parameter.first} class="slds-p-bottom_medium slds-border_bottom" horizontal-align="spread">
+                                <lightning-layout-item size="5">
+                                    <lightning-input type="text" name="parameterName"
+                                        label={label.Parameter_Name} value={parameter.value.parameterName}
+                                        placeholder={label.Parameter_Name_Placeholder} data-id={parameter.value.id}
+                                        onchange={handleParameterChange}></lightning-input>
+                                    </lightning-layout-item>
+                                <lightning-layout-item size="5">
+                                <lightning-input type="text" name="parameterValue"
+                                        label={label.Parameter_Value} value={parameter.value.parameterValue}
+                                        placeholder={label.Parameter_Value_Placeholder} data-id={parameter.value.id}
+                                        onchange={handleParameterChange}></lightning-input>
+                                    </lightning-layout-item>
+                                <lightning-layout-item class="slds-m-top_large slds-text-align_right" size="1">
+                                    <lightning-button-icon icon-name="utility:delete" alternative-text={label.DELETE}
+                                        title={label.DELETE} data-id={parameter.value.id} onclick={handleDeleteParameter}>
+                                    </lightning-button-icon>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                            <lightning-layout if:false={parameter.first} class="slds-p-bottom_medium slds-border_bottom" horizontal-align="spread">
+                                <lightning-layout-item size="5">
+                                    <lightning-input type="text" name="parameterName"
+                                        value={parameter.value.parameterName} placeholder={label.Parameter_Name_Placeholder}
+                                        data-id={parameter.value.id} onchange={handleParameterChange}></lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="5">
+                                    <lightning-input type="text" name="parameterValue"
+                                        value={parameter.value.parameterValue}
+                                        placeholder={label.Parameter_Value_Placeholder} data-id={parameter.value.id}
+                                        onchange={handleParameterChange}></lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item class="slds-m-top_small slds-p-top_x-small slds-text-align_right" size="1">
+                                    <lightning-button-icon icon-name="utility:delete" alternative-text={label.DELETE}
+                                        title={label.DELETE} data-id={parameter.value.id} onclick={handleDeleteParameter}>
+                                    </lightning-button-icon>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </li>
+                    </template>
+                </ul>
+                <div class="slds-m-top_medium">
+                    <lightning-button label={label.Add_new_parameter} title={label.Add_new_parameter}
+                        icon-name="utility:add" onclick={handleAddParameter}></lightning-button>
+                </div>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" padding="horizontal-large">
+                <c-deployment-steps-dynamic-variable-helper></c-deployment-steps-dynamic-variable-helper>
+            </lightning-layout-item>
+        </lightning-layout>
+    </div>
+</template>

@@ -1,0 +1,52 @@
+<template>
+    <lightning-spinner if:true={showSpinner} variant="brand" alternative-text="Loading" size="large"> </lightning-spinner>
+
+    <c-related-list-delete-popup if:false={customHandleRowActionEnabled} onrefreshdata={handleRefresh}> </c-related-list-delete-popup>
+
+    <lightning-layout class={lightningLayoutClasses}>
+        <article class="slds-card lightning-card">
+            <div if:false={hideHeader} class="slds-card__header slds-grid slds-theme_shade slds-border_bottom slds-border_bottom">
+                <header class={headerClasses}>
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name={iconName} size="small"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <h2 class="slds-card__header-title">
+                            <a class="slds-card__header-link" onclick={handleGoToRelatedList}>{title}</a>
+                        </h2>
+                    </div>
+                    <div class="slds-no-flex">
+                        <slot name="actions"></slot>
+                        <lightning-button label={label.NEW} title={label.NEW} onclick={handleCreateRecord}></lightning-button>
+                    </div>
+                </header>
+            </div>
+            <div>
+                <c-copadocore-dynamic-datatable
+                    data-instance={instance}
+                    class="related-list"
+                    record-id={recordId}
+                    related-list={relatedList}
+                    fieldset={fieldset}
+                    look-up-object-api={relantionshipField}
+                    order-by={orderBy}
+                    record-size={recordSize}
+                    height={height}
+                    actions={actions}
+                    show-row-number-column={showRowNumberColumn}
+                    hide-checkbox-column={hideCheckboxColumn}
+                    resize-column-disabled={resizeColumnDisabled}
+                    enable-infinite-loading={enableInfiniteLoading}
+                    hide-default-columns-actions={hideDefaultColumnsActions}
+                    implements-drag-and-drop={implementsDragAndDrop}
+                    onrowaction={handleRowAction}
+                    onretrievedrows={handleRetrievedRows}
+                    ondroprow={handleDropRow}>
+                </c-copadocore-dynamic-datatable>
+            </div>
+            <footer if:false={hideFooter} class={footerClasses}>
+                <a onclick={handleGoToRelatedList}>{label.View_All}</a>
+            </footer>
+        </article>
+    </lightning-layout>
+</template>

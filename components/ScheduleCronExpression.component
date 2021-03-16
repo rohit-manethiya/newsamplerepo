@@ -1,0 +1,528 @@
+<apex:component id="ScheduleCronExpression" controller="ScheduleCronExpressionController" allowDML="true" layout="block">
+    <apex:attribute name="recordId" type="Id" assignTo="{!thisRecordId}" required="true" description="Record id"/>
+    <apex:attribute name="cronExpression" type="String" assignTo="{!thisCronExpression}" required="true" description="Current cron expression"/>
+    <apex:attribute name="promotionType" type="String" required="false" description="Promotion/Backpromotion on Connection Behavior"/>
+
+    <style>
+        fieldset {
+            border: 0;
+        }
+
+        body label,
+        .slds-vf-scope label {
+            margin-right: 0;
+            font-size: .8125rem;
+            line-height: 1.875rem;
+        }
+
+        .slds-scope .slds-modal__footer {
+            background-color: #F7F9FB;
+        }
+
+        .cronInputDiv {
+            display: inline-flex;
+        }
+    </style>
+    <apex:form id="mainForm" rendered="{!AND(showOptions,!showError)}">
+        <apex:actionFunction name="setCronExpressionValue" action="{!setCronExpressionValue}" reRender="pagemessages" status="loadingScreen">
+            <apex:param value="" name="newCronExpression"/>
+        </apex:actionFunction>
+        <apex:pageMessages id="pagemessages"/>
+        <div class="slds-border_top slds-border_bottom slds-border_left slds-border_right">
+            <div class="slds-modal__header">
+                <h2 class="slds-text-heading_medium slds-hyphenate slds-text-align_left">
+                    <b>
+                        {!IF(promotionType == 'Promotion',
+                            $Label.Schedule_Deployment,
+                            IF(promotionType == 'Back_Promotion',
+                                $Label.Schedule_Back_Promotion,
+                                $Label.SCHEDULE_JOB)
+                        )}
+                    </b>
+                </h2>
+            </div>
+            <div class="slds-modal__content slds-p-around_large">
+                <div class="slds-grid slds-p-around_small slds-border_bottom">
+                    <div class="slds-col slds-size_1-of-3">
+                        <fieldset class="slds-form-element slds-form-element_compound">
+                            <legend class="slds-form-element__legend slds-form-element__label slds-p-bottom_medium">
+                                {!$Label.How_Often_You_Deploy}
+                                <abbr class="slds-required" title="required"> *</abbr>
+                            </legend>
+                            <div class="slds-form-element__control">
+                                <div class="slds-form-element__row">
+                                    <div class="slds-size_1-of-3">
+                                        <div class="slds-form-element">
+                                            <span class="slds-radio">
+                                                <input type="radio" name="deployFrequencyRadio" id="hourly_frequency_Radio" class="cronRadio"
+                                                       onclick="cronBuilder.setSelectedTab('hourlySettings');" checked="checked"/>
+                                                <label class="slds-radio__label" for="hourly_frequency_Radio">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">{!$Label.HOURLY}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-3">
+                                        <div class="slds-form-element">
+                                            <span class="slds-radio">
+                                                <input type="radio" name="deployFrequencyRadio" id="daily_frequency_Radio" class="cronRadio"
+                                                       onclick="cronBuilder.setSelectedTab('dailySettings');"/>
+                                                <label class="slds-radio__label" for="daily_frequency_Radio">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">{!$Label.DAILY}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-3">
+                                        <div class="slds-form-element">
+                                            <span class="slds-radio">
+                                                <input type="radio" name="deployFrequencyRadio" id="weekly_frequency_Radio" class="cronRadio"
+                                                       onclick="cronBuilder.setSelectedTab('weeklySettings');"/>
+                                                <label class="slds-radio__label" for="weekly_frequency_Radio">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">{!$Label.WEEKLY}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="slds-grid slds-p-around_small">
+                    <div class="slds-col slds-size_1-of-3 settingsContainer" id="hourlySettings">
+                        <fieldset class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-radio slds-p-bottom_small">
+                                    <input type="radio" name="hourlyRadio" id="every_x_hours_Radio" class="cronRadio"
+                                           onclick="cronBuilder.setFrequency('hourly', 'every');"/>
+                                    <label class="slds-radio__label" for="every_x_hours_Radio">
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">
+                                            {!$Label.EVERY}&nbsp;
+                                            <select id="every_x_hours_hourOptions" data-controller-element="every_x_hours_Radio" class="cronInput">
+                                                <option value="0">00</option>
+                                                <option value="1">01</option>
+                                                <option value="2">02</option>
+                                                <option value="3">03</option>
+                                                <option value="4">04</option>
+                                                <option value="5">05</option>
+                                                <option value="6">06</option>
+                                                <option value="7">07</option>
+                                                <option value="8">08</option>
+                                                <option value="9">09</option>
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option selected="selected" value="12">12</option>
+                                                <option value="13">13</option>
+                                                <option value="14">14</option>
+                                                <option value="15">15</option>
+                                                <option value="16">16</option>
+                                                <option value="17">17</option>
+                                                <option value="18">18</option>
+                                                <option value="19">19</option>
+                                                <option value="20">20</option>
+                                                <option value="21">21</option>
+                                                <option value="22">22</option>
+                                                <option value="23">23</option>
+                                            </select>
+                                            &nbsp;{!$Label.HOUR_S}
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="slds-radio">
+                                    <input type="radio" name="hourlyRadio" id="starts_at_Radio" class="cronRadio"
+                                           onclick="cronBuilder.setFrequency('hourly', 'starts');"/>
+                                    <label class="slds-radio__label" for="starts_at_Radio">
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">
+                                            {!$Label.STARTS_AT}&nbsp;
+                                            <select id="hourly_starts_at_hourOptions" data-controller-element="starts_at_Radio" class="cronInput">
+                                                <option value="0">00</option>
+                                                <option value="1">01</option>
+                                                <option value="2">02</option>
+                                                <option value="3">03</option>
+                                                <option value="4">04</option>
+                                                <option value="5">05</option>
+                                                <option value="6">06</option>
+                                                <option value="7">07</option>
+                                                <option value="8">08</option>
+                                                <option value="9">09</option>
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option selected="selected" value="12">12</option>
+                                                <option value="13">13</option>
+                                                <option value="14">14</option>
+                                                <option value="15">15</option>
+                                                <option value="16">16</option>
+                                                <option value="17">17</option>
+                                                <option value="18">18</option>
+                                                <option value="19">19</option>
+                                                <option value="20">20</option>
+                                                <option value="21">21</option>
+                                                <option value="22">22</option>
+                                                <option value="23">23</option>
+                                            </select>
+                                            <select id="hourly_starts_at_minuteOptions" data-controller-element="starts_at_Radio" class="cronInput">
+                                                <option selected="selected" value="0">00</option>
+                                                <option value="1">01</option>
+                                                <option value="2">02</option>
+                                                <option value="3">03</option>
+                                                <option value="4">04</option>
+                                                <option value="5">05</option>
+                                                <option value="6">06</option>
+                                                <option value="7">07</option>
+                                                <option value="8">08</option>
+                                                <option value="9">09</option>
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option value="12">12</option>
+                                                <option value="13">13</option>
+                                                <option value="14">14</option>
+                                                <option value="15">15</option>
+                                                <option value="16">16</option>
+                                                <option value="17">17</option>
+                                                <option value="18">18</option>
+                                                <option value="19">19</option>
+                                                <option value="20">20</option>
+                                                <option value="21">21</option>
+                                                <option value="22">22</option>
+                                                <option value="23">23</option>
+                                                <option value="24">24</option>
+                                                <option value="25">25</option>
+                                                <option value="26">26</option>
+                                                <option value="27">27</option>
+                                                <option value="28">28</option>
+                                                <option value="29">29</option>
+                                                <option value="30">30</option>
+                                                <option value="31">31</option>
+                                                <option value="32">32</option>
+                                                <option value="33">33</option>
+                                                <option value="34">34</option>
+                                                <option value="35">35</option>
+                                                <option value="36">36</option>
+                                                <option value="37">37</option>
+                                                <option value="38">38</option>
+                                                <option value="39">39</option>
+                                                <option value="40">40</option>
+                                                <option value="41">41</option>
+                                                <option value="42">42</option>
+                                                <option value="43">43</option>
+                                                <option value="44">44</option>
+                                                <option value="45">45</option>
+                                                <option value="46">46</option>
+                                                <option value="47">47</option>
+                                                <option value="48">48</option>
+                                                <option value="49">49</option>
+                                                <option value="50">50</option>
+                                                <option value="51">51</option>
+                                                <option value="52">52</option>
+                                                <option value="53">53</option>
+                                                <option value="54">54</option>
+                                                <option value="55">55</option>
+                                                <option value="56">56</option>
+                                                <option value="57">57</option>
+                                                <option value="58">58</option>
+                                                <option value="59">59</option>
+                                            </select>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="slds-col settingsContainer" id="dailySettings" style="display: none;">
+                        <fieldset class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-radio slds-p-bottom_small">
+                                    <input type="radio" name="dailyRadio" id="every_x_days_Radio" class="cronRadio"
+                                           onclick="cronBuilder.setFrequency('daily', 'every');"/>
+                                    <label class="slds-radio__label" for="every_x_days_Radio">
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">
+                                            <div class="cronInputDiv">
+                                                {!$Label.EVERY}&nbsp;
+                                                <input type="number" min="1" id="every_x_daysInput" data-controller-element="every_x_days_Radio"
+                                                       class="slds-input cronInput" value="1"/>
+                                                &nbsp;{!$Label.DAY_S}
+                                            </div>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="slds-radio">
+                                    <input type="radio" name="dailyRadio" id="every_week_day_Radio" class="cronRadio"
+                                           onclick="cronBuilder.setFrequency('daily', 'weekdays');"/>
+                                    <label class="slds-radio__label" for="every_week_day_Radio">
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">
+                                            {!$Label.EVERY_WEEK_DAY}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="slds-p-top_small">
+                            <label class="slds-form-element__label">
+                                {!$Label.STARTS_AT}&nbsp;
+                            </label>
+                            <select id="daily_starts_at_hourOptions" class="cronInput">
+                                <option value="0">00</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                                <option value="6">06</option>
+                                <option value="7">07</option>
+                                <option value="8">08</option>
+                                <option value="9">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option selected="selected" value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                            </select>
+                            <select id="daily_starts_at_minuteOptions" class="cronInput">
+                                <option selected="selected" value="0">00</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                                <option value="6">06</option>
+                                <option value="7">07</option>
+                                <option value="8">08</option>
+                                <option value="9">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                                <option value="24">24</option>
+                                <option value="25">25</option>
+                                <option value="26">26</option>
+                                <option value="27">27</option>
+                                <option value="28">28</option>
+                                <option value="29">29</option>
+                                <option value="30">30</option>
+                                <option value="31">31</option>
+                                <option value="32">32</option>
+                                <option value="33">33</option>
+                                <option value="34">34</option>
+                                <option value="35">35</option>
+                                <option value="36">36</option>
+                                <option value="37">37</option>
+                                <option value="38">38</option>
+                                <option value="39">39</option>
+                                <option value="40">40</option>
+                                <option value="41">41</option>
+                                <option value="42">42</option>
+                                <option value="43">43</option>
+                                <option value="44">44</option>
+                                <option value="45">45</option>
+                                <option value="46">46</option>
+                                <option value="47">47</option>
+                                <option value="48">48</option>
+                                <option value="49">49</option>
+                                <option value="50">50</option>
+                                <option value="51">51</option>
+                                <option value="52">52</option>
+                                <option value="53">53</option>
+                                <option value="54">54</option>
+                                <option value="55">55</option>
+                                <option value="56">56</option>
+                                <option value="57">57</option>
+                                <option value="58">58</option>
+                                <option value="59">59</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="slds-col settingsContainer" id="weeklySettings" style="display: none;">
+                        <fieldset class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-checkbox_button-group">
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="monday" value="MON" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="monday">
+                                            <span class="slds-checkbox_faux">{!$Label.MONDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="tuesday" value="TUE" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="tuesday">
+                                            <span class="slds-checkbox_faux">{!$Label.TUESDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="wednesday" value="WED" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="wednesday">
+                                            <span class="slds-checkbox_faux">{!$Label.WEDNESDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="thursday" value="THU" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="thursday">
+                                            <span class="slds-checkbox_faux">{!$Label.THURSDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="friday" value="FRI" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="friday">
+                                            <span class="slds-checkbox_faux">{!$Label.FRIDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="saturday" value="SAT" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="saturday">
+                                            <span class="slds-checkbox_faux">{!$Label.SATURDAY}</span>
+                                        </label>
+                                    </span>
+                                    <span class="slds-button slds-checkbox_button">
+                                        <input type="checkbox" name="weeklyCheckbox" id="sunday" value="SUN" class="dayCheckbox"/>
+                                        <label class="slds-checkbox_button__label" for="sunday">
+                                            <span class="slds-checkbox_faux">{!$Label.SUNDAY}</span>
+                                        </label>
+                                    </span>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="slds-p-top_small">
+                            <label class="slds-form-element__label">
+                                {!$Label.STARTS_AT}&nbsp;
+                            </label>
+                            <select id="weekly_starts_at_hourOptions" class="cronInput">
+                                <option value="0">00</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                                <option value="6">06</option>
+                                <option value="7">07</option>
+                                <option value="8">08</option>
+                                <option value="9">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option selected="selected" value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                            </select>
+                            <select id="weekly_starts_at_minuteOptions" class="cronInput">
+                                <option selected="selected" value="0">00</option>
+                                <option value="1">01</option>
+                                <option value="2">02</option>
+                                <option value="3">03</option>
+                                <option value="4">04</option>
+                                <option value="5">05</option>
+                                <option value="6">06</option>
+                                <option value="7">07</option>
+                                <option value="8">08</option>
+                                <option value="9">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                                <option value="24">24</option>
+                                <option value="25">25</option>
+                                <option value="26">26</option>
+                                <option value="27">27</option>
+                                <option value="28">28</option>
+                                <option value="29">29</option>
+                                <option value="30">30</option>
+                                <option value="31">31</option>
+                                <option value="32">32</option>
+                                <option value="33">33</option>
+                                <option value="34">34</option>
+                                <option value="35">35</option>
+                                <option value="36">36</option>
+                                <option value="37">37</option>
+                                <option value="38">38</option>
+                                <option value="39">39</option>
+                                <option value="40">40</option>
+                                <option value="41">41</option>
+                                <option value="42">42</option>
+                                <option value="43">43</option>
+                                <option value="44">44</option>
+                                <option value="45">45</option>
+                                <option value="46">46</option>
+                                <option value="47">47</option>
+                                <option value="48">48</option>
+                                <option value="49">49</option>
+                                <option value="50">50</option>
+                                <option value="51">51</option>
+                                <option value="52">52</option>
+                                <option value="53">53</option>
+                                <option value="54">54</option>
+                                <option value="55">55</option>
+                                <option value="56">56</option>
+                                <option value="57">57</option>
+                                <option value="58">58</option>
+                                <option value="59">59</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-p-around_small">
+                    <div class="slds-form-element">
+                        <label class="slds-form-element__label" for="cronExpressionInput">
+                            <b>{!$Label.Cron_Expression}</b>
+                            <abbr class="slds-required" title="required"> *</abbr>
+                        </label>
+                        <div class="slds-form-element__control">
+                            <apex:inputText value="{!thisCronExpression}" id="cronExpressionInput" styleClass="cronExpression"/>
+                        </div>
+                    </div>
+                    <div class="slds-text-body_regular slds-text-color_weak slds-p-top_small">
+                        {!$Label.USE_CRONMAKER}
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal__footer">
+                <div class="slds-grid slds-grid_align-center">
+                    <input type="button" class="slds-button slds-button_brand" value="{!$Label.Save}" onclick="cronBuilder.setCronExpressionAndSave();"/>
+                    <apex:commandButton styleClass="slds-button slds-button_outline-brand" action="{!goBackToRecordDetail}" value="{!$Label.Cancel}" immediate="true"/>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+</apex:component>

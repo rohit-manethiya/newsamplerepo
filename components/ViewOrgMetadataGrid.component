@@ -1,0 +1,93 @@
+<apex:component controller="Settings">
+    <apex:attribute name="orgId" type="String" description="Organization Id"/>
+    <apex:attribute name="envId" type="String" description="Organization Id"/>
+    <apex:attribute name="recId" type="String" description="Id"/>
+    <apex:attribute name="metadataurl" type="String" description="Metadata URL"/>
+
+    <apex:includeScript value="{!URLFOR($Resource.statusManager) }" />
+    <apex:includeScript value="{!URLFOR($Resource.utilsV2) }"/>
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }"/>
+    <c:IncludeStaticsResourceComponent addCometdjs="true" addJSON2js="true" addJCometdjs="true" />
+    <apex:includeScript value="{!URLFOR($Resource.copadoStreamingService) }" />
+
+
+    <apex:pageBlock >
+        <apex:pageblockButtons id="removeCacheContainer">
+            <apex:commandLink style="display:none;" value="{!$Label.CACHE_REFRESHED_NOW}"  onclick="return orgMetadata.refreshCache();" rerender="opDummy" id="removeCache"/>
+        </apex:pageblockButtons>        
+        <div id="metadataGrid2">
+          
+
+          <div class="mg2_scaleFilterFrame" style="padding: 5px; display: none;">
+            <label class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+            <apex:commandLink value="({!$Label.REFRESH})"  onclick="return metadataGrid2.refreshMetadataTypes();" rerender="opDummy" id="removeMTCache"/>
+            <div class="mg2_scaleFilter" style="margin-bottom: 10px;" />
+          </div>
+            
+          
+          <div class="mg2_jqxgrid" >
+          <center><img src="/img/loading.gif" /><i><span id="retry-label">{!$Label.LOADING}</span></i></center>
+          </div>
+        </div>
+    </apex:pageBlock>
+
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" addjqxEBcss="true"/>
+    <script>
+          var metadataselector = {
+            orgId: '{!orgId}'            
+          };
+          
+          $copado( document ).ready(function() {
+              
+              
+              copadoStreamingService.ns = '{!JSENCODE(namespace)}';
+              copadoStreamingService.init();
+              statusManager.ns = '{!JSENCODE(namespace)}';
+              statusManager.herokuServer = '{!JSENCODE(herokuServer)}';
+              statusManager.urlParameters = '{!JSENCODE(urlParameters)}';
+              statusManager.sessionId = __sfdcSessionId;
+              statusManager.parentId = metadataselector.orgId;
+              statusManager.waitTimeout = 10000;
+
+              var _config = {
+                data:{
+                    id: '{!JSENCODE(recId)}',
+                    orgId: metadataselector.orgId,
+                    envId: '{!JSENCODE(envId)}'                    
+                },
+                server: {
+                  //metadataUrl: '{!JSENCODE(urlBase)}metadata/__ORGID__{!JSENCODE(urlParameters)}&parentId=__ORGID__&dates=format',  
+                  metadataUrl: '{!JSENCODE(metadataurl)}&parentId={!JSENCODE(orgId)}',
+                  typesUrl: '{!JSENCODE(urlBase)}gitTypes{!JSENCODE(urlParameters)}'
+                },
+                ns: '{!JSENCODE(namespace)}',
+                attachmentName: 'MetaData',
+                viewType: 0,
+                contextSize: 10,
+                leftContent: '',
+                rightContent: ''
+            };
+            metadataselector.metadata_url = _config.server.metadataUrl;
+            statusManager.initFunction = function(){ orgMetadata.init(_config,false,{!scalableGrid},orgMetadata.item); };
+
+              setTimeout(function(){
+                  statusManager.initialise();
+              },2000);
+              var body = document.getElementsByTagName('body')[0];
+              body.addEventListener("beforeunload", function(){
+                  copadoStreamingService.unload();
+              });
+          });
+      </script>
+     
+
+      <apex:outputText rendered="{!$CurrentPage.parameters.dev == ''}">
+      <apex:includeScript value="{!URLFOR($Resource.metadataGrid2) }" />
+      <apex:includeScript value="{!URLFOR($Resource.orgMetadata) }" />
+      </apex:outputText>
+
+      <apex:outputText rendered="{!$CurrentPage.parameters.dev == '1'}">
+      <apex:includeScript value="https://mavens.local/copado%20dev/resource-bundles/Statics.resource/js/metadataGrid2.js" />
+      <apex:includeScript value="https://mavens.local/copado%20dev/resource-bundles/Statics.resource/js/orgMetadata.js" />
+      </apex:outputText>
+</apex:component>

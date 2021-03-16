@@ -1,0 +1,3 @@
+<apex:component id="PipelineFilters">
+    <!--DEPRECATED with v15 (Winter20) after merging it with PipelineManager-->
+</apex:component>

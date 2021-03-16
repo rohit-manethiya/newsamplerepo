@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Git Commit</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Git Commits</value>
+    </caseValues>
+    <fields>
+        <label><!-- Branch --></label>
+        <name>Branch__c</name>
+    </fields>
+    <fields>
+        <label><!-- Changes --></label>
+        <name>Changes__c</name>
+    </fields>
+    <fields>
+        <label><!-- Commit Date --></label>
+        <name>Commit_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Commit Datetime --></label>
+        <name>Commit_Datetime__c</name>
+    </fields>
+    <fields>
+        <label><!-- Commit Id --></label>
+        <name>Commit_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Commit Message --></label>
+        <name>Commit_Message__c</name>
+    </fields>
+    <fields>
+        <label><!-- Git Repository --></label>
+        <name>Git_Repository__c</name>
+        <relationshipLabel><!-- Git Commits --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

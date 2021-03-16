@@ -1,0 +1,14 @@
+<template>
+    <c-copadocore-modal>
+        <span slot="title">{title}</span>
+        <slot class="slds-align_absolute-center">
+            {body}
+        </slot>
+        <span slot="footer">
+            <lightning-button label={label.Cancel} title={label.Cancel} variant="neutral" onclick={handleCancel}>
+            </lightning-button>
+            <lightning-button class="slds-m-left_x-small" label={label.DELETE} title={label.DELETE} variant="brand"
+                onclick={handleDelete}></lightning-button>
+        </span>
+    </c-copadocore-modal>
+</template>

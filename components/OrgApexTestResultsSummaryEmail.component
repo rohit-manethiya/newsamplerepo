@@ -1,0 +1,123 @@
+<apex:component id="cmp_apex_test_email" controller="OrgApexTestResultsSummaryEmailController" access="global">
+    <apex:attribute name="resId" type="String" description="Apex Test Result Id" assignTo="{!apexResultId}" />
+
+    <style>
+        .col1, .col2, .col3 {
+            text-align:left;
+        }
+    </style>
+
+    <h3>{!$Label.TOTAL_ORG_COVERAGE}</h3>
+    <table id="tblClassCoverage" width="100%" class="list" border="0" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr class="headerRow">
+                <th class="col1">{!$Label.NAME}</th>
+                <th class="col1">{!$Label.COVERAGE_STATUS}</th>
+                <th class="col2">{!$Label.TOTAL_NUMBER_OF_LINES}</th>
+                <th class="col3">{!$Label.LINES_NOT_COVERED}</th>
+                <th class="col3">{!$Label.LINES_COVERED}</th>
+                <th class="col3">{!$Label.COVERAGE} %</th>
+            </tr>
+        </thead>
+        <tr>
+            <td class="col1">{!$Organization.Name}</td>
+            <td class="col1">{!IF((total_lines - not_covered_lines)/total_lines*100>min_coverage,$Label.PASSED,$Label.FAILED)}</td>
+            <td class="col3 alignRight">{!total_lines}</td>
+            <td class="col3 alignRight">{!not_covered_lines}</td>
+            <td class="col3 alignRight">{!covered_lines}</td>
+            <td class="col3 alignRight">
+                <apex:outputText value="{0, number, 00.00}">
+                    <apex:param value="{!(total_lines - not_covered_lines)/total_lines*100}" />
+                </apex:outputText>
+            </td>
+        </tr>
+    </table>
+
+    <h3>{!$Label.CLASS_COVERAGE}</h3>
+    <table id="tblClassCoverage" width="100%" class="list" border="0" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr class="headerRow">
+                <th class="col1">{!$Label.NAME}</th>
+                <th class="col1">{!$Label.COVERAGE_STATUS}</th>
+                <th class="col2">{!$Label.TOTAL_NUMBER_OF_LINES}</th>
+                <th class="col3">{!$Label.LINES_NOT_COVERED}</th>
+                <th class="col3">{!$Label.LINES_COVERED}</th>
+                <th class="col3">{!$Label.COVERAGE} %</th>
+            </tr>
+        </thead>
+        <apex:repeat value="{!classCoverage}" var="c">
+            <tr>
+                <td class="col1">{!c.name}</td>
+                <td class="col3 alignRight">{!IF(c.total_lines=0,$Label.PASSED,IF((c.total_lines - c.lines_not_covered)/c.total_lines*100>min_coverage,$Label.PASSED,$Label.FAILED))}</td>
+                <td class="col3 alignRight">{!c.total_lines}</td>
+                <td class="col3 alignRight">{!c.lines_not_covered}</td>
+                <td class="col3 alignRight">{!c.total_lines -c.lines_not_covered}</td>
+                <td class="col3 alignRight">
+                    <apex:outputText value="{0, number, 00.00}">
+                       <apex:param value="{!IF(c.total_lines=0,0,(c.total_lines -c.lines_not_covered)/c.total_lines*100)}" />
+                    </apex:outputText>
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+    <apex:outputText style="font-style: italic;" rendered="{!IF(classLines>1000,'true','false')}" value="{!$Label.APEX_TESTS_RESULTS_TRIMMED}">
+        <apex:param value="{!SFDC_Org_Id}"/>
+    </apex:outputText>
+
+    <h3>{!$Label.TRIGGER_COVERAGE}</h3>
+
+    <table id="tblTriggerCoverage" width="100%" class="list" border="0" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr class="headerRow">
+                <th class="col1">{!$Label.NAME}</th>
+                <th class="col1">{!$Label.COVERAGE_STATUS}</th>
+                <th class="col2">{!$Label.TOTAL_NUMBER_OF_LINES}</th>
+                <th class="col3">{!$Label.LINES_NOT_COVERED}</th>
+                <th class="col3">{!$Label.LINES_COVERED}</th>
+                <th class="col3">{!$Label.COVERAGE} %</th>
+            </tr>
+        </thead>
+        <apex:repeat value="{!triggerCoverage}" var="c">
+            <tr>
+                <td class="col1">{!c.name}</td>
+                <td class="col3 alignRight">{!IF(c.total_lines=0,$Label.PASSED,IF((c.total_lines - c.lines_not_covered)/c.total_lines*100>min_coverage,$Label.PASSED,$Label.FAILED))}</td>
+                <td class="col3 alignRight">{!c.total_lines}</td>
+                <td class="col3 alignRight">{!c.lines_not_covered}</td>
+                <td class="col3 alignRight">{!c.total_lines -c.lines_not_covered}</td>
+                <td class="col3 alignRight">
+                    <apex:outputText value="{0, number, 00.00}">
+                       <apex:param value="{!IF(c.total_lines=0,0,(c.total_lines -c.lines_not_covered)/c.total_lines*100)}" />
+                    </apex:outputText>
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+    <apex:outputText style="font-style: italic;" rendered="{!IF(triggerLines>1000,'true','false')}" value="{!$Label.APEX_TESTS_RESULTS_TRIMMED}">
+        <apex:param value="{!SFDC_Org_Id}"/>
+    </apex:outputText>
+
+    <h3>{!$Label.METHODS}</h3>
+    <table id="tblMethods" width="100%" class="list" border="0" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr class="headerRow">
+                <th class="col1">{!$Label.APEX_CLASS}</th>
+                <th class="col2">{!$Label.METHOD_NAME}</th>
+                <th class="col3">{!$Label.PASS_FAIL_COLUMN_HEADER}</th>
+                <th class="colmsg">{!$Label.MESSAGE}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <apex:repeat value="{!classMethods}" var="c">
+                <tr>
+                    <td class="col1">{!c.className}</td>
+                    <td class="col3 alignRight">{!c.methodName}</td>
+                    <td class="col3 alignRight">{!c.status}</td>
+                    <td class="col3 alignRight">{!c.message}</td>
+                </tr>
+            </apex:repeat>
+        </tbody>
+    </table>
+    <apex:outputText style="font-style: italic;" rendered="{!IF(methodLines>1000,'true','false')}" value="{!$Label.APEX_TESTS_RESULTS_TRIMMED}">
+        <apex:param value="{!SFDC_Org_Id}"/>
+    </apex:outputText>
+</apex:component>

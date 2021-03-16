@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Project</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Projects</value>
+    </caseValues>
+    <fields>
+        <help><!-- If working with Copado Change Management, the Project must be linked to a Pipeline. --></help>
+        <label><!-- Pipeline --></label>
+        <name>Deployment_Flow__c</name>
+        <relationshipLabel><!-- Projects --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- End Date --></label>
+        <name>End_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Exclude Tabs from Promotion Page --></label>
+        <name>Exclude_Tabs_from_Promotion_Page__c</name>
+        <picklistValues>
+            <masterLabel>Promotion User Story Metadata</masterLabel>
+            <translation><!-- Promotion User Story Metadata --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Selenium Test</masterLabel>
+            <translation><!-- Selenium Test --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Static Code Analysis Summary</masterLabel>
+            <translation><!-- Static Code Analysis Summary --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- When this field is checked, Copado will index the metadata selected against the user stories into the User Story Metadata custom object. Indexed metadata can be used for reporting and compliance, and it&apos;s also used by Copado overlap awareness feature. --></help>
+        <label><!-- Index Metadata --></label>
+        <name>Index_Metadata__c</name>
+    </fields>
+    <fields>
+        <label><!-- Start Date --></label>
+        <name>Start_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Completed</masterLabel>
+            <translation><!-- Completed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In progress</masterLabel>
+            <translation><!-- In progress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Planned</masterLabel>
+            <translation><!-- Planned --></translation>
+        </picklistValues>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

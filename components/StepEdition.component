@@ -1,0 +1,828 @@
+<apex:component id="cmpStepEdition" controller="StepEditionController" allowDML="true">
+
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.min.css')}" />
+    <style>
+        .fixed-width {
+            width: 11.7rem;
+        }
+    </style>
+    <div>
+        <apex:pageBlock id="pbStepDetailComponent">
+
+            <apex:pageblockButtons >
+                <apex:actionFunction name="validateDataTemplate" action="{!validateDataTemplateDeployment}" onComplete="refreshAttachmentInDataStepValidationResultCtrl();unlockScreen();">
+                    <apex:param name="stepId" value="" />
+                </apex:actionFunction>
+                <button id="btn-js-ValidateStep" class="btn js-validateStep" style="visibility: hidden" onclick="lockScreen();copadoStep.validateStep(); return false;">{!$Label.Validate}</button>
+
+                <button id="btn-js-SaveStep" class="btn js-saveStep" onclick="copadoStep.save(); return false;">{!$Label.site.save}</button>
+                <button id="btn-js-CancelStep" class="btn" onclick="copadoStep.cancel(); return false;">{!$Label.site.cancel}</button>
+            </apex:pageblockButtons>
+
+            <!-- **************************************************************** -->
+            <!-- METADATA FIND AND REPLACE -->
+            <!-- **************************************************************** -->
+            <div id="js-FindReplaceContainer" style="display:none;">
+                <apex:includeScript value="{!URLFOR($Resource.metadataReplace) }" />
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Find and Replace" />
+                            <div id="metadataReplaceFindReplaceWrapper">
+                                <div id="findReplaceArrayPlaceholder"> </div>
+                                <div style="clear:both;">
+                                    <button id="btn-js-addFindReplace" class="copado-lightning" onclick="metadataReplace.findReplace.addRow(); return false;">Add Find/Replace text</button>
+                                </div>
+                                <script>metadataReplace.bindings.bindActions();</script>
+                            </div>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:pageBlockSection>
+            </div>
+
+
+            <div id="js-TestLevelContainer" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Test Level</apex:outputLabel>
+                            <select id="js-TestLevel" data-selected="">
+                                <option value="NoTestRun" selected="selected">No Test Run</option>
+                                <option value="RunSpecifiedTests">Run Specified Tests</option>
+                                <option value="RunLocalTests">Run Local Tests</option>
+                                <option value="RunAllTestsInOrg">Run All Tests In Org</option>
+                            </select>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:pageBlockSection>
+            </div>
+
+            <!-- **************************************************************** -->
+            <!-- USERS STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Users" style="display:none;">
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.FROM_SUFFIX}" for="fromSuffix" />
+                        <apex:inputText value="{!inputAux}" id="fromSuffix" styleClass="js-fromSuffix" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.TO_SUFFIX}" for="toSuffix" />
+                        <apex:inputText value="{!inputAux}" id="toSuffix" styleClass="js-toSuffix" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.ACTIVATE_USERS}" for="actives" />
+                        <apex:inputCheckbox value="{!inputAux}" id="actives" styleClass="js-actives" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem id="d-useTerritories">
+                        <apex:outputLabel value="{!$Label.USER_TERRITORIES}" for="useTerritories" />
+                        <apex:inputCheckbox value="{!inputAux}" id="useTerritories" styleClass="js-useTerritories" />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- CUSTOM SETTINGS STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-CustomSettings" style="display:none;">
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.FROM_SUFFIX}" for="csfromSuffix" />
+                        <apex:inputText value="{!inputAux}" id="csfromSuffix" styleClass="cs-fromSuffix" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.TO_SUFFIX}" for="cstoSuffix" />
+                        <apex:inputText value="{!inputAux}" id="cstoSuffix" styleClass="cs-toSuffix" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.STEP_TYPE_CUSTOM_SETTINGS}" for="objectsCJ" />
+                        <div id="objectsCJ"></div>
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem >
+                        <button id="refresh-cache-cs" onclick="return false;" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}">{!$Label.RefreshCS}</button>
+
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="" for="getCSValues" />
+                        <button id="getCSValues" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}">{!$Label.GetCSValues}</button>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <div id="jqxgrid-custom-setting"> </div>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- QUICK ACTIONS STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-QuickActions" style="display:none;">
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.STEP_TYPE_QUICK_ACTIONS}" for="objectsQA" />
+                        <div id="objectsQA"></div>
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem >
+                        <button id="getQuickActions" class="btnDisabled {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" disabled="disabled">Get Quick Actions</button>
+                        <div class="nonused"></div>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.STEP_TYPE_QUICK_ACTIONS}" for="objectsQAs" />
+                        <select id="qa-values" size="20" style="width:400px;" multiple="multiple">
+                        </select>
+                        <button id="qa-toggle-all" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}">{!$Label.SELECT_ALL}</button>
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem >
+                        <div class="nonused"></div>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- APEX STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Apex" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Apex Script" for="jsapex" />
+                        <apex:inputTextarea value="{!inputAux}" id="jsapex" styleClass="js-apex" style="width:95%" rows="15" html-placeholder="System.debug('Write your awesome Apex code here!');"
+                        />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- MANUAL TASK STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-ManualTask" style="display:none;">
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.TASK_OWNER}" for="jsTaskOwner" />
+                        <apex:outputPanel >
+                            <input type="hidden" name="jsTaskOwner_lkid" id="jsTaskOwner_lkid" value="000000000000000" />
+                            <input type="hidden" name="jsTaskOwner_lkold" id="jsTaskOwner_lkold" value="" />
+                            <input type="hidden" name="jsTaskOwner_lktp" id="jsTaskOwner_lktp" value="{!$ObjectType.User.keyPrefix}" />
+                            <input type="hidden" name="jsTaskOwner_lspf" id="jsTaskOwner_lspf" value="0" />
+                            <input type="hidden" name="jsTaskOwner_lspfsub" id="jsTaskOwner_lspfsub" value="0" />
+                            <input type="hidden" name="jsTaskOwner_mod" id="jsTaskOwner_mod" value="0" />
+                            <span class="lookupInput">
+                                <input id="jsTaskOwner" maxlength="255" name="jsTaskOwner" onchange="getElementByIdCS('jsTaskOwner_lkid').value='';getElementByIdCS('jsTaskOwner_mod').value='1';"
+                                    size="20" tabindex="3" type="text" value="" />
+                                <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DjsTaskOwner%26lktp%3D%27%20%2B%20getElementByIdCS%28%27jsTaskOwner_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27jsTaskOwner%27%29.value.substring%280%2C%2080%29%29%29"
+                                    id="jsTaskOwner_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="User Lookup (New Window)">
+                                    <img src="/img/s.gif" alt="User Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';" onfocus="this.className = 'lookupIconOn';"
+                                        onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';"
+                                        title="User Lookup (New Window)" />
+                                </a>
+                            </span>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.NOTIFY_TASK_OWNER}" for="jsNotifyTaskOwner" />
+                        <apex:inputField value="{!Step.Notify_Task_Owner__c}" id="jsNotifyTaskOwner" />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Task Description" for="jsTaskDesc" />
+                        <apex:inputTextArea value="{!inputAux}" id="jsTaskDesc" style="width:95%" rows="15" styleClass="js-manual" html-placeholder="Write the task description here."
+                        />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="2">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Source Org" for="jsPerformInSource" />
+                        <apex:inputCheckbox value="{!inputAux}" id="jsPerformInSource" styleClass="js-manual" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Perform in Destination Org(s)" for="jsPerformInDestinations" />
+                        <apex:inputCheckbox value="{!inputAux}" id="jsPerformInDestinations" styleClass="js-manual" />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- URL CALLOUT STEP -->
+            <!-- **************************************************************** -->
+            <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+            <apex:includeScript value="{!URLFOR($Resource.urlcallout) }" />
+            <c:IncludeStaticsResourceComponent addSLcss="true" />
+            <apex:outputPanel id="js-stepBlock-UrlCallout" style="display:none;">
+                <apex:outputPanel id="js-stepBlock-UrlCallout-ResumeUrl" style="display:none;">
+                    <apex:pageBlockSection columns="1">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel id="lbljsUrlCalloutResumeUrl" value="Resume URL" for="jsUrlCalloutResumeUrl" />
+                            <apex:outputPanel >
+                                <div id="jsUrlCalloutResumeUrl"> </div>
+                                <div id="js-urlCallOut-hide-div" style="display:none;">
+                                    <br />
+                                    <button id="btnHideResumeUrl" type="button" class="copado-lightning" onclick="urlCallout.hookUrl.hide();">Hide</button>
+                                </div>
+                                <div id="js-urlCallOut-show-div" style="display:block;">
+                                    <button id="btnShowResumeUrl" type="button" class="copado-lightning" onclick="urlCallout.hookUrl.show();">Show</button>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel id="lbljsWebhookLookup" for="jsWebhookLookup">
+                            <img height="20" width="20" src="{!URLFOR($Resource.Statics,'img/icons/logo-icon.png')}" alt="Lookup Copado Webhook" />
+                        </apex:outputLabel>
+                        <apex:outputPanel >
+                            <c:webhookLookup ></c:webhookLookup>
+                            <script>
+                                webhookLookup.config.URL_ELEMENT_ID = 'jsUrlCalloutUrl';
+                                webhookLookup.config.ns = '{!JSENCODE(settings.namespace)}';
+                                webhookLookup.config.herokuServer = '{!JSENCODE(settings.herokuServer)}';
+                                webhookLookup.config.ADD_API_KEY_TO_URL = true;
+                                webhookLookup.onSuccessCB = function () {
+                                    urlCallout.parseUrl($copado('input[id$=jsUrlCalloutUrl]').val());
+                                    $copado('[id=jsUrlCalloutMethod]').val('POST');
+                                    $copado('[id=jsUrlCalloutType]').val('wait');
+                                    $copado('[id=jsUrlCalloutType]').change();
+                                };
+                            </script>
+                            <div id="jsWebhookLookup">
+                                <button class="btn {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" id="btnWebhookLookup" onclick="webhookLookup.show();return false;"
+                                    value="Look up Copado Webhook">Look up Copado Webhook</button>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel id="lbljsUrlCalloutType" value="Type" for="jsUrlCalloutType" />
+                        <apex:outputPanel >
+                            <select id="jsUrlCalloutType">
+                                <option value="wait">Perform callout and pause Step</option>
+                                <option value="continue">Perform callout and continue with deployment</option>
+                            </select>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Method" for="jsUrlCalloutMethod" />
+                        <select id="jsUrlCalloutMethod">
+                            <option value="GET" selected="selected">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Dynamic URL Parameters" />
+                        <apex:outputPanel >
+                            <c:VariableLookup id="cmpVarLookup" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="URL" for="jsUrlCalloutUrl" />
+                        <apex:inputText value="{!inputAux}" id="jsUrlCalloutUrl" style="width:95%" styleClass="js-UrlCallout" html-placeholder="Enter URL here"
+                        />
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="URL Parameters" />
+                        <div id="urlCalloutParamWrapper">
+                            <div id="urlCalloutUrlParameters"> </div>
+                            <div style="clear:both;">
+                                <button id="btn-js-addUrlParameter" class="btn {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="urlCallout.param.addRow(); return false;">Add URL Parameter</button>
+                            </div>
+                        </div>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Headers" />
+                        <div id="urlCalloutHeadersWrapper">
+                            <div id="urlCalloutUrlHeaders"> </div>
+                            <div style="clear:both;">
+                                <button id="btn-js-addHeader" class="btn {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="urlCallout.header.addRow(); return false;">Add Header</button>
+                            </div>
+                        </div>
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Body" for="jsUrlCalloutBody" />
+                        <apex:inputTextarea value="{!inputAux}" id="jsUrlCalloutBody" styleClass="js-urlCallout-Body" style="width:95%" rows="15"
+                            html-placeholder="Optional POST body goes here" />
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <script type="text/javascript">
+                    urlCallout.config.ns = '{!JSENCODE(settings.namespace)}';
+                    urlCallout.config.herokuServer = '{!JSENCODE(settings.herokuServer)}';
+                    $copado(document).ready(function () {
+                        urlCallout.bindings.bindActions();
+                    });
+                </script>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- EXTERNAL CI STEP -->
+            <!-- **************************************************************** -->
+            <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+
+            <apex:outputPanel id="js-stepBlock-ExternalCI" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$Label.EXTERNAL_CI_JOB}" for="ExternalCIJob" />
+                        <apex:outputPanel >
+                            <!--<input size="43" value="" id="ExternalCIJob" class="js-external-ci-job" type="text" />
+                        <a class="js-external-ci-job-lookup lookupIcon iconAction" href="#" onclick="return false;"><img src="/s.gif" class="lookupIcon iconAction" /></a>-->
+                            <div class="requiredInput">
+                                <div class="requiredBlock">
+                                </div>
+                                <input type="hidden" name="XCI_INPUT_lkid" id="XCI_INPUT_lkid" value="000000000000000" />
+                                <input type="hidden" name="XCI_INPUT_lkold" id="XCI_INPUT_lkold" value="" />
+                                <input type="hidden" name="XCI_INPUT_lktp" id="XCI_INPUT_lktp" value="{!$ObjectType.External_CI_Job__c.keyPrefix}" />
+                                <input type="hidden" name="XCI_INPUT_lspf" id="XCI_INPUT_lspf" value="0" />
+                                <input type="hidden" name="XCI_INPUT_lspfsub" id="XCI_INPUT_lspfsub" value="0" />
+                                <input type="hidden" name="XCI_INPUT_mod" id="XCI_INPUT_mod" value="0" />
+                                <span class="lookupInput">
+                                    <input id="XCI_INPUT" maxlength="255" name="XCI_INPUT" onchange="getElementByIdCS('XCI_INPUT_lkid').value='';getElementByIdCS('XCI_INPUT_mod').value='1';"
+                                        size="20" tabindex="3" type="text" value="" />
+                                    <a href="javascript:%20openLookup%28%27%2F_ui%2Fcommon%2Fdata%2FLookupPage%3Flkfm%3DeditPage%26lknm%3DXCI_INPUT%26lktp%3D%27%20%2B%20getElementByIdCS%28%27XCI_INPUT_lktp%27%29.value%2C670%2C%271%27%2C%27%26lksrch%3D%27%20%2B%20escapeUTF%28getElementByIdCS%28%27XCI_INPUT%27%29.value.substring%280%2C%2080%29%29%29"
+                                        id="XCI_INPUT_lkwgt" onclick="setLastMousePosition(event)" tabindex="3" title="External CI Job Lookup (New Window)">
+                                        <img src="/img/s.gif" alt="External CI Job Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';"
+                                            onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';"
+                                            onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" title="External CI Job Lookup (New Window)"
+                                        />
+                                    </a>
+                                </span>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+
+            <!-- **************************************************************** -->
+            <!-- DATA DEPLOYMENT STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-DataTemplate" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:outputPanel >
+                        <apex:outputLabel value="{!$Label.Select_Data_Source}" for="DataSourceType" />
+                        <div class="requiredInput" style="padding-bottom: 20px;">
+                            <div class="requiredBlock"></div>
+                            <select id="DataSourceType" style="min-width: 300px;" onchange="copadoDataTemplateStep.handleChangeSourceType(this.value);">
+                                <option value="ENVIRONMENT" selected="selected">{!$Label.Environment_Based_On_Data_Template}</option>
+                                <option value="DATASET">{!$Label.Data_Set}</option>
+                            </select>
+                        </div>
+                        <div id="dataTemplateSourcePanel">
+                            <apex:outputLabel value="{!$Label.Data_Template}" for="SourceDataTemplate" />
+
+                            <div class="requiredInput">
+                                <div class="requiredBlock"></div>
+                                <apex:inputField style="min-width: 300px;" value="{!lookupAux.Data_Template__c}" id="SourceDataTemplate" onchange="copadoDataTemplateStep.setTemplate();"
+                                />
+                            </div>
+                        </div>
+                        <div id="dataSetSourcePanel">
+                            <apex:outputLabel value="{!$Label.Data_Set}" for="SourceDataSet" />
+                            <div class="requiredInput">
+                                <div class="requiredBlock"></div>
+                                <apex:inputField style="min-width: 300px;" value="{!lookupAux.Data_Set__c}" id="SourceDataSet" onchange="copadoDataTemplateStep.setSourceId();"
+                                />
+                            </div>
+                        </div>
+
+                        <div id="dataSetDestinationPanel">
+                            <apex:outputLabel value="{!$Label.Destination_Data_Set}" for="DestinationDataSet" />
+                            <div class="requiredInput">
+                                <div class="requiredBlock"></div>
+                                <apex:inputField style="min-width: 300px;" value="{!lookupAux.Data_Set__c}" id="DestinationDataSet" />
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+                <div id="dataTemplateInformation">
+                    <hr/>
+                    <apex:pageBlockSection columns="2">
+                        <apex:outputpanel >
+                            <div style="display: inline-flex; padding-bottom: 20px;">
+                                <span id="headerDataTemplate" data-recordid="" style="font-weight: bold;"></span>
+                                <div id="opentemplate" style="display:none;">
+                                    <apex:commandLink onClick="copadoDataTemplateStep.openRelationDataTemplate('headerDataTemplate'); return false;" target="_blank">
+                                        <apex:image value="{!URLFOR($Resource.DTS_images,'lookup.png')}" style="margin-left: 10px; margin-top: -5px; width: 20px;"
+                                        />
+                                    </apex:commandLink>
+                                </div>
+                            </div>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            <apex:outputPanel layout="none" rendered="{!$User.UiThemeDisplayed == 'Theme4d'}">
+                                <div id="openRelationshipDiagram" style="display:none;">
+                                    <apex:commandLink onClick="copadoDataTemplateStep.redirectToRelationalDiagramLWC(); return false;" target="_blank">
+                                        <apex:image value="{!URLFOR($Resource.DTS_images,'relationship.svg')}" style="margin-left: 5px;" /> {!$Label.Relationship_Diagram}
+                                    </apex:commandLink>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$ObjectType.Data_Template__c.fields.Template_Source_Org__c.Label}:
+                            <span id="sourceOrg" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$Label.Total_Related_Objects}:
+                            <span id="totalObjects" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$ObjectType.Data_Template__c.fields.Batch_Size__c.Label}:
+                            <span id="batchSize" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$ObjectType.Data_Template__c.fields.Max_Record_Limit__c.Label}:
+                            <span id="maxRecordLimit" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$Label.Template_Filter}:
+                            <span id="objectFilter" style="font-weight: bold;"></span>
+                            <apex:outputPanel id="editTemplateFilter" style="display:none;">
+                                <apex:commandLink onClick="copadoDataTemplateStep.openOverrideFilterPage();return false;">
+                                    <span id="editFilterIconText" style="font-weight: bold;"></span>
+                                    <apex:image value="{!URLFOR($Resource.DTS_images,'ic-edit.svg')}" style="margin-left: 5px;" />
+                                </apex:commandLink>
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+                    </apex:pageBlockSection>
+                </div>
+                <div id="dataSetInformation">
+                    <hr/>
+                    <apex:pageBlockSection columns="2">
+                        <apex:outputpanel >
+                            <div style="display: inline-flex; padding-bottom: 20px;">
+                                <span id="headerDataSet" data-recordid="" style="font-weight: bold;"></span>
+                                <div id="openDataSet" style="display:none;">
+                                    <apex:commandLink onClick="copadoDataTemplateStep.openRelationDataSet('headerDataSet'); return false;" target="_blank">
+                                        <apex:image value="{!URLFOR($Resource.DTS_images,'lookup.png')}" style="margin-left: 10px; margin-top: -5px; width: 20px;"
+                                        />
+                                    </apex:commandLink>
+                                </div>
+                            </div>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            <apex:outputPanel layout="none" rendered="{!$User.UiThemeDisplayed == 'Theme4d'}">
+                            </apex:outputPanel>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$ObjectType.Data_Set__c.fields.Data_Template__c.Label}:
+                            <div id="openDataTemplate" style="display:inline-block;">
+                                <apex:commandLink onClick="copadoDataTemplateStep.openRelationDataTemplate('dataSetTemplate'); return false;">
+                                    <span id="dataSetTemplate" data-recordid="" style="font-weight: bold;"></span>
+                                </apex:commandLink>
+                            </div>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$Label.Number_Of_Files}:
+                            <span id="numberOfFiles" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$ObjectType.Data_Set__c.fields.Description__c.Label}:
+                            <span id="description" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                        <apex:outputpanel >
+                            {!$Label.Total_File_Size}:
+                            <span id="totalFileSize" style="font-weight: bold;"></span>
+                        </apex:outputpanel>
+
+                    </apex:pageBlockSection>
+                </div>
+
+                <apex:pageBlockSection columns="1">
+                    <c:DataStepValidationResult />
+                </apex:pageBlockSection>
+
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- AUTOMATION STEP -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Automation" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:outputLabel value="{!$Label.AUTOMATION}" for="Automation" />
+                    <apex:outputPanel >
+                        <div class="requiredInput">
+                            <div class="requiredBlock"></div>
+                            <apex:inputField value="{!lookupAux.Deployment__c}" id="auxAutomationId" onchange="copadoAutomationStep.setPrevData(copadoAutomationStep.getObjToSave());"
+                            />
+                        </div>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- GRID -->
+            <!-- In use for Delete Metadata, Full Permission Sets, Translations, Full Profiles, Metadata -- UCU Note -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Grid" style="display:none;">
+                <apex:pageBlockSection columns="1">
+
+                    <apex:outputPanel >
+                        <div id="removeCacheContainer" style="display:none; float:right; margin-right: 2px;">
+                            <a target="_blank" href="/{orgId}?_mtf=1" id="link-org-filtered" style="float: left">
+                                <img width="16px" height="16px" src="{!$Resource.filter}" title="{!$Label.METADATA_FILTERED}" />
+                            </a>
+                            <a href="javascript:void(0);" style="display:block;width:400px;" onclick="return rock.removeCached();" id="removeCache">
+                                {!$Label.CACHE_REFRESHED_NOW}
+                            </a>
+                        </div>
+                    </apex:outputPanel>
+
+                    <div id="jqxgrid">
+                        <div id="loading">
+                            <center>
+                                <img src="/img/loading.gif" />
+                                <i>{!$Label.LOADING}
+                                    <span id="retry-label"></span>
+                                </i>
+                            </center>
+                        </div>
+                    </div>
+
+                    <apex:outputPanel layout="none">
+                        <div id="metadataGrid2">
+                            <div class='mg2_tabs'>
+                                <ul style="margin-left: 20px;">
+                                    <li>All Metadata</li>
+                                    <li>Selected Metadata</li>
+                                </ul>
+
+                                <div>
+                                    <!-- div required for jqxTabs -->
+                                    <div class="mg2_scaleFilterFrame" style="padding: 5px; display: none;">
+                                        <label class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+                                        <apex:commandLink value="({!$Label.REFRESH})" onclick="return metadataGrid2.refreshMetadataTypes();" rerender="opDummy" id="removeMTCache"
+                                        />
+                                        <div class="mg2_scaleFilter" style="margin-bottom: 10px;" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                </div>
+
+                            </div>
+                            <div class="mg2_jqxgrid">
+                                <center>
+                                    <img src="/img/loading.gif" />
+                                    <i>
+                                        <span id="retry-label">{!$Label.LOADING}</span>
+                                    </i>
+                                </center>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- QUERY BUILDER STEP                                               -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-QB" style="display:none;">
+                <div>
+                    <center>
+                        <a id="qb-refresh" class="iconAction" onclick="return dw.qb.removeCached();">{!$Label.CACHE_REFRESHED_NOW}</a>
+                    </center>
+                </div>
+                <fieldset>
+                    <legend>{!$Label.QUERY_BUILDER}</legend>
+
+                    <div id="queryBuilder" style="display:none;">
+                        <apex:pageBlockSection >
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="{!$Label.OBJECT}" />
+                                <apex:outputPanel >
+                                    <div id="objects"></div>
+                                    <button id="getFields" class="{!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" disabled="disabled">{!$Label.GET_FIELDS}</button>
+                                    <i id="selected-obj">{!$Label.SOBJECT}</i>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+
+                        <apex:outputPanel styleClass="query-step-2" layout="block" style="display:none;">
+                            <apex:pageBlockSection >
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="{!$Label.EXTERNAL_ID}" />
+                                    <apex:outputPanel layout="block">
+                                        <select id="fieldsEx" width="400px"></select>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+
+                            <apex:outputPanel styleClass="attachmentOptionPanel">
+                                <apex:pageBlockSection >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.Attachment_Options}" />
+                                        <apex:outputPanel layout="block">
+                                            <select id="attachmentOptions" width="400px">
+                                                <option value="none">{!$Label.No_Attachments}</option>
+                                                <option value="insert">{!$Label.Insert_Attachments}</option>
+                                                <option value="update">{!$Label.Upsert_Attachments}</option>
+                                                <option value="replace">{!$Label.Replace_Attachments}</option>
+                                                <option value="remove">{!$Label.Remove_Attachments}</option>
+                                            </select>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+
+                            <apex:outputPanel styleClass="matchOwnerPanel">
+                                <apex:pageBlockSection >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.Match_Owner}" />
+                                        <apex:outputPanel layout="block">
+                                            <input type="checkbox" id="matchOwner" />
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+
+                            <apex:outputPanel styleClass="matchRecordTypePanel">
+                                <apex:pageBlockSection >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="{!$Label.Match_Record_Type}" />
+                                        <apex:outputPanel layout="block">
+                                            <input type="checkbox" id="matchRecordType" />
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="" />
+                                    <apex:outputPanel layout="block">
+                                        <c:MultiselectPicklist leftLabel="{!$Label.AVAILABLE_FIELDS}" pleftOptions="" rightLabel="{!$Label.SELECTED_FIELDS}" prightOptions=""
+                                            size="14" width="350px" id="soqlfields" />
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="{!$Label.QUERY}" />
+                                    <apex:outputPanel layout="block">
+                                        <textarea id="query-label" class="query-label" cols="60" rows="5" style="width:85%;"></textarea>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+
+                                <div class="row action">
+                                    <button id="testQuery" class="btnImportant {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}">{!$Label.TEST_QUERY}</button>
+                                </div>
+                            </apex:pageBlockSection>
+                        </apex:outputPanel>
+                    </div>
+                </fieldset>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- GIT METADATA -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Git-MetaData" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Step__c.fields.Commit_Id__c.label}" for="GitCommit" />
+                            <apex:outputPanel >
+                                <span class="lookupInput">
+                                    <input size="20" tabindex="3" value="" maxlength="255" id="GitCommit" class="js-gitCommit" type="text" readonly="readonly"
+                                    />
+                                    <a class="js-gitCommit-lookup lookupIcon iconAction" href="#" onclick="return false;">
+                                        <img src="/img/s.gif" alt="Git Commit Lookup (New Window)" class="lookupIcon" onblur="this.className = 'lookupIcon';" onfocus="this.className = 'lookupIconOn';"
+                                            onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';"
+                                        />
+                                    </a>
+                                </span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Commit Name</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitName"></span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Git Repository</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitRepository">My Own Repository</span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Branch</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitBranch"></span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+
+                    <div id="jqxgrid-git-metadata"> </div>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- GIT PROMOTION -->
+            <!-- **************************************************************** -->
+            <apex:outputPanel id="js-stepBlock-Git-Promotion" style="display:none;">
+                <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Step__c.fields.Commit_Id__c.label}" for="GitCommit" />
+                            <apex:outputPanel >
+                                <input size="43" value="" id="GitCommit" class="js-gitCommit" type="text" readonly="readonly" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Commit Name</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitName"></span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Git Repository</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitRepository">My Own Repository</span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel >Branch</apex:outputLabel>
+                            <apex:outputPanel >
+                                <span class="js-gitBranch"></span>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+
+                    <div id="jqxgrid-git-promotion"> </div>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+
+            <!-- **************************************************************** -->
+            <!-- SALESFORCE FLOW STEP -->
+            <!-- **************************************************************** -->
+            <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }" />
+            <apex:includeScript value="{!URLFOR($Resource.salesforceFlow) }" />
+            <c:IncludeStaticsResourceComponent addSLcss="true" />
+            <!-- display is used instead of rendered attribute to prevent
+            reference error in js when the html elements does not exist,
+            this is not secure since user can change display in console-->
+            <apex:outputPanel style="display:{!IF(IsFeatureAvailable,'block','none')};">
+                <apex:outputPanel id="js-stepBlock-SalesforceFlow" style="display:none;">
+                    <apex:pageBlockSection columns="1">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$Label.SELECT} {!$Label.SALESFORCE_FLOW}" for="jsSalesforceFlowName">
+                                <c:HelpText label="{!$Label.SALESFORCE_FLOW_HELPTEXT}" />
+                            </apex:outputLabel>
+                            <select id="jsSalesforceFlowName" class="fixed-width">
+                            </select>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel id="lbljsSalesforceFlowType" value="{!$Label.POST_EXECUTION_ACTION}" for="jsSalesforceFlowType">
+                                <c:HelpText label="{!$Label.SALESFORCE_FLOW_POSTEXECUTION_HELPTEXT}" />
+                            </apex:outputLabel>
+                            <select id="jsSalesforceFlowType" class="fixed-width">
+                                <option selected="selected" value="wait">{!$Label.PAUSE_STEP}</option>
+                                <option value="continue">{!$Label.CONTINUE_WITH_DEPLOYMENT}</option>
+                            </select>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$Label.FLOW_PARAMETERS}">
+                                <c:HelpText label="{!$Label.SALESFORCE_FLOW_ADD_PARAMETER_HELPTEXT}" />
+                            </apex:outputLabel>
+                            <div id="flowParamWrapper">
+                                <div id="flowParameters"> </div>
+                                <div style="clear:both;">
+                                    <button id="btn-js-addFlowParameter" class="btn {!IF($User.UIThemeDisplayed=='Theme3','','copado-lightning')}" onclick="salesforceFlow.param.addRow(); return false;">{!$Label.ADD_FLOW_PARMETER}</button>
+                                </div>
+                            </div>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <script type="text/javascript">
+                        $copado(document).ready(function () {
+                            salesforceFlow.bindings.bindActions();
+                            const flowsAvailableForExecution = JSON.parse("{!JSENCODE(flowsAvailableForExecution)}");
+                            salesforceFlow.createHtmlFlowOptionsElements(flowsAvailableForExecution);
+                        });
+                    </script>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <!--TODO move to label once we now real message for Feature Flag-->
+            <apex:outputPanel rendered="{!NOT(IsFeatureAvailable)}">This feature is not available, please activate it</apex:outputPanel>
+
+        </apex:pageBlock>
+    </div>
+    <script type="text/javascript">$copado('[id$=pbStepDetailComponent]').hide();</script>
+</apex:component>

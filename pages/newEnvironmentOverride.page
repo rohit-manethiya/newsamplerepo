@@ -1,0 +1,14 @@
+<apex:page id="thePage" standardController="Environment__c" tabStyle="Environment__c" lightningStylesheets="true">
+    
+    <c:GAnalytics />
+    <apex:sectionHeader title="{!$Label.NEW_ENVIRONMENT}" subtitle="{!$Label.NEW_ENVIRONMENT}"/>
+    
+    <apex:pageMessage id="theMessage" severity="INFO" strength="3" title="{!$Label.CREATE_ENVIRONMENT_INSTRUCTIONS}" detail="{!$Label.NEW_ENVIRONMENT_OVERRIDE_INSTRUCTIONS}" />
+	
+    <script>
+        ga('send', 'pageview', {
+            'page': '/newEnvironmentOverride',
+            'title': 'New Environment Override page'
+        });
+    </script>
+</apex:page>

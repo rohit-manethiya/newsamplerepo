@@ -1,0 +1,13 @@
+<template>
+    <div class="slds-is-relative slds-spinner_inline spinner-padding">
+        <template if:false={processCompleted}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </template>
+        <c-add-record-type-matching-header record-matching-name={recordMatchingName}></c-add-record-type-matching-header>
+        <c-add-record-type-matching-body
+            record-id={recordId}
+            onupdaterecordmatchingname={handleRecordMatchingName}
+            onupdatespinner={handleSpinner}
+        ></c-add-record-type-matching-body>
+    </div>
+</template>

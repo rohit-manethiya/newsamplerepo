@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Feature</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Features</value>
+    </caseValues>
+    <fields>
+        <label><!-- Application --></label>
+        <name>Application__c</name>
+        <relationshipLabel><!-- Features --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Architect --></label>
+        <name>Architect__c</name>
+        <relationshipLabel><!-- Features (Architect) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Complexity --></label>
+        <name>Complexity__c</name>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Epic --></label>
+        <name>Epic__c</name>
+        <relationshipLabel><!-- Features --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Estimated Value --></label>
+        <name>Estimated_Value__c</name>
+    </fields>
+    <fields>
+        <label><!-- Priority --></label>
+        <name>Priority__c</name>
+    </fields>
+    <fields>
+        <label><!-- Product Owner --></label>
+        <name>Product_Owner__c</name>
+        <relationshipLabel><!-- Features (Product Owner) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Accepted</masterLabel>
+            <translation><!-- Accepted --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Coming Soon</masterLabel>
+            <translation><!-- Coming Soon --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Delivered</masterLabel>
+            <translation><!-- Delivered --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Refinement</masterLabel>
+            <translation><!-- Refinement --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Rejected</masterLabel>
+            <translation><!-- Rejected --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Requested</masterLabel>
+            <translation><!-- Requested --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Under Review</masterLabel>
+            <translation><!-- Under Review --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Technical Assumptions --></label>
+        <name>Technical_Assumptions__c</name>
+    </fields>
+    <fields>
+        <label><!-- # Users --></label>
+        <name>Users__c</name>
+    </fields>
+    <fields>
+        <label><!-- Value Type --></label>
+        <name>Value_Type__c</name>
+        <picklistValues>
+            <masterLabel>New Revenue</masterLabel>
+            <translation><!-- New Revenue --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Time Savings</masterLabel>
+            <translation><!-- Time Savings --></translation>
+        </picklistValues>
+    </fields>
+    <nameFieldLabel><!-- Feature Name --></nameFieldLabel>
+    <startsWith>Consonant</startsWith>
+</CustomObjectTranslation>

@@ -1,0 +1,5 @@
+<messaging:emailTemplate subject="Build Task has completed" relatedToType="Build_Task__c">
+    <messaging:htmlEmailBody >
+        <c:NewBuildTaskStatusNotificationContainer buildTaskRecordId="{!relatedTo.Id}" continuousIntegrationRecordId="{!relatedTo.Continuous_Integration__c}"/>
+    </messaging:htmlEmailBody>
+</messaging:emailTemplate>

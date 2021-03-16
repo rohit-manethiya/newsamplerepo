@@ -1,0 +1,276 @@
+<apex:component controller="OverrideFiltersComponentController" allowDML="true">
+
+    <apex:includeScript value="{!$Resource.filterComponent}" />
+    <apex:stylesheet value="{!$Resource.filterComponentCSS}" />
+
+
+    <apex:attribute name="deploymentRecordId" description="This is the id value of the deployment for the component." type="String" required="false" assignTo="{!deploymentId}" />
+    <apex:attribute name="stepRecordId" description="This is the id value of the step" type="String" required="false" assignTo="{!stepId}" />
+    
+    <script>
+        var globalSldsResourcePath = '{!URLFOR($Asset.SLDS)}';
+    </script>
+
+    <div class="co-dw-container">
+        <div class="slds-grid filter-container">
+            <div class="slds-col slds-size_3-of-12"></div>
+            <div class="slds-col slds-size_6-of-12">
+
+                <h1>
+                    <apex:outputPanel layout="none" rendered="{!deploymentInterface.StepGeneralHeader != null}">
+                        {!deploymentInterface.StepGeneralHeader}
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!deploymentInterface.StepGeneralHeader == null}">
+                        {!$Label.Review_Main_Object_Filter}
+                    </apex:outputPanel>
+                </h1>
+                <p class="subtitle">{!$Label.Confirm_Data_Filters}</p>
+
+                <div class="slds-align_absolute-center">
+                    {!$Label.Override_Filter_Help}
+                </div>
+
+                <div class="table">
+
+                    <apex:outputPanel layout="block" id="errorPanel">
+                        <apex:outputPanel layout="none" styleClass="error-panel" rendered="{!PageMessageSize != 0}">
+                            <div id="divToast" class="slds-notify_container slds-is-relative">
+                                <apex:repeat value="{!pageMessagesMap}" var="severity">
+                                    <div class="slds-notify slds-notify_toast slds-theme_{!severity}" role="status">
+                                        <span class="slds-assistive-text"></span>
+                                        <span class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-no-flex slds-align-top">
+                                        <span class="slds-icon_container slds-icon__svg--default {!severity}ToastIcon"></span>
+                                    </span>
+                                        <div class="slds-notify__content">
+                                            <apex:repeat value="{!pageMessagesMap[severity]}" var="messages">
+                                                <h2 class="slds-text-heading_small ">{!messages}</h2>
+                                            </apex:repeat>
+                                        </div>
+                                        <div class="slds-notify__close">
+                                            <button type="button" class="slds-button slds-button_icon slds-button_icon-inverse" title="{!$Label.CLOSE}" onclick="$copado('[id=divToast]').addClass('slds-hide');">
+                                                <span class="slds-icon_container slds-icon__svg--default closeToastIcon"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </apex:repeat>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+
+
+                    <div id="main-object-filter-content" class="slds-tabs_default__content" role="tabpanel" aria-labelledby="main-object-filter">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_12-of-12">
+                                <apex:outputPanel layout="block" styleClass="form-wrapper" id="mainObjectFiltersTab">
+                                    <div class="filter-main-object">
+                                        <ol>
+                                            <li>
+                                                <apex:commandLink id="resetFilters" action="{!resetFilterValues}"
+                                                                reRender="errorPanel,mainObjectFiltersTab"
+                                                                value="{!$Label.Reset_Filters}"
+                                                                onClick="fc.onClickFunction();"
+                                                                styleClass="resetIcon rotate-button"
+                                                                onComplete="fc.onCompleteFunctionToreRender();"
+                                                                rendered="{!AND(enableADD,$ObjectType.Data_Template__c.Accessible,$ObjectType.Data_Template__c.Createable,$ObjectType.Data_Template__c.Updateable)}"/>
+                                                <hr class="custom-hr"/>
+                                            </li>
+                                            
+                                            <apex:repeat value="{!temporaryCriteriaWrappers}" var="criteria">
+                                                <li>
+                                                    <div class="slds-grid slds-gutters {!IF(criteria.fieldName == 'Custom Filter','li-wrapper-textarea','li-wrapper')}">
+                                                        <span class="criteria-order custom-div-li">{!criteria.order}.</span>
+                                                        <div class="slds-col slds-size_3-of-12">
+                                                            <div class="slds-form-element">
+                                                                <div class="slds-form-element__control">
+                                                                    <div class="slds-select_container">
+                                                                        <apex:selectList styleClass="slds-select" value="{!criteria.fieldName}" size="1" multiselect="false" disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}">
+                                                                            <apex:selectOptions value="{!AllFieldsAPIName}" />
+                                                                            <apex:actionSupport action="{!getFieldOperators}"
+                                                                                    event="onchange"
+                                                                                    reRender="errorPanel,mainObjectFiltersTab"
+                                                                                    onSubmit="fc.onClickFunction();"
+                                                                                    onComplete="fc.onCompleteFunctionToreRender();">
+                                                                                <apex:param name="cro" value="{!criteria.order}" />
+                                                                            </apex:actionSupport>
+                                                                        </apex:selectList>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <apex:outputPanel layout="block" styleClass="slds-col slds-size_2-of-12" rendered="{!criteria.fieldName != 'Custom Filter'}">
+                                                            <div class="slds-form-element">
+                                                                <div class="slds-form-element__control">
+                                                                    <div class="slds-select_container">
+                                                                        <apex:selectList styleClass="slds-select"
+                                                                                            value="{!criteria.operator}"
+                                                                                            size="1" multiselect="false"
+                                                                                            disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}">
+                                                                            <apex:selectOptions value="{!criteria.operatorSet}" />
+                                                                        </apex:selectList>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel layout="block" styleClass="slds-col slds-size_3-of-12" rendered="{!criteria.fieldName != 'Custom Filter'}">
+                                                            <div class="slds-form-element">
+                                                                <div class="slds-form-element__control">
+                                                                    <apex:input styleClass="slds-input"
+                                                                                    rendered="{!OR(criteria.fieldType='STRING', criteria.fieldType='REFERENCE', criteria.fieldType='PICKLIST', criteria.fieldType='TEXTAREA', criteria.fieldType='ID', criteria.fieldType='BASE64BINARY', criteria.fieldType='TIME', criteria.fieldType='URL', criteria.fieldType='EMAIL', criteria.fieldType='PHONE', criteria.fieldType='ADDRESS', criteria.fieldType='MULTIPICKLIST')}"
+                                                                                    value="{!criteria.input}" type="text"
+                                                                                    disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                    <apex:outputPanel layout="block" styleClass="slds-select_container" rendered="{!OR(criteria.fieldType='DATE',criteria.fieldType='DATETIME')}">
+                                                                        <apex:selectList styleClass="slds-select" value="{!criteria.input}" size="1" multiSelect="false" disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}">
+                                                                            <apex:selectOption itemValue="YESTERDAY" itemLabel="Yesterday"/>
+                                                                            <apex:selectOption itemValue="TODAY" itemLabel="Today"/>
+                                                                            <apex:selectOption itemValue="TOMORROW" itemLabel="Tomorrow"/>
+                                                                            <apex:selectOption itemValue="LAST_WEEK" itemLabel="Last Week"/>
+                                                                            <apex:selectOption itemValue="THIS_WEEK" itemLabel="This Week"/>
+                                                                            <apex:selectOption itemValue="NEXT_WEEK" itemLabel="Next Week"/>
+                                                                            <apex:selectOption itemValue="LAST_MONTH" itemLabel="Last Month"/>
+                                                                            <apex:selectOption itemValue="THIS_MONTH" itemLabel="This Month"/>
+                                                                            <apex:selectOption itemValue="NEXT_MONTH" itemLabel="Next Month"/>
+                                                                            <apex:selectOption itemValue="LAST_N_DAYS:n" itemLabel="Last N Days"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_DAYS:n" itemLabel="Next N Days"/>
+                                                                            <apex:selectOption itemValue="LAST_N_WEEKS:n" itemLabel="Last N Weeks"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_WEEKS:n" itemLabel="Next N Weeks"/>
+                                                                            <apex:selectOption itemValue="THIS_QUARTER" itemLabel="This Quarter"/>
+                                                                            <apex:selectOption itemValue="LAST_QUARTER" itemLabel="Last Quarter"/>
+                                                                            <apex:selectOption itemValue="NEXT_QUARTER" itemLabel="Next Quarter"/>
+                                                                            <apex:selectOption itemValue="LAST_N_QUARTERS:n" itemLabel="Last N Quarters"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_QUARTERS:n" itemLabel="Next N Quarters"/>
+                                                                            <apex:selectOption itemValue="THIS_YEAR" itemLabel="This Year"/>
+                                                                            <apex:selectOption itemValue="LAST_YEAR" itemLabel="Last Year"/>
+                                                                            <apex:selectOption itemValue="NEXT_YEAR" itemLabel="Next Year"/>
+                                                                            <apex:selectOption itemValue="LAST_N_YEARS:n" itemLabel="Last N Years"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_YEARS:n" itemLabel="Next N Years"/>
+                                                                            <apex:selectOption itemValue="THIS_FISCAL_QUARTER" itemLabel="This Fiscal Quarter"/>
+                                                                            <apex:selectOption itemValue="LAST_FISCAL_QUARTER" itemLabel="Last Fiscal Quarter"/>
+                                                                            <apex:selectOption itemValue="NEXT_FISCAL_QUARTER" itemLabel="Next Fiscal Quarter"/>
+                                                                            <apex:selectOption itemValue="LAST_N_FISCAL_​QUARTERS:n" itemLabel="Last N Fiscal Quarters"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_FISCAL_​QUARTERS:n" itemLabel="Next N Fiscal Quarters"/>
+                                                                            <apex:selectOption itemValue="THIS_FISCAL_YEAR" itemLabel="This Fiscal Year"/>
+                                                                            <apex:selectOption itemValue="LAST_FISCAL_YEAR" itemLabel="Last Fiscal Year"/>
+                                                                            <apex:selectOption itemValue="NEXT_FISCAL_YEAR" itemLabel="Next Fiscal Year"/>
+                                                                            <apex:selectOption itemValue="LAST_N_FISCAL_​YEARS:n" itemLabel="Last N Fiscal Years"/>
+                                                                            <apex:selectOption itemValue="NEXT_N_FISCAL_​YEARS:n" itemLabel="Next N Fiscal Years"/>
+                                                                            <apex:selectOption itemValue="customDate" itemLabel="Custom Date (Time)"/>
+                                                                            <apex:actionSupport event="onchange"
+                                                                                                onSubmit="fc.onClickFunction();"
+                                                                                                reRender="errorPanel,mainObjectFiltersTab"
+                                                                                                onComplete="fc.onCompleteFunctionToreRender();" />
+                                                                        </apex:selectList>
+                                                                    </apex:outputPanel>
+                                                                    <apex:input styleClass="slds-input"
+                                                                                    rendered="{!OR(criteria.fieldType='INTEGER', criteria.fieldType='DOUBLE',criteria.fieldType='INT',criteria.fieldType='PERCENT',criteria.fieldType='CURRENCY')}"
+                                                                                    value="{!criteria.numberInput}"
+                                                                                    type="number"
+                                                                                    disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+
+                                                                    <apex:inputCheckbox style="font-size: x-large;"
+                                                                                        rendered="{!criteria.fieldType='BOOLEAN'}"
+                                                                                        value="{!criteria.input}"
+                                                                                        disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel layout="block" styleClass="slds-col slds-size_4-of-12" rendered="{!criteria.fieldName != 'Custom Filter'}">
+                                                            <div class="slds-form-element filter-value slds-clearfix">
+                                                                <div class="slds-form-element__control slds-float_left">
+                                                                    <apex:input styleClass="slds-input"
+                                                                                rendered="{!AND(CONTAINS(criteria.input,':n'),OR(criteria.fieldType='DATE',criteria.fieldType='DATETIME'))}"
+                                                                                value="{!criteria.numberInput}"
+                                                                                type="number"
+                                                                                disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                    <apex:input styleClass="slds-input"
+                                                                                rendered="{!AND(criteria.input='customDate',criteria.fieldType='DATE')}"
+                                                                                value="{!criteria.dateInput}"
+                                                                                type="date"
+                                                                                disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                    <apex:input styleClass="slds-input"
+                                                                                rendered="{!AND(criteria.input='customDate',criteria.fieldType='DATETIME')}"
+                                                                                value="{!criteria.dateTimeInput}"
+                                                                                type="datetime-local"
+                                                                                disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                </div>
+                                                                <div class="delete-icon slds-float_right">
+                                                                    <apex:outputPanel layout="none" rendered="{!AND(enableADD,$ObjectType.Data_Template__c.Accessible,$ObjectType.Data_Template__c.Createable,$ObjectType.Data_Template__c.Updateable,$ObjectType.Data_Template__c.Deletable)}">
+                                                                        <span class="deleteIcon" onclick="fc.onClickFunction();removeCriteria({!criteria.order});"></span>
+                                                                    </apex:outputPanel>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel layout="block" styleClass="slds-col slds-size_9-of-12" rendered="{!criteria.fieldName == 'Custom Filter'}">
+                                                            <div class="slds-form-element filter-value">
+                                                                <div class="slds-form-element__control">
+                                                                    <apex:inputTextarea styleClass="slds-input" value="{!criteria.input}" html-placeholder="Account.Name = 'ABC'" disabled="{!OR(!enableADD,AND($ObjectType.Data_Template__c.Accessible,!$ObjectType.Data_Template__c.Createable,!$ObjectType.Data_Template__c.Updateable))}"/>
+                                                                </div>
+                                                                <div class="delete-icon">
+                                                                    <apex:outputPanel layout="none" rendered="{!AND(enableADD,$ObjectType.Data_Template__c.Accessible,$ObjectType.Data_Template__c.Createable,$ObjectType.Data_Template__c.Updateable,$ObjectType.Data_Template__c.Deletable)}">
+                                                                        <span class="deleteIcon" onclick="dts.onClickFunction();removeCriteria({!criteria.order});"></span>
+                                                                    </apex:outputPanel>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                    <hr class="custom-hr"/>
+                                                </li>
+                                                
+                                            </apex:repeat>
+                                        </ol>
+
+                                        <p class="actions">
+                                            <apex:commandLink id="addRow" action="{!addNewCriteria}"
+                                                                reRender="errorPanel,mainObjectFiltersTab"
+                                                                value="{!$Label.Add_new_parameter}"
+                                                                onClick="fc.onClickFunction();"
+                                                                onComplete="fc.onCompleteFunctionToreRender();"
+                                                                rendered="{!AND(enableADD,$ObjectType.Data_Template__c.Accessible,$ObjectType.Data_Template__c.Createable,$ObjectType.Data_Template__c.Updateable)}"/>
+                                        </p>
+
+                                        <apex:outputPanel layout="block" id="filterLogicPanel" styleClass="slds-form-element">
+                                            <label class="slds-form-element__label" for="filterLogic">{!$ObjectType.Data_Template__c.fields.Filter_Logic__c.Label}</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputText value="{!temporaryFilterLogic}"
+                                                                    styleClass="slds-input"
+                                                                    rendered="{!AND(enableADD,$ObjectType.Data_Template__c.fields.Filter_Logic__c.Createable,$ObjectType.Data_Template__c.fields.Filter_Logic__c.Updateable)}" />
+                                                <apex:outputText value="{!temporaryFilterLogic}"
+                                                                    styleClass="slds-input"
+                                                                    rendered="{!OR(!enableADD,AND($ObjectType.Data_Template__c.fields.Filter_Logic__c.Accessible,!$ObjectType.Data_Template__c.fields.Filter_Logic__c.Createable,!$ObjectType.Data_Template__c.fields.Filter_Logic__c.Updateable))}"/>
+                                            </div>
+                                        </apex:outputPanel>
+                                        
+                                    </div>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+
+                   <apex:actionFunction name="removeCriteria" action="{!removeCriteria}" onComplete="fc.onCompleteFunctionToreRender();" reRender="mainObjectFiltersTab">
+                       <apex:param name="criteriaOrder" value="" />
+                   </apex:actionFunction>
+
+                    </div>
+
+                </div>
+
+                <div class="buttons">
+                    <apex:outputPanel layout="none" rendered="{!!URLParameters}">
+                        <apex:commandButton styleClass="slds-button slds-button_outline-brand" onClick="fc.onClickFunction();" value="{!$Label.BACK}" action="{!goToPreviousStep}"  onComplete="fc.onCompleteFunctionToreRender();" reRender="errorPanel,mainObjectFiltersTab" />
+                        <apex:commandButton styleClass="slds-button slds-button_outline-brand" onClick="fc.onClickFunction();" value="{!$Label.SAVE_AND_CLOSE}" action="{!saveFiltersAndClose}" onComplete="fc.onCompleteFunctionToreRender();" reRender="errorPanel,mainObjectFiltersTab" />
+                        <apex:commandButton styleClass="slds-button slds-button_brand" onClick="fc.onClickFunction();" value="{!$Label.Confirm_Data_Filters}" action="{!confirmAndGoOverview}" onComplete="fc.onCompleteFunctionToreRender();" reRender="errorPanel,mainObjectFiltersTab" />
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!URLParameters}">
+                        <apex:commandButton styleClass="slds-button slds-button_outline-brand" onClick="fc.onClickFunction();" value="{!$Label.Cancel}" action="{!saveFiltersAndGoToRecord}"  onComplete="fc.onCompleteFunctionToreRender();" reRender="errorPanel,mainObjectFiltersTab">
+                            <apex:param name="action" value="justGo" />
+                        </apex:commandButton>
+                        <apex:commandButton styleClass="slds-button slds-button_brand" onClick="fc.onClickFunction();" value="{!$Label.Save}" action="{!saveFiltersAndGoToRecord}" onComplete="fc.onCompleteFunctionToreRender();" reRender="errorPanel,mainObjectFiltersTab">
+                            <apex:param name="action" value="saveAndGo" />
+                        </apex:commandButton>
+                    </apex:outputPanel>
+                </div>
+            </div>
+            <div class="slds-col slds-size_3-of-12"></div>
+        </div>
+    </div>
+
+    
+</apex:component>

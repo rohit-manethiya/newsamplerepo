@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Settings</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Settings</value>
+    </caseValues>
+    <fields>
+        <label><!-- CAD Licenses --></label>
+        <name>CAD_Licenses__c</name>
+    </fields>
+    <fields>
+        <label><!-- CCH Licenses --></label>
+        <name>CCH_Licenses__c</name>
+    </fields>
+    <fields>
+        <label><!-- CCM Licenses --></label>
+        <name>CCM_Licenses__c</name>
+    </fields>
+    <fields>
+        <label><!-- CST Licenses --></label>
+        <name>CST_Licenses__c</name>
+    </fields>
+    <fields>
+        <label><!-- Copado Licenses --></label>
+        <name>Copado_Licenses__c</name>
+    </fields>
+    <fields>
+        <label><!-- Copado_Site --></label>
+        <name>Copado_Site__c</name>
+    </fields>
+    <fields>
+        <label><!-- CryptoKEY --></label>
+        <name>CryptoKEY__c</name>
+    </fields>
+    <fields>
+        <help><!-- Current Copado Deployer version that is installed in the Org. This field needs to be maintained in every single Copado version manually. --></help>
+        <label><!-- Current Copado Version --></label>
+        <name>Current_Copado_Version__c</name>
+    </fields>
+    <fields>
+        <label><!-- Enabled Multi-Licenses --></label>
+        <name>Enabled_Multi_Licenses__c</name>
+    </fields>
+    <fields>
+        <help><!-- The namespace should contain two underscores &quot;__&quot; e.g. copado__ --></help>
+        <label><!-- Namespace --></label>
+        <name>Namespace__c</name>
+    </fields>
+    <fields>
+        <label><!-- Server_URL --></label>
+        <name>Server_URL__c</name>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

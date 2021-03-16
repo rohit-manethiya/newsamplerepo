@@ -1,0 +1,201 @@
+<apex:component controller="ScratchOrgStatusCtrl" allowDML="true" extensions="Settings">
+    <apex:attribute name="orgId" description="This is the Id of the Scratch Org's Org Credential." type="Id" required="false" assignTo="{!scratchOrgId}" />
+    <c:IncludeJqxResourceComponent addJqxAlljs="true" addJqxBasecss="true" />
+    <c:WizardUtils id="cmpWizardUtilities" />
+    <c:IncludeStaticsResourceComponent addJquery="true" />
+    <c:IncludeConnectionJsComponent />
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting)}" />
+    <apex:stylesheet value="{!IF($User.UIThemeDisplayed == 'Theme4d',URLFOR($Resource.CopadoLightningCSS),'')}" />
+    <style type="text/css">
+        .AddClass{
+            background-color: lightgreen;
+        }
+        .UpdateClass{
+            background-color: gold;
+        }
+
+    </style>
+
+    <apex:outputPanel layout="block" id="theMessages">
+        <apex:pageMessage summary="Org Credential is not a Scratch Org" severity="warning" strength="2" rendered="{!!isScratchOrg && soOrg.Id != null}" />
+        <apex:pageMessage summary="No Deployment Flow Step Found" severity="warning" strength="2" rendered="{!AND(soOrg.Id != null,NOT(hasRepository))}" />
+    </apex:outputPanel>
+    <c:CopadoHelp sectionText="{!$Label.DX_Source_Status_Help}" sectionTitle="{!$Label.HELP}" sectionLink="https://docs.copado.com/" sectionLinkTitle="{!$Label.MORE_INFORMATION_HERE}" sectionOpen="false" />
+    <apex:actionFunction name="pGrid" action="{!orgChanged}" onComplete="prepareGrid();" rerender="cJFlag, statBlock,theMessages" />
+    <apex:pageBlock title="Scratch Org Status" rendered="{!OR(scratchOrgId == null,soOrg.is_Developer_Hub_Org__c)}">
+        <apex:pageBlockSection >
+            <apex:selectList value="{!selectedOrgId}" multiselect="false" size="1" label="Scratch Org:" id="orgsList">
+                <apex:actionSupport event="onchange" action="{!orgChanged}" rerender="cJFlag, statBlock,theMessages" onComplete="prepareGrid();" />
+                <apex:selectOptions value="{!scratchOrgOptions}" />
+            </apex:selectList>
+            <p />
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+
+    <apex:outputPanel layout="block" id="statBlock">
+        <apex:pageBlock title="{!soOrg.Name}" rendered="{!soOrg != null}">
+            <script>
+            var orgId = "{!JSENCODE(soOrg.Id)}";
+
+            </script>
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="Check Status" rendered="{!AND(IsActive,hasRepository)}" reRender="cJFlag, pbSec, theMessages" onclick="lockScreen();" action="{!requestStatus}" onComplete="checkJob();" />
+            </apex:pageBlockButtons>
+            <apex:outputPanel layout="none" id="pbSec" rendered="{!AND(IsActive, hasRepository)}">
+                <apex:outputText value="Last Status: {!lastStatusCheck}" />
+                <div id="jqxgrid" style="width:99%;"></div>
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" rendered="{!AND(IsActive, hasRepository)}">
+                <fieldset>
+                    <legend>Legend:</legend>
+                    <table>
+                        <tr>
+                            <td>Remote Add: Metadata Added in the Scratch Org</td>
+                        </tr>
+                        <tr>
+
+                            <td>Remote Changed: Metadata Updated in the Scratch Org</td>
+                        </tr>
+                        <tr>
+                            <td>Remote Deleted: Metadata Removed in the Scratch Org</td>
+                        </tr>
+                    </table>
+                </fieldset>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:outputPanel>
+    <apex:actionFunction name="checkUpdate" action="{!retrieveStatus}" onComplete="checkJob();" rerender="cJFlag, theMessages" />
+    <apex:outputPanel layout="block" id="cJFlag">
+        <script>
+            var stat = {!copadoJobFinished};
+            var msgcJob = '{!JSENCODE(slockerMessage)}';
+            var oId = '{!if(orgId != '', orgId,JSENCODE(soOrg.Id))}';
+
+        </script>
+    </apex:outputPanel>
+    <script type="text/javascript">
+        // call the function after the page loads
+        $copado(pGrid);
+
+        function checkJob(){
+            if(stat == true){
+                prepareGrid();
+                return false;
+            }else{
+                setLockScreenMessage(msgcJob);
+                setTimeout(function(){
+                    checkUpdate();
+                }, 3000);
+            }
+        }
+        var loadingHTML = '<center><img src="/img/loading.gif" /> <i>{!$Label.LOADING}<span id="retry-label"></span></i></center>';
+        $copado('#jqxgrid').html(loadingHTML);
+
+        var prepareGrid = function(){
+            // alert('prepareGrid Called');
+            var att = dw.u.getDecodedAttach(oId,"SourceStatus");
+            if(att){
+                var body = att.Body;
+                try{
+                    var metadataRecords = JSON.parse(body);
+                    console.log(metadataRecords);
+                    if(metadataRecords.length>0){
+                        startGrid(metadataRecords);
+                    }
+                } catch(e){
+                    console.error(e);
+                    var noDataHtml = '<center>{!JSENCODE($Label.NODATATODISPLAY)}</center>';
+                    $copado('#jqxgrid').html(noDataHtml);
+                }
+            } else {
+                var noDataHtml = '<center>{!JSENCODE($Label.NODATATODISPLAY)}</center>';
+                $copado('#jqxgrid').html(noDataHtml);
+            }
+            unlockScreen();
+        }
+        var setColumns = function(columnNames){
+
+            var columns = [];
+            //Map to define Column Names
+            var cMap = {};
+            cMap["st"] = 'Status';
+            cMap["n"] = 'Name';
+            cMap["t"] = 'Type';
+            cMap["fp"] = 'Field Path';
+
+            for(var c = 0; c < columnNames.length; c++){
+                var columnObj = {};
+                columnObj.text = cMap[columnNames[c]]; // Look for the right Label
+                if(columnNames[c] == 'st' || columnNames[c] == 't'){
+                    columnObj.filtertype = 'checkedlist';
+                }else{
+                    columnObj.filtertype = 'textbox';
+                }
+                columnObj.filtercondition = 'contains';
+                columnObj.editable = false;
+                columnObj.datafield = columnNames[c];
+                columns.push(columnObj);
+            }
+            return columns;
+        }
+        var startGrid = function (data) {
+            try{
+                //normalize data
+                var len = data.length;
+
+                var columnNames = Object.keys(data[0]);
+                var _datafields = [];
+                console.log("columnNames",columnNames);
+                for(var c = 0; c < columnNames.length; c++ ){
+                    var df = {};
+                    df.name = columnNames[c];
+                    df.type = 'string';
+                    _datafields.push(df);
+                }
+                console.log('_datafields',_datafields);
+                console.log('setColm',setColumns(columnNames));
+                var theme = 'base',
+                    source = {
+                        localdata: data,
+                        datafields: _datafields,
+                        datatype: "array",
+                        updaterow: function (rowid, rowdata, commit) {
+
+                            data[rowid] = rowdata;
+                            commit(true);
+                        }
+                    },
+                    //adapter wrapper
+                    dataAdapter = new $copado.jqx.dataAdapter(source),
+
+                    //keep jquery pointer for performance query
+                    $grid = $copado('<div>');
+
+                $copado("#jqxgrid").html($grid);
+
+                $grid.jqxGrid({
+                    width: '99%',
+                    source: dataAdapter,
+                    showfilterrow: true,
+                    filterable: true,
+                    theme: theme,
+                    editable: false,
+                    selectionmode: 'none',
+                    enablebrowserselection: true,
+                    pageable: true,
+                    pagesizeoptions: ['10', '20', '50','100','500'],
+                    pagesize: 100,
+                    sortable: true,
+                    columnsresize: true,
+                    localization: localizationobj,
+                    columns: setColumns(columnNames)
+                });
+            } catch(e){
+                console.error('error',e);
+                var noDataHtml = '<center>{!JSENCODE($Label.NODATATODISPLAY)}</center>';
+                $copado('#jqxgrid').html(noDataHtml);
+            }
+        };
+
+    </script>
+</apex:component>

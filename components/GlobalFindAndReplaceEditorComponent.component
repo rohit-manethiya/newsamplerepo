@@ -1,0 +1,229 @@
+<apex:component >
+	<apex:attribute id="obj" name="object" type="sObject" description="sObject to use as a standard controller object" />
+	<apex:attribute id="objName" name="objectName" type="String" description="sObject type name" />
+	<apex:slds />
+	<apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.min.css')}" />
+    <c:IncludeCodeMirrorResourceComponent addCMjs="true" addYamljs="true" addActiveLinejs="true" addLintjs="true" addYamlLintjs="true" addAutoRefreshjs="true" addCommentjs="true" addCMcss="true" addEclipsecss="true" addLintcss="true"/>
+    <apex:includeScript value="{!URLFOR($Resource.YamlMinJS, 'js-yaml/dist/js-yaml.min.js')}" />
+	<c:IncludeStaticsResourceComponent addJquery="true"/>
+    <c:IncludeConnectionJsComponent />
+	<apex:includeScript value="{!URLFOR($Resource.utils)}" />
+	<style type="text/css">
+		.line-error {
+			background-color: red !important;
+		}
+
+		.CodeMirror {
+		  border: 1px solid #eee;
+		  height: 100%;
+		}
+
+        .cm-tab {
+            background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAMCAYAAAAkuj5RAAAAAXNSR0IArs4c6QAAAGFJREFUSMft1LsRQFAQheHPowAKoACx3IgEKtaEHujDjORSgWTH/ZOdnZOcM/sgk/kFFWY0qV8foQwS4MKBCS3qR6ixBJvElOobYAtivseIE120FaowJPN75GMu8j/LfMwNjh4HUpwg4LUAAAAASUVORK5CYII=);
+            background-position: right;
+            background-repeat: no-repeat;
+            background-color: red !important;
+        }
+
+		#screenLockerLightning{
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            z-index: 10000;
+            background-color: rgba(33,33,33,0.2);
+        }
+
+        .slds-screenlocker div{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%);
+            padding-top: 15px;                  
+            padding: 30px;
+            background-color: transparent;
+            z-index: 9999;
+        }
+	</style>
+	<div class="slds-scope">
+		<div id="screenLockerLightning" class="slds-screenlocker" style="display: none;">
+			<div>
+            	<img style="width: 100px;" src="{!URLFOR($Resource.SLDS,'/assets/images/spinners/slds_spinner_brand.gif')}" />
+        	</div>
+        </div>
+        <apex:pageMessages id="pageMessages" />
+		<div class="slds-page-header">	                
+            <div class="slds-grid">
+                <div class="slds-col slds-has-flexi-truncate">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <span class="slds-icon_container slds-icon-standard-calibration">
+                                <svg class="slds-icon" aria-hidden="true">
+                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Resource.SLDS,'/assets/icons/standard-sprite/svg/symbols.svg#calibration')}"></use>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="slds-media__body">
+                        	<p class="slds-text-heading--label slds-line-height--reset">{!$ObjectType[objectName].Label}</p>
+                            <h1 class="slds-page-header__title slds-truncate slds-align-middle" >
+                            	{!$Label.HEADER_TITLE}
+                            </h1>
+                        </div>
+                   </div>
+                </div>
+                <!-- ACTION BUTTONS -->
+                <div class="slds-col slds-no-flex slds-grid slds-align-top ">
+                    <div class="slds-button-group" role="group">
+                        <button  class="slds-button slds-button--neutral" onclick="saveYaml()">{!$Label.Save}</button>
+                    </div>
+                </div>
+                <!-- / ACTION BUTTONS -->
+            </div>
+        </div>
+		<div id="panels" style="height: 550px; width: 100%; ">
+		<div id="source_label" style="width: 100%; background: white;border: none; float: left;margin: 2px; font-weight: bolder;">
+			<a href="javascript:void(0);" id='errorMessage' title="Go to error line" style="color:red;font-weight: bold;" onclick="goToLine($copado(this).data().line);"></a>
+		</div>
+		<div id="source_panel" style="width: 100%;background: white;border: 1px solid black; float: left;margin: 2px;">
+			<textarea id="sourceArea" ></textarea>
+		</div>		
+        <p>Note: tab characters ( marked in <span style="color: red">red</span> ) are discouraged in YAML. Replace them with 4 spaces.</p>
+		</div>
+		<script type="text/javascript">
+			var config = {};
+			config.parentId = "{!object.Id}";
+			config.saveWarningLabel = "{!$Label.FINDREPLACE_CONFIRM}";
+			config.hasError = false;
+			config.alreadyChecked = false;
+			config.errorLines = [];
+
+			var editor;
+			$copado(function(){
+			  toogleLocker(true);
+			  editor = CodeMirror.fromTextArea(document.getElementById("sourceArea"), {
+			    lineNumbers: true,
+			    lineWrapping: false,
+			    styleActiveLine: true,
+			    autoRefresh: true,
+                indentUnit: 4,
+                specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/,
+			    mode: 'text/x-yaml',
+			    gutters: ["CodeMirror-lint-markers"],
+    			lint: true
+			  });
+			  editor.setOption("theme", 'eclipse');
+			  editor.on('change',function(cm, change){
+			  	parseYaml();
+			  });
+			});
+
+			setTimeout(
+				function(){
+					setPreValue();
+				}, 50
+			);
+			
+			var setPreValue = function(){
+				var attach = getAttachmentbyType(config.parentId);
+				editor.focus();
+				config.hasError = false;
+				if(attach && attach.Body.length > 0){
+					config.attachName = attach.Name;
+					config.alreadyChecked = true;
+					editor.setValue(Base64.decode(attach.Body));
+					if(config.errorLines.length > 0) goToLine(config.errorLines[0]);
+				}
+				toogleLocker(false);
+			}
+			var goToLine = function(lineNo){
+				console.log(lineNo);
+				editor.setCursor(parseInt(lineNo), 0);
+			}
+			var setGlobalErrorMessage = function(message, lineNo){
+				var elt = $copado('#errorMessage');
+				elt.text(message);
+				elt.data('line',lineNo);
+			}
+			var parseYaml = function(){				
+				try{
+					if(editor.getValue().length > 0){
+						var doc = jsyaml.load(editor.getValue());
+						removeLineErrors('line-error');
+					}
+					setGlobalErrorMessage('' , 0);
+				}catch(e){
+					removeLineErrors('line-error');					
+					var lineNo = e.mark.line;
+					console.warn('code exception: ',e.message);
+					setGlobalErrorMessage('ERROR: ' + e.message , lineNo);
+					addLineError(lineNo);
+				}
+			}
+			var toogleLocker = function(lock){
+				if(lock){
+					$copado('#screenLockerLightning').show();
+					return;
+				}
+				$copado('#screenLockerLightning').hide();
+			}
+			var addLineError = function(lineNo){
+				config.hasError = true;
+				config.errorLines.push(lineNo);
+				var line = editor.getLineHandle(lineNo);
+				console.log('addLineError :: adding error message ',line);
+				if(line){
+					editor.addLineClass(line, 'background', 'line-error');
+				}
+			}
+			var removeLineErrors = function(className){
+				config.hasError = false;
+				for(var i = 0; i<config.errorLines; i++){
+					var line = editor.getLineHandle(config.errorLines[i]);	
+					console.log('removeLineErrors :: removing error message ',line);
+					if(line) editor.doc.removeLineClass(line, 'background', 'line-error');
+				}
+				config.errorLines = [];
+			}
+			var getAttachmentbyType = function(parentId) {
+			    var q = "Select Id, Body, LastModifiedDate, Name, ParentId From Attachment where (Name LIKE 'Copado.yml' OR  Name LIKE 'Copado.yaml') AND parentId = '" + parentId + "' order by LastModifiedDate DESC limit 1",
+			        result = sforce.connection.query(q),
+			        records = result.getArray("records");
+			    return records[0];
+			};
+			var hideLocker = function(){
+				setTimeout(
+					function(){
+						toogleLocker(false);
+					}, 500
+				);
+			}
+			var saveYaml = function(){
+				config.attachName = config.attachName || 'Copado.yml';
+				if(config.hasError){
+					var errorMessageClass = 'slds-notify slds-notify--alert slds-theme--error customMessage slds-theme--alert-texture';
+					if(confirm(config.saveWarningLabel)){
+						toogleLocker(true);
+						try{
+							dw.u.upsertAttach(config.parentId, config.attachName, editor.getValue(), false);
+						} catch(e){
+							$copado('[Id$=pageMessages]').text(e).addClass(errorMessageClass);
+						}						
+						hideLocker();						
+					}else{
+						return false;
+					}
+				}else{
+					toogleLocker(true);
+					try{
+						dw.u.upsertAttach(config.parentId, config.attachName, editor.getValue(), false);
+					} catch(e){
+						$copado('[Id$=pageMessages]').text(e).addClass(errorMessageClass);
+					}					
+					hideLocker();					
+				}
+			}
+		</script>
+	</div>
+</apex:component>

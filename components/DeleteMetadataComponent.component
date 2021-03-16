@@ -1,0 +1,67 @@
+<apex:component controller="queryBuilderController" >
+  <apex:attribute name="isEdit" description="" type="Boolean" required="true" default="false"/>
+
+  <apex:attribute name="stepType" type="String" description="step type"/>
+  <apex:attribute name="orgId" type="String" description="Organization Id"/>
+  <apex:attribute name="filtered" type="Boolean" description="Is the org metadata filtered"/>
+
+<div class="slds-grid">
+    <div class="slds-col">
+    	<apex:pageMessages id="md_js_error"/>
+    	<div id="removeCacheContainer">
+    	<apex:commandLink style="display:none;" value="{!$Label.CACHE_REFRESHED_NOW}"  onclick="return metadataTask.refreshCache();" rerender="opDummy" id="removeCache"/>
+
+        <apex:outputPanel style="float:left;" rendered="{!filtered}"><a target="_blank" href="/{!orgId}?_mtf=1" ><img width="16px" height="16px" src="{!$Resource.filter}" title="{!$Label.METADATA_FILTERED}" /></a> </apex:outputPanel>
+        </div>
+        <apex:actionFunction name="showMessage" action="{!showMessage}" rerender="md_js_error">
+        <apex:param name="errorLevel" assignTo="{!errorLevel}" value="" />
+        <apex:param name="messageName" assignTo="{!messageName}" value="" />
+    </apex:actionFunction>
+    
+    <apex:outputPanel layout="none" rendered="{!isEdit}">
+          <div id="metadataGrid2">
+              <div class='mg2_tabs'>
+                <ul style="margin-left: 20px;">
+                  <li>All Metadata</li>
+                  <li>Selected Metadata</li>
+                </ul>
+                <div>
+                    <div class="mg2_scaleFilterFrame" style="padding: 5px; display: none;">
+                      <label class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+                      <apex:commandLink value="({!$Label.REFRESH})"  onclick="return metadataTask.refreshMetadataTypeCache();" rerender="opDummy" id="removeMTCache"/>
+                      <div class="mg2_scaleFilter" style="margin-bottom: 10px;"></div>
+                    </div>
+                </div>
+                <div><!-- empty div, needed as content for the two tabs --></div>
+              </div>
+              <div class="mg2_jqxgrid" >
+               <center><img src="/img/loading.gif" /><i><span id="retry-label">{!$Label.LOADING}</span></i></center>
+              </div>
+          </div>
+    </apex:outputPanel>
+    <apex:outputPanel layout="none" rendered="{!!isEdit}">
+      <div id="metadataGrid2">
+          
+
+          <div class="mg2_scaleFilterFrame" style="display: none;">
+            <label style="display: none;" class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+            
+            <div class="mg2_scaleFilter" style="display: none;" />
+          </div>
+            
+          
+          <div class="mg2_jqxgrid" >
+          <center><img src="/img/loading.gif" /><i><span id="retry-label">{!$Label.LOADING}</span></i></center>
+          </div>
+        </div>
+    </apex:outputPanel>
+    
+    
+</div>
+</div>
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" addJqxEBcss="true"/>
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting)}" />
+    <apex:includeScript value="{!URLFOR($Resource.MetadataComponent)}" />
+    <script src="{!URLFOR($Resource.metadataGrid2) }" />
+
+</apex:component>

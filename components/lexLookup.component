@@ -1,0 +1,146 @@
+<apex:component selfClosing="false" allowDML="false" controller="Settings">
+
+    <apex:attribute name="repoId" type="String" description="Repository Id" />
+    <apex:attribute name="attName" type="String" description="Attachment Name" />
+    <apex:attribute name="currentBranch" type="String" description="currentBaseBranch" />
+
+    <!-- body-->
+    <style>
+        li.slds-lookup__item:hover {
+            background-color: #3593c6;
+            color:white !important;
+        }
+        li.slds-lookup__item:hover a {
+            color:white !important;
+        }
+        span.closeIcon{
+            height:1rem !important;
+        }
+    </style>
+    <div id="branchSelector">
+        <div class="slds-spinner_container" style="display:none;" id="loader">
+            <div class="slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+
+        <apex:actionFunction name="branchSelector" rerender="random" oncomplete="recordSelected('branchSelector')"/>
+        <div class="slds-lookup" data-select="single" data-scope="single" data-typeahead="true">
+            <div class="slds-form-element">
+                <label class="slds-form-element__label" for="lookup">Select Base Branch</label>
+                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+
+                    <!-- section to display selected record-->
+                    <div class="slds-pill_container slds-show" style="display: none;border:none;" id="selected-record">
+                        <a href="javascript:void(0)" class="slds-pill" style="width:100%;padding:7px">
+                            <span class="slds-pill__label" id="selected-name" ></span>
+                            <button type="button" class="slds-button slds-button--icon-bare slds-pill__remove" onclick="removeRecord('branchSelector')">
+                                <span class="slds-icon slds-icon-text-default slds-icon__small closeIcon slds-button__icon"></span>
+                                <span class="slds-assistive-text">Remove</span>
+                            </button>
+                        </a>
+                    </div>
+
+                    <!-- section to display input field for search-->
+                    <!--<div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">-->
+                        <div id="input-text" style="display:block">
+
+                            <span class="searchIcon_input slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default"></span>
+                            <input id="lookup" class="slds-input  slds-input_bare" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" onfocus="addRefresh('branchSelector')" aria-activedescendant=""
+                                   onkeyup="keyPressedOnLookup('branchSelector','{!repoId}','{!JSENCODE(attName)}')" onfocusout="keyPressedOnLookup('branchSelector','{!repoId}','{!JSENCODE(attName)}')"
+                                   placeholder="Search base branch"/>
+                        </div>
+                    <!--</div>-->
+                </div>
+            </div>
+
+            <!-- section to display searched results-->
+            <div class="slds-lookup__menu" role="listbox" id="list-box" style="display: none">
+                <div class="branchLookup slds-lookup__item">
+                    <div style="display:inline-block;padding-left:15px" class="slds-icon slds-icon-text-default slds-icon__small forwardIcon slds-button__icon" ></div>
+                    <span id="search-text-info" style="display:inline"></span>
+                </div>
+                <ul class="slds-lookup__list" role="presentation" id="record-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        var branch = {};
+        branch.svgButtonsId = [];
+        branch.svgButtonsClass = ['forwardIcon', 'searchIcon_input', 'closeIcon', 'refreshBranchIcon','branchItemIcon'];
+
+        branch.svgStruct = [];
+        branch.setSVGStruct = function(){
+            branch.svgStruct['.forwardIcon'] = {
+                imageURL: "{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#search')}",
+                class:'slds-button__icon'
+            };
+            branch.svgStruct['.searchIcon_input'] = {
+                imageURL: "{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#search')}",
+                class:'slds-input__icon'
+            };
+            branch.svgStruct['.closeIcon'] = {
+                imageURL: "{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#close')}",
+                class:'slds-button__icon',
+            };
+            branch.svgStruct['.refreshBranchIcon'] = {
+                imageURL: "{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#refresh')}",
+                class:'slds-button__icon',
+            };
+            branch.svgStruct['.branchItemIcon'] = {
+                imageURL: "{!URLFOR($Asset.SLDS, '/assets/icons/standard-sprite/svg/symbols.svg#branch_merge')}",
+                class:'slds-button__icon',
+            };
+        }
+
+        $copado(document).ready(function(){
+            var currentBranch = '{!JSENCODE(currentBranch)}';
+            if(currentBranch != '') {
+                select('branchSelector',currentBranch,false);
+            }
+            branch.setSVGStruct();
+            if(branch && branch.applyRenderSVG) branch.applyRenderSVG(svgButtonsId,branch.svgButtonsClass);
+        });
+
+        branch.applyRenderSVG = function(listIdArray,listClassArray){
+            if(listIdArray && listIdArray.length > 0){
+                listIdArray.forEach(function(element){
+                    branch.renderSVG('#'+element);
+                });
+            }
+
+            if(listClassArray && listClassArray.length > 0) {
+                listClassArray.forEach(function(element){
+                    branch.renderSVG('.'+element);
+                });
+            }
+        }
+
+        branch.renderSVG = function(elemId){
+            var elem = $copado(elemId);
+            console.log(elemId);
+            var struct = branch.svgStruct[elemId];
+            if(!struct) return;
+            var imageURL = struct.imageURL;
+            var SVG = $copado('<svg/>', {
+               class: struct.class,
+            });
+
+            var SVGUse = $copado('<use/>');
+            SVGUse.attr('xlink:href',imageURL);
+            elem.prepend(SVG.append(SVGUse));
+            elem.html(elem.html());
+        }
+
+        function navigateTo(pageName){
+            var redirectUrl = encodeURI('/apex/{!JSENCODE(namespace)}'+pageName);
+            if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+                sforce.one.navigateToURL(redirectUrl,false);
+            } else {
+                window.open(redirectUrl,'_blank');
+            }
+        }
+    </script>
+</apex:component>

@@ -1,0 +1,20 @@
+<!--
+ - Created by umitcanuckan on 23/08/2018.
+ -->
+
+<apex:page id="CreatePackageDefinition" standardController="Artifact__c" docType="html-5.0" standardStyleSheets="true" lightningStylesheets="true">
+    <c:GAnalytics />
+    <c:IncludeStaticsResourceComponent addJQuery="true" />
+    <apex:slds />
+    <apex:form >
+        <apex:pageMessages id="pageMsgs"/>
+        <apex:inputHidden value="{!Artifact__c.Package_Namespace__c}"/>
+        <apex:inputHidden value="{!Artifact__c.Package_Id__c}"/>
+        <apex:inputHidden value="{!Artifact__c.Source_Api_Version__c}"/>
+        <apex:inputHidden value="{!Artifact__c.Name}"/>
+        <apex:inputHidden value="{!Artifact__c.Sfdc_Login_Url__c}"/>
+        <apex:inputHidden value="{!Artifact__c.Package_Type__c}"/>
+        <apex:inputHidden value="{!Artifact__c.Artifact_Version__c}"/>
+        <c:ShowAttachmentDetails artifactRecord="{!Artifact__c}" attachmentType="sfdx-project.json"/>
+    </apex:form>
+</apex:page>

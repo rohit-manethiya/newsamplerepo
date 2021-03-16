@@ -1,0 +1,27 @@
+<template>
+    <c-copadocore-modal size={size} hide-close>
+        <span slot="title">{title}</span>
+        <slot class="slds-align_absolute-center">
+            <lightning-radio-group if:false={stepType} class="slds-text-heading_large validValue" type="radio"
+                name="selectStepType" label={label.Select_Step_Type} options={stepTypes} required>
+            </lightning-radio-group>
+            <c-deployment-steps-details
+                if:true={stepType}
+                current-deployment-id={currentDeploymentId}
+                selected-step-id={selectedStepId}
+                selected-step-name={selectedStepName}
+                selected-step-type={stepType}
+                onrefreshdata={handleRefreshData}
+                onrestoreoriginalvalues={handleRestoreOriginalValues}>
+            </c-deployment-steps-details>
+        </slot>
+        <span slot="footer">
+            <lightning-button variant="neutral" label={label.Cancel} title={label.Cancel} onclick={handleCancel}>
+            </lightning-button>
+            <lightning-button if:false={stepType} class="slds-m-left_x-small" label={label.NEXT} title={label.NEXT}
+                variant="brand" onclick={handleNext}></lightning-button>
+            <lightning-button if:true={stepType} class="slds-m-left_x-small" label={label.SAVE} title={label.SAVE}
+                variant="brand" onclick={handleSave}></lightning-button>
+        </span>
+    </c-copadocore-modal>
+</template>

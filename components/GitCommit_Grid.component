@@ -1,0 +1,336 @@
+<apex:component controller="GitCommit_GridController" extensions="Settings,JsRemotingController" allowDML="true">
+    <apex:attribute name="pController" type="GitCommit_PageBase" assignTo="{!pageController}" required="true" description="The controller for the page."
+    />
+
+    <c:WizardUtils />
+    <apex:stylesheet value="{!URLFOR($Resource.CopadoLightningCSS)}" />
+    <c:IncludeConnectionJsComponent />
+    <apex:includeScript value="{!URLFOR($Resource.utilsV2) }" />
+    <c:IncludeStaticsResourceComponent addJquery="true" addJSON2js="true" addCometdjs="true" addJcometdjs="true" />
+    <c:IncludeJqxResourceComponent addjqxAlljs="true" addjqxBasecss="true" />
+
+    <script>
+        var Copado_Licenses = {!CurrentUserLicenses}; //TODO move to page
+
+        var copadoGitCommit_config = {
+            data:{
+                orgId: '{!JSENCODE(pageController.snapshot.Org__c)}',
+                id: '{!JSENCODE(pageController.userStory.Org_Credential__c)}',
+                repositoryId: '{!JSENCODE(pageController.snapshot.Git_Repository__c)}',
+                snapshotId:'{!JSENCODE(pageController.snapshot.Id)}',
+                userStoryId: '{!JSENCODE(pageController.userStory.Id)}',
+                branch: '{!JSENCODE(pageController.snapshot.Branch__c)}',
+                mainBranch: '{!JSENCODE(pageController.userStory.Base_Branch__c)}',
+                type: '{!JSENCODE(pageController.selectedGitOperation)}',
+                operationLabel: '{!JSENCODE(pageController.selectedGitOperation)}',
+                commitType: 'main',
+                vlocityEnabled: '{!pageController.showVlocity}',
+                orgCommitId: ''
+            },
+            elts: {},
+            jsonData: {
+                repository: '{!JSENCODE(pageController.repositoryRecordJson)}',
+                snapshot: '{!JSENCODE(pageController.snapshotRecordJson)}',
+                org: '{!JSENCODE(pageController.orgRecordJson)}',
+                userStory: '{!JSENCODE(pageController.userStoryRecordJson)}',
+                selectedMetadata: []
+            },
+            gitOperationCall: '{!JSENCODE(pageController.AllOperationsMap)}',
+            style: {
+                height: '400px'
+            },
+            server: {
+                metadataUrl: '{!JSENCODE(urlBase)}metadata/{!JSENCODE(pageController.snapshot.Org__c)}?{!JSENCODE(urlParameters)}&parentId={!JSENCODE(pageController.snapshot.Org__c)}&dates=format{!orgMetadataTypeFilter}',
+                commitUrl: '{!JSENCODE(urlBase)}__ENDPOINT__/__COMMITID__{!JSENCODE(urlParameters)}&orgId={!JSENCODE(pageController.snapshot.Org__c)}&gitBackupId={!JSENCODE(pageController.snapshot.Id)}&message=__MSG__&userStoryId={!JSENCODE(pageController.userStory.Id)}',
+                typesUrl: '{!JSENCODE(urlBase)}gitTypes{!JSENCODE(urlParameters)}',
+            },
+            processVlocityDependencies: function(){
+                var attach = dw.u.getAttach('{!JSENCODE(pageController.userStory.Id)}','VlocityDependencies');
+                if(attach.length){
+                    var res = JSON.parse(Base64.decode(attach[0].Body));
+                    if(res && res.length) {
+                        var dependencies = res;
+                        var retrievedDependencies = gitCommitVlocity.forceVlocitySelections(dependencies);
+                        gitCommitCommons.grid.addItemsIfMissing(retrievedDependencies);
+                        gitCommitCommons.grid.eltTabs.jqxTabs('select',0);
+                        gitCommitCommons.grid.render();
+                        gitCommitCommons.grid.eltTabs.jqxTabs('select',1);
+                    }else{
+                        console.info('Could not load Vlocity dependencies attachment!', res);
+                    }
+                } else {
+                    console.error('Could not find dependencies attachment');
+                }
+            },
+            checkIfCompleted: function(){
+                var isCompleted = $copado('[id="vlocityDone"]').val();
+                console.log('isCompleted==> ',isCompleted);
+                if(isCompleted == 'true'){
+                    $copado('[id="notificationModal"]').hide();
+                    $copado('[id="backDropM"]').hide();
+                    gitCommitCommons.conf.processVlocityDependencies();
+                    clearMessagesMap();
+                }
+            },
+            checkIfRefreshCacheCompleted: function(){
+                var isCompleted = $copado('[id="refreshDone"]').val();
+                if(isCompleted == 'true'){
+                    $copado('[id="notificationModalRefresh"]').hide();
+                    $copado('[id="backDropRefresh"]').hide();
+                    clearMessagesMap();
+                }
+            },
+            ns: '{!JSENCODE(namespace)}',
+            scalableGrid: '{!scalableGrid}',
+            gridMode: 'gitCommit',
+            attachmentName: 'MetaData',
+            eltMainId: 'mainCommitGrid'
+        };
+        $copado( document ).ready(function() {
+            gitCommitCommons.init(copadoGitCommit_config,false);
+            if(copadoGitCommit_config.scalableGrid === 'true'){
+                var metadataTypeList = [];
+                for (var i = 0; i < gitCommitCommons.grid.filterByTypeList.length; i++) {
+                    metadataTypeList.push(gitCommitCommons.grid.filterByTypeList[i]);
+                }
+                gitCommitCommons.grid.eltMetaDataTypeFilter.jqxComboBox({source: metadataTypeList});
+            }
+
+            if ({!isRecentChangesEnabled}) {
+                document.getElementById("btnRecentChanges").disabled = false;
+                gitCommitCommons.refreshRecentChanges('{!JSENCODE(pageController.snapshot.Org__c)}');
+            }
+        });
+    </script>
+
+    <apex:includeScript value="{!URLFOR($Resource.JsRemoting) }"/>
+    <apex:includeScript value="{!URLFOR($Resource.gitCommitCommons) }" />
+    <apex:includeScript value="{!URLFOR($Resource.gitCommitMain) }" />
+    <apex:includeScript value="{!URLFOR($Resource.gitCommitVlocity) }" />
+    <apex:includeScript value="{!URLFOR($Resource.metadataGrid2) }" />
+
+    <apex:outputPanel layout="none" rendered="{!pageController.userHasAccess}">
+        <div class="slds-form" role="list" id="metadataGridSection">
+
+            <div id="metadataDiv" class="slds-form__row divSeperator">
+                <div class="slds-form__item" role="listitem" style="margin-top: 20px;">
+                    <div class="slds-text-heading_medium">{!$Label.Select_Metadata}</div>
+                </div>
+                <div class="slds-float--right slds-m-vertical_small" role="listitem" style="margin-top: 20px; margin-right: 1%; color:#3593c6;">
+                    <apex:outputPanel layout="none" rendered="{!pageController.showVlocity}">
+                        <a onclick="lockScreen();return gitCommitCommons.getVlocityDependencies();" id="vlocityMeta" style="text-align: right;margin-right:10px;">{!$Label.GET_VLOCITY_DEPENDENCIES}</a>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!!pageController.showVlocity}">
+                        <a style="text-align: right;margin-right:10px;visibility: hidden;">{!$Label.GET_VLOCITY_DEPENDENCIES}</a>
+                    </apex:outputPanel>
+
+
+                    <div class="slds-button-group slds-is-relative" role="group">
+                        <button onclick="gitCommitCommons.refreshCache(); return false;" class="slds-button slds-button_neutral">{!$Label.Refresh_All_Metadata}
+                        </button>
+                        <div onmouseenter="$copado('#refreshHelpTooltip').css('display','block')" onmouseleave="$copado('#refreshHelpTooltip').css('display','none')">
+                            <button id="btnRecentChanges" disabled="true" style="border-left: none; border-top-left-radius: 0px; border-bottom-left-radius: 0px;"
+                                onclick="lockScreen(); gitCommitCommons.refreshRecentChanges('{!JSINHTMLENCODE(pageController.snapshot.Org__c)}'); return false;"
+                                class="slds-button slds-button_neutral">{!$Label.Refresh_Recent_Changes}
+                            </button>
+                        </div>
+
+                        <div id="refreshHelpTooltip" class="slds-popover slds-popover_tooltip slds-nubbin_bottom-right slds-is-absolute" role="tooltip"
+                            style="display: none; bottom: 45px;">
+
+                        <div class="slds-popover__body">
+                                <div id="refreshHelpContainer">
+                                    <!-- False positive, not using HTMLENCODE because text always comes from labels in the package and they may contain special characters -->
+                                    <span id="refreshHelp">{!refreshHelpTooltipMessage}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <apex:actionFunction name="reRenderHeader" rerender="theHeader"></apex:actionFunction>
+
+                </div>
+            </div>
+
+            <apex:outputPanel layout="none">
+                <div id="mainCommitGrid">
+                    <div class='mg2_tabs'>
+                        <ul style="margin-left: 20px;">
+                            <li>All Metadata</li>
+                            <li>Selected Metadata</li>
+                        </ul>
+                        <div>
+                            <div class="mg2_scaleFilterFrame" style="padding: 5px; display: none;">
+                                <label class="mg2_mtFilter">Metadata Type Filter</label>&nbsp;
+                                <apex:commandLink value="({!$Label.REFRESH})" onclick="return gitCommitCommons.grid.refreshMetadataTypes();" rerender="opDummy"
+                                    id="removeMTCache" />
+                                <div class="mg2_scaleFilter" style="margin-bottom: 10px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <!-- empty div, needed as content for the second tabs -->
+                        </div>
+                    </div>
+                    <div class="mg2_jqxgrid" >
+                        <center>
+                            <img src="/img/loading.gif" />
+                            <i>
+                                <span id="retry-label">{!$Label.LOADING}</span>
+                            </i>
+                        </center>
+                    </div>
+                </div>
+            </apex:outputPanel>
+        </div>
+        <div id="removeCacheContainer" class="slds-float_right" style="display:none;">
+            <span id="removeCache">{!$Label.LAST_METADATA_REFRESH_DATE}</span>
+        </div>
+    </apex:outputPanel>
+
+
+    <apex:actionFunction name="clearMessagesMap" action="{!clearMessagesMap}" reRender="rightPanelOnly"/>
+    <apex:actionFunction action="{!initPoller}" name="rerenderRefreshCachePoller" onComplete="$copado('[id=notificationModalRefresh]').show();$copado('[id=backDropRefresh]').show();unlockScreen();"
+        reRender="theRefreshCachePoller,rightRefreshCachePanelOnly">
+        <apex:param name="operation" value="refreshCache" />
+    </apex:actionFunction>
+    <apex:actionFunction action="{!initPoller}" name="rerenderPoller" reRender="theVlocityPoller,rightPanelOnly" onComplete="$copado('[id=notificationModal]').show();$copado('[id=backDropM]').show();unlockScreen();">
+        <apex:param name="operation" value="vlocity" />
+    </apex:actionFunction>
+    <apex:actionPoller action="{!pollerHandler}" id="theVlocityPoller" reRender="theVlocityPoller,rightPanelOnly" interval="5"
+        enabled="{!AND(!isVlocitySucceeded,startActionPoller)}" onComplete="applyRenderSVG(svgButtonsId,['approvalIcon', 'errorIcon', 'pinIcon', 'warningIcon']);gitCommitCommons.conf.checkIfCompleted();"
+    />
+    <apex:actionPoller action="{!pollerHandler}" id="theRefreshCachePoller" reRender="theRefreshCachePoller,rightRefreshCachePanelOnly"
+        interval="5" enabled="{!AND(!isRefreshCacheSucceeded,startActionPoller)}" onComplete="applyRenderSVG(svgButtonsId,['approvalIcon', 'errorIcon', 'pinIcon', 'warningIcon']);gitCommitCommons.conf.checkIfRefreshCacheCompleted();"
+    />
+
+
+    <!-- MODAL FOR VLOCITY DEPENDENCY JOB -->
+    <section style="display:none" id="notificationModal" role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id"
+        aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt" aria-modal="true">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header" style="background-color: #3593c6;;color:white;">
+                <h2 class="slds-text-heading_medium" id="prompt-heading-id">{!$Label.INFO}</h2>
+            </header>
+            <apex:outputPanel layout="block" styleClass="slds-size_1-of-1 slds-scrollable_y" id="rightPanelOnly">
+                <input type="hidden" value="{!isVlocitySucceeded}" id="vlocityDone" />
+                <div class="slds-modal__content slds-p-around_medium" id="prompt-message-wrapper">
+                    <div class="slds-box_x-small slds-m-around_x-small slds-p-around_x-small">
+                        <apex:variable var="counter" value="{!0}" />
+                        <apex:outputPanel layout="none" rendered="{!componentMessagesMap != null}">
+                            <apex:repeat value="{!componentMessagesMap}" var="status">
+                                <apex:repeat value="{!componentMessagesMap[status]}" var="message">
+                                    <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                        <div class="slds-media__figure">
+
+                                            <div class="slds-input__icon-group">
+                                                <apex:outputPanel layout="none" rendered="{!OR(AND(ComponentMessageSize > 0, (counter + 1 < ComponentMessageSize)),showCloseVlocityPromtButton)}">
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'success'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default approvalIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'info'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default pinIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'error'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default errorIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'warning'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default warningIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel layout="none" rendered="{!AND(ComponentMessageSize > 0, (counter + 1 = ComponentMessageSize),!isVlocitySucceeded,!showCloseVlocityPromtButton)}">
+                                                    <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_x-small slds-input__spinner">
+                                                        <div class="slds-spinner__dot-a"></div>
+                                                        <div class="slds-spinner__dot-b"></div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </div>
+
+                                        </div>
+                                        <div class="slds-media__body" style="margin-left:10px;text-align: left;">
+                                            <p>{!message}</p>
+                                        </div>
+
+                                    </div>
+                                    <apex:variable var="counter" value="{!counter + 1}" />
+                                </apex:repeat>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+                <apex:outputPanel layout="none" rendered="{!showCloseVlocityPromtButton}">
+                    <footer class="slds-modal__footer slds-theme_default">
+                        <button type="button" class="slds-button slds-button_neutral" style="color:#3593c6;" onclick="clearMessagesMap();$copado('[id=notificationModal]').hide(); $copado('[id=backDropM]').hide();">Close</button>
+                    </footer>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+    </section>
+    <div style="display:none;" id="backDropM" class="slds-backdrop slds-backdrop_open"></div>
+    <!-- // MODAL FOR VLOCITY DEPENDENCY JOB -->
+
+    <!-- MODAL FOR REFRESH CACHE -->
+    <section style="display:none" id="notificationModalRefresh" role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id"
+        aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal_prompt" aria-modal="true">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header" style="background-color: #3593c6;;color:white;">
+                <h2 class="slds-text-heading_medium" id="prompt-heading-id">{!$Label.INFO}</h2>
+            </header>
+            <apex:outputPanel layout="block" styleClass="slds-size_1-of-1 slds-scrollable_y" id="rightRefreshCachePanelOnly">
+                <input type="hidden" value="{!isRefreshCacheSucceeded}" id="refreshDone" />
+                <div class="slds-modal__content slds-p-around_medium" id="prompt-message-wrapper">
+                    <div class="slds-box_x-small slds-m-around_x-small slds-p-around_x-small">
+                        <apex:variable var="counter" value="{!0}" />
+                        <apex:outputPanel layout="none" rendered="{!componentMessagesMap != null}">
+                            <apex:repeat value="{!componentMessagesMap}" var="status">
+                                <apex:repeat value="{!componentMessagesMap[status]}" var="message">
+                                    <div class="slds-scoped-notification slds-media slds-media_center" role="status">
+                                        <div class="slds-media__figure">
+
+                                            <div class="slds-input__icon-group">
+                                                <apex:outputPanel layout="none" rendered="{!OR(AND(ComponentMessageSize > 0, (counter + 1 < ComponentMessageSize)),showRefreshCachePromtButton)}">
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'success'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default approvalIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'info'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default pinIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'error'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default errorIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!status == 'warning'}">
+                                                        <span class="slds-icon_container slds-icon__svg--default warningIcon"></span>&nbsp;&nbsp;
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel layout="none" rendered="{!AND(ComponentMessageSize > 0, (counter + 1 = ComponentMessageSize),!isRefreshCacheSucceeded,!showRefreshCachePromtButton)}">
+                                                    <div role="status" class="slds-spinner slds-spinner_brand slds-spinner_x-small slds-input__spinner">
+                                                        <div class="slds-spinner__dot-a"></div>
+                                                        <div class="slds-spinner__dot-b"></div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </div>
+
+                                        </div>
+                                        <div class="slds-media__body" style="margin-left:10px;text-align: left;">
+                                            <p>{!message}</p>
+                                        </div>
+
+                                    </div>
+                                    <apex:variable var="counter" value="{!counter + 1}" />
+                                </apex:repeat>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+                <apex:outputPanel layout="none" rendered="{!showCloseVlocityPromtButton}">
+                    <footer class="slds-modal__footer slds-theme_default">
+                        <button type="button" class="slds-button slds-button_neutral" style="color:#3593c6;" onclick="clearMessagesMap();$copado('[id=notificationModalRefresh]').hide(); $copado('[id=backDropRefresh]').hide();">Close</button>
+                    </footer>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+    </section>
+    <div style="display:none;" id="backDropRefresh" class="slds-backdrop slds-backdrop_open"></div>
+    <!-- // MODAL FOR REFRESH CACHE -->
+
+</apex:component>

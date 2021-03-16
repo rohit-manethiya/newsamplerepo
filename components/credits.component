@@ -1,0 +1,25 @@
+<apex:component controller="creditsCompController" id="creditsComponent">
+    <apex:attribute name="showGoToLicenseButton" description="Go to license manager" type="Boolean" />
+    <apex:pageMessage id="theMessage" strength="3" severity="ERROR" title="{!$Label.site.error2}" summary="{!errorMessage}" rendered="{!showError}" />
+    <apex:pageBlock id="pbCredits" rendered="{!isValid}" title="{!$Label.BALANCE_STATUS}">
+        <apex:pageBlockButtons id="pbbs" location="top">
+            <apex:commandButton rendered="true" id="btn_refreshBalance" value="{!$Label.REFRESH_BALANCE}" action="{!getCredits}" immediate="true" status="loadingStatus" rerender="pbCredits" />
+            <apex:commandButton rendered="{!showGoToLicenseButton}" value="{!$Label.LICENSE_MANAGER}" action="{!getLicenseManagerReference}" status="loadingStatus" />
+            <apex:actionStatus id="loadingStatus">
+                <apex:facet name="start">
+                    <apex:image url="/img/loading.gif" />
+                </apex:facet>
+            </apex:actionStatus>
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection id="pbs" columns="1">
+            <apex:pageBlockSectionItem id="pbsi1">
+                <apex:outputLabel >{!$Label.Available} {!$Label.CREDIT_BALANCE}</apex:outputLabel>
+                <apex:outputText id="ot_credits">{!creditBalance}</apex:outputText>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem id="pbsi2">
+                <apex:outputLabel >{!$Label.Available_Selenium_Minutes}</apex:outputLabel>
+                <apex:outputText id="ot_minutes">{!minutesBalance}</apex:outputText>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+</apex:component>

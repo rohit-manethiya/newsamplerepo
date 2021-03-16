@@ -1,0 +1,120 @@
+<apex:component >
+    <apex:attribute name="usMap" description="Mapped User Stories by promotion Id" type="map" required="true"/>
+    <apex:attribute name="proId" description="Promotion Id for the map key" type="Id" required="true"/>
+    <style>
+        .slds-scope .slds-table_tree [aria-level="1"]>.slds-tree__item, .slds-scope .slds-table--tree [aria-level="1"]>.slds-tree__item {
+            padding-left: 0rem !important;
+        }
+        .slds-scope .slds-table th, .slds-scope .slds-table td{
+            padding:unset;
+        }
+    </style>
+    <script>
+        var accEls = document.getElementsByClassName("accordion");
+        var i;
+
+        for (i = 0; i < accEls.length; i++) {
+            accEls[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var usId = this.getAttribute('html-usId')
+                /* Toggle between hiding and showing the active panel */
+                var subList = document.querySelectorAll('tr[html-usId="'+usId+'"]');
+                var flag = false;
+                for(var i = 0; i<subList.length;i++){
+                    var activeCheck = this.classList.contains('active');
+                    flag = applySvgChanges(subList[i],activeCheck ? '' : 'none',activeCheck ? 'chevrondown' : 'chevronright',usId,flag);
+                }
+            });
+        }
+
+        function applySvgChanges(subListItem,displayP,svgP,usId,flag){
+            subListItem.style.display = displayP;
+            if(!flag){
+                $copado('span[html-usid="'+usId+'"] svg').remove();
+                applyRenderSVG(undefined,[svgP],'[html-usid="'+usId+'"]');
+                flag = true;
+            }
+            return flag;
+        }
+    </script>
+    <table aria-multiselectable="true" class="slds-table slds-table_bordered slds-table_edit slds-table_fixed-layout slds-table_resizable-cols slds-tree slds-table_tree" role="treegrid">
+        <thead>
+            <tr class="slds-line-height_reset" style="height: 35px;">
+                <th aria-label="Reference" aria-sort="none" class="slds-has-button-menu slds-is-resizable slds-is-sortable" scope="col">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                        <span class="slds-truncate" title="Reference">Reference</span>
+                    </div>
+                </th>
+                <th aria-label="{!$Label.USDependency_Title}" aria-sort="none" class="slds-has-button-menu slds-is-resizable slds-is-sortable" scope="col">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                        <span class="slds-truncate" title="{!$Label.USDependency_Title}">{!$Label.USDependency_Title}</span>
+                    </div>
+                </th>
+                <th aria-label="{!$Label.USDependency_Status}" aria-sort="none" class="slds-has-button-menu slds-is-resizable slds-is-sortable" scope="col">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                        <span class="slds-truncate" title="{!$Label.USDependency_Status}">{!$Label.USDependency_Status}</span>
+                    </div>
+                </th>
+                <th aria-label="{!$Label.USDependency_Environment}" aria-sort="none" class="slds-has-button-menu slds-is-resizable slds-is-sortable" scope="col">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                        <span class="slds-truncate" title="{!$Label.USDependency_Environment}">{!$Label.USDependency_Environment}</span>
+                    </div>
+                </th>
+                <th aria-label="{!$Label.USDependency_Dependency_Info}" aria-sort="none" class="slds-has-button-menu slds-is-resizable slds-is-sortable" scope="col">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                        <span class="slds-truncate" title="{!$Label.USDependency_Dependency_Info}">{!$Label.USDependency_Dependency_Info}</span>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <apex:repeat value="{!usMap[proId]}" var="us">
+                <apex:outputField value="{!us.Environment__c}" rendered="false"/><!-- avoids vf NS issues -->
+                <tr aria-level="1" aria-posinset="1" aria-selected="false" aria-setsize="4" style="height: 30px;" class="slds-hint-parent" tabindex="0">
+                    <th class="slds-tree__item" data-label="Reference" scope="row">
+                        <div class="slds-truncate" style="width:100%;" title="{!us.Name}"><span html-usId="{!us.Id}" class="accordion active slds-icon_container null slds-icon__svg--default chevronright chevrondown"></span><a style="margin-left: 5%;" href="{!URLFOR($Action.User_Story__c.View, us.Id)}" target="_blank">{!us.Name}</a></div>
+                    </th>
+                    <td data-label="Title" role="gridcell">
+                        <div class="slds-truncate" title="{!us.User_Story_Title__c}"><apex:outputField value="{!us.User_Story_Title__c}"/></div>
+                    </td>
+                    <td data-label="Status" role="gridcell">
+                        <div class="slds-truncate" title="{!us.Status__c}"><apex:outputField value="{!us.Status__c}"/></div>
+                    </td>
+                    <td data-label="Environment" role="gridcell">
+                        <div class="slds-truncate" title="{!us.Environment__r.Name}">
+                            <apex:outputPanel layout="none" rendered="{!us.Environment__c != null}">
+                                <a href="{!URLFOR($Action.Environment__c.View, us.Environment__c)}" target="_blank"><apex:outputField value="{!us.Environment__r.Name}"/></a>
+                            </apex:outputPanel>
+                        </div>
+                    </td>
+                    <td data-label="Dependency Info" role="gridcell">
+                        <div class="slds-truncate" title="Dependency Info"><b>Provider</b></div>
+                    </td>
+                </tr>
+                <apex:repeat value="{!us.Team_Dependencies_On_UStory__r}" var="usD">
+                    <tr style="height: 30px;" aria-level="1" html-usId="{!us.Id}" aria-posinset="1" aria-selected="false" aria-setsize="4" class="slds-hint-parent" tabindex="0">
+                        <th class="slds-tree__item" data-label="Reference" scope="row">
+                            <div class="slds-truncate" style="margin-left: 20%;" title="{!usD.Dependent_User_Story__r.Name}"><a href="{!URLFOR($Action.User_Story__c.View, usD.Dependent_User_Story__r.Id)}" target="_blank">{!usD.Dependent_User_Story__r.Name}</a></div>
+                        </th>
+                        <td data-label="Title" role="gridcell">
+                            <div class="slds-truncate" title="{!usD.Dependent_User_Story__r.User_Story_Title__c}"><apex:outputField value="{!usD.Dependent_User_Story__r.User_Story_Title__c}"/></div>
+                        </td>
+                        <td data-label="Status" role="gridcell">
+                            <div class="slds-truncate" title="{!usD.Dependent_User_Story__r.Status__c}"><apex:outputField value="{!usD.Dependent_User_Story__r.Status__c}"/></div>
+                        </td>
+                        <td data-label="Environment" role="gridcell">
+                            <div class="slds-truncate" title="{!usD.Dependent_User_Story__r.Environment__r.Name}">
+                                <apex:outputPanel layout="none" rendered="{!usD.Dependent_User_Story__r.Environment__c != null}">
+                                    <a href="{!URLFOR($Action.Environment__c.View, usD.Dependent_User_Story__r.Environment__c)}" target="_blank"><apex:outputField value="{!usD.Dependent_User_Story__r.Environment__r.Name}"/></a>
+                                </apex:outputPanel>
+                            </div>
+                        </td>
+                        <td data-label="Dependency Info" role="gridcell">
+                            <div class="slds-truncate" title="{!usD.Name}"><a href="{!URLFOR($Action.Team_Dependency__c.View, usD.Id)}" target="_blank">{!usD.Name}</a></div>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </apex:repeat>
+        </tbody>
+    </table>
+</apex:component>

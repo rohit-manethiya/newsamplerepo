@@ -1,0 +1,217 @@
+<apex:component id="PackageVersionHelper" controller="DXPackageVersionHandler" allowDML="true">
+    <apex:attribute name="package" type="Artifact__c" assignTo="{!givenPackage}" required="true" description="The artifact record with salesforce package record type and managed or unlocked package type"
+    />
+    <div>
+        <div>
+            <apex:outputPanel rendered="{!givenPackage.Package_Type__c != 'First-Generation Package'}">
+                <apex:actionFunction name="changePreviousRelease" action="{!getPreviousVersion}" reRender="previousReleaseVersion,releaseVersionOptions,releaseVersionSript"
+                    onComplete="unlockScreen();" />
+                <!-- RELEASE VERSION HELP SECTION -->
+                <c:CopadoHelp sectionText="Populate with proper help text" sectionLink="https://git-scm.com/book/en/v2/Git-Basics-Tagging"
+                />
+                <!-- / RELEASE VERSION HELP SECTION -->
+                <apex:pageBlock title="Generate Package" id="theBlock">
+                    <apex:pageBlockButtons location="both" style="text-align:right;">
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(givenPackage.Package_Id__c))}" layout="none">
+                            <button id="generateBtn" class="slds-button slds-button_neutral" onclick="checkReleaseVersion();return false;">{!$Label.Generate_Beta_Version}</button>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!ISBLANK(givenPackage.Package_Id__c)}" layout="none">
+                            <button id="generatePackageBtn" class="slds-button slds-button_neutral" onclick="checkProject(makeCallout); return false;">{!$Label.Generate_package}</button>
+                        </apex:outputPanel>
+                        <apex:commandButton styleClass="slds-button slds-button_neutral" action="{!cancel}" value="{!$Label.Cancel}" />
+                    </apex:pageBlockButtons>
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(givenPackage.Package_Id__c))}">
+                        <apex:pageBlockSection title="Preview Details" columns="1">
+                            <apex:pageBlockSectionItem rendered="{!previousPackageVersion!=null}">
+                                <apex:outputLabel value="{!$Label.Previous_Version}" />
+                                <apex:inputField value="{!givenPackage.Artifact_Version__c}" onselect="changePreviousRelease();" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="{!$Label.Previous} {!$Label.RELEASE_VERSION}" />
+                                <apex:outputPanel id="previousReleaseVersion">
+                                    <apex:outputText value="{!previousPackageVersion.Version_number__c}" />
+                                    <apex:outputText id="previousRelease" value="{!IF(previousPackageVersion==null,$Label.RELEASE_NOT_FOUND,'')}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem rendered="{!previousPackageVersion!=null}">
+                                <apex:outputLabel value="{!$Label.OPTIONS}" />
+                                <apex:outputPanel id="releaseVersionOptions">
+                                    <fieldset class="slds-form-element" style="padding: 5px 0 5px 0;">
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-radio">
+                                                <input type="radio" id="major" name="options" value="on" onclick="defineVersionNo(this);" />
+                                                <label class="slds-radio__label" for="major">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">Major:
+                                                        <span class="findMe">{!JSENCODE(versionWrapper.major)}</span>
+                                                    </span>
+                                                </label>
+                                            </span>
+
+                                            <span class="slds-radio">
+                                                <input type="radio" id="minor" name="options" value="on" onclick="defineVersionNo(this);" />
+                                                <label class="slds-radio__label" for="minor">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">Minor:
+                                                        <span class="findMe">{!JSENCODE(versionWrapper.minor)}</span>
+                                                    </span>
+                                                </label>
+                                            </span>
+
+                                            <span class="slds-radio">
+                                                <input type="radio" id="patch" name="options" value="on" onclick="defineVersionNo(this);" />
+                                                <label class="slds-radio__label" for="patch">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">Patch:
+                                                        <span class="findMe">{!JSENCODE(versionWrapper.patch)}</span>
+                                                    </span>
+                                                </label>
+                                            </span>
+
+                                            <span class="slds-radio">
+                                                <input type="radio" id="built" name="options" value="on" onclick="defineVersionNo(this);" />
+                                                <label class="slds-radio__label" for="built">
+                                                    <span class="slds-radio_faux"></span>
+                                                    <span class="slds-form-element__label">Build:
+                                                        <span class="findMe">{!JSENCODE(versionWrapper.build)}</span>
+                                                    </span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                    </fieldset>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="{!$Label.NEW} {!$Label.Version_Name}" />
+                                <apex:inputText id="newReleaseVersionName" value="{!versionWrapper.versionName}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputPanel layout="none">
+                                    <span class="helpButtonOn" id="rel.ver-_help">
+                                        <apex:outputLabel value="{!$Label.NEW} {!$Label.RELEASE_VERSION}" />
+                                        <img src="/img/s.gif" alt="" class="helpOrb" title="" />
+                                        <script>sfdcPage.setHelp('rel.ver', 'The version number of the package version. Must be in major.minor.patch.build format.');</script>
+                                    </span>
+                                </apex:outputPanel>
+                                <apex:inputText id="newReleaseVersion" value="{!versionWrapper.newVersion}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="{!$Label.NEW} {!$Label.Version_Description}" />
+                                <apex:inputTextarea rows="5" cols="30" html-maxlength="255" id="newReleaseVersionDescription" value="{!versionWrapper.versionDescription}"
+                                />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputPanel layout="none">
+                                    <span class="helpButtonOn" id="ins.key-_help">
+                                        <apex:outputLabel value="{!$Label.Installation_Key}" />
+                                        <img src="/img/s.gif" alt="" class="helpOrb" title="" />
+                                        <script>sfdcPage.setHelp('ins.key', '[Optional] installation key for key-protected package. If empty installationkeybypass will set as true automatically.');</script>
+                                    </span>
+                                </apex:outputPanel>
+                                <apex:outputPanel id="insKeyPanel">
+                                    <input type="password" id="newReleaseInstallationKey" value="{!versionWrapper.installationKey}" />
+                                    <apex:outputPanel layout="none" rendered="{!sensitiveInformationCS != null}">
+                                        <a href="" onclick="lockScreen();applyPrevKey();">Apply previous key</a>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!ISBLANK(givenPackage.Package_Id__c)}">
+                        <apex:pageMessage id="notPackage" summary="{!$Label.NeedtoCreatePackageFirst}" severity="warning" strength="3" />
+                    </apex:outputPanel>
+                </apex:pageBlock>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!givenPackage.Package_Type__c == 'First-Generation Package'}">
+                <apex:pageMessage id="notAvailable" summary="{!$Label.NAforFGP}" severity="warning" strength="3" />
+            </apex:outputPanel>
+        </div>
+    </div>
+    <style>
+        .apexButton {
+            -webkit-appearance: button !important;
+            padding: 2px 3px !important;
+            border: 1px solid #b5b5b5 !important;
+            border-bottom-color: #7f7f7f !important;
+            background: #e8e8e9 url(/img/alohaSkin/btn_sprite.png) repeat-x right top !important;
+            border-radius: 3px !important;
+            color: inherit !important;
+            font: inherit !important;
+            margin: 0 !important;
+            align-items: flex-start;
+            text-align: center;
+            text-indent: 0px;
+            text-shadow: none;
+            display: inline-block;
+            letter-spacing: normal;
+            margin-bottom: 3px !important;
+            word-spacing: normal;
+        }
+    </style>
+    <script>
+
+        function defineVersionNo(elem) {
+            var preDefinedVersion = $copado(elem).next().find('.findMe').text();
+            if (preDefinedVersion.length > 0) {
+                $copado('[id$="newReleaseVersion"]').val(preDefinedVersion);
+            }
+        }
+        function checkReleaseVersion() {
+            var str = $copado('[id$="newReleaseVersion"]').val();
+            console.log('str===> ' + str);
+            var patt = new RegExp("[1-9]{1,}\.[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}");
+            var res = patt.test(str);
+
+            if (checkProject()) {
+                if (str.length == 0) {
+                    alert('Please enter a version number for your package.');
+                    unlockScreen();
+                }
+                else if (!res) {
+                    alert('Release version number must be in this format. major.minor.patch.build.');
+                    unlockScreen();
+                } else {
+                    lockScreen();
+                    var installationKey = $copado('[id$="newReleaseInstallationKey"]');
+                    if (installationKey.length > 0) {
+                        makeCallout(installationKey.val());
+                    } else {
+                        makeCallout();
+                    }
+                }
+            }
+        }
+
+        function checkProject(cb) {
+            var hasProjectDefAtt = {!hasProjectDefinitionJson
+        };
+        if (!hasProjectDefAtt) {
+            if (confirm('Project definition file is required in order to generate your package.\nDo you want to create now?')) {
+                location.href = '/apex/' + "{!JSENCODE(ns)}" + 'CreatePackageDefinition?Id=' + "{!givenPackage}" + '&DXPackageVersion=true';
+            }
+            return false;
+        }
+        console.log('cb', cb);
+        lockScreen();
+        cb && cb();
+        return true;
+        }
+        $copado(document).ready(function () {
+            var packageId = "{!givenPackage.Package_Id__c}";
+            if (packageId.length != 0) {
+                $copado('#VersionDescription').css('display', '');
+                $copado('#VersionName').css('display', '');
+            }
+            unlockScreen();
+        });
+    </script>
+    <apex:actionFunction name="makeCallout" action="{!callBackend}" reRender="packageMsg" onComplete="unlockScreen();">
+        <apex:param name="nrik" value="" />
+    </apex:actionFunction>
+    <apex:actionFunction name="applyPrevKey" action="{!updateInstallationKey}" reRender="insKeyPanel" onComplete="unlockScreen();"
+    />
+    <apex:actionFunction name="deleteInstallationKeyRecord" action="{!deleteInstallationKeyAfterVersionCreationFailure}" reRender=""
+    />
+    <apex:actionFunction name="updateArtifactProjectJsonAttachment" action="{!updateArtifactProjectJsonAttachment}" reRender=""
+    />
+</apex:component>

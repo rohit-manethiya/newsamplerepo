@@ -1,0 +1,31 @@
+<template>
+    <template if:true={showModal}>
+        <div class={modalClasses}>
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon if:false={hideClose} class="slds-modal__close" icon-name="utility:close"
+                        alternative-text="Close this window" variant="bare-inverse" onclick={handleClose} size="large">
+                    </lightning-button-icon>
+                    <div class="slds-hide" data-id="titleContainer">
+                        <h2 class="slds-text-heading_medium slds-hyphenate slds-hide" data-id="title">
+                            <slot name="title" onslotchange={handleTitleChange}></slot>
+                        </h2>
+
+                        <p class="slds-m-top_x-small slds-hide" data-id="tagline">
+                            <slot name="tagline" onslotchange={handleTaglineChange}></slot>
+                        </p>
+                    </div>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <slot></slot>
+                </div>
+
+                <footer class="slds-modal__footer slds-hide" data-id="footer">
+                    <slot name="footer" onslotchange={handleFooterChange}></slot>
+                </footer>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

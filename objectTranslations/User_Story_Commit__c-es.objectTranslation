@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>User Story Commit</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>User Story Commits</value>
+    </caseValues>
+    <fields>
+        <label><!-- External Id --></label>
+        <name>External_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Snapshot Commit --></label>
+        <name>Snapshot_Commit__c</name>
+        <relationshipLabel><!-- User Story Commits --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- User Story Commits --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- View in Git --></label>
+        <name>View_in_Git__c</name>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

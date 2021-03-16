@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Clone_Automation_Template</name>
+        <label>Clone Automation Template</label>
+        <locationX>456</locationX>
+        <locationY>159</locationY>
+        <actionName>CloneAutomationTemplate</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Clone_Template</targetReference>
+        </connector>
+        <inputParameters>
+            <name>automationTemplateId</name>
+            <value>
+                <elementReference>recordId.Id</elementReference>
+            </value>
+        </inputParameters>
+        <outputParameters>
+            <assignToReference>clonedAutomationId</assignToReference>
+            <name>output</name>
+        </outputParameters>
+    </actionCalls>
+    <apiVersion>50.0</apiVersion>
+    <interviewLabel>Clone Template {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Clone Template</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <screens>
+        <name>Clone_Template</name>
+        <label>Clone Template</label>
+        <locationX>208</locationX>
+        <locationY>292</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>GoToClonedAutomation</name>
+            <fieldText>&lt;p style=&quot;text-align: center;&quot;&gt;View record &lt;a href=&quot;/{!clonedAutomationId}&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;here&lt;/a&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <start>
+        <locationX>50</locationX>
+        <locationY>50</locationY>
+        <connector>
+            <targetReference>Clone_Automation_Template</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>clonedAutomationId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>recordId</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Deployment__c</objectType>
+    </variables>
+</Flow>

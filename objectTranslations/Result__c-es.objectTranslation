@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Result</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Results</value>
+    </caseValues>
+    <fields>
+        <help><!-- Used to track multi-step deployment overall results. --></help>
+        <label><!-- Deployment --></label>
+        <name>Deployment__c</name>
+        <relationshipLabel><!-- Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <help><!-- Total time duration of the job. Use this value to track job performance. --></help>
+        <label><!-- Duration (in seconds) --></label>
+        <name>Duration__c</name>
+    </fields>
+    <fields>
+        <help><!-- Date time when the job ended. --></help>
+        <label><!-- End Time --></label>
+        <name>End_Time__c</name>
+    </fields>
+    <fields>
+        <label><!-- Error Code --></label>
+        <name>Error_Code__c</name>
+    </fields>
+    <fields>
+        <label><!-- Error Message --></label>
+        <name>Error_Message__c</name>
+    </fields>
+    <fields>
+        <help><!-- Unique identifier for the jobs. This is as an External Id for mapping this result with an external job. --></help>
+        <label><!-- Job Id --></label>
+        <name>Job_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Job Type --></label>
+        <name>Job_Type__c</name>
+        <picklistValues>
+            <masterLabel>Integration</masterLabel>
+            <translation><!-- Integration --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Link to open more information about the results. --></help>
+        <label><!-- Link --></label>
+        <name>Link__c</name>
+    </fields>
+    <fields>
+        <help><!-- Used to track job results triggered from promotion events. --></help>
+        <label><!-- Promotion --></label>
+        <name>Promotion__c</name>
+        <relationshipLabel><!-- Results --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- Date time when the job started. --></help>
+        <label><!-- Start Time --></label>
+        <name>Start_Time__c</name>
+    </fields>
+    <fields>
+        <help><!-- Current status of the result. Confirms if the result is pending or completed. --></help>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Cancelled</masterLabel>
+            <translation><!-- Cancelled --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Failed</masterLabel>
+            <translation><!-- Failed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Progress</masterLabel>
+            <translation><!-- In Progress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Not Started</masterLabel>
+            <translation><!-- Not Started --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Success</masterLabel>
+            <translation><!-- Success --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- User story that originated the result. --></help>
+        <label><!-- User Story --></label>
+        <name>User_Story__c</name>
+        <relationshipLabel><!-- Result --></relationshipLabel>
+    </fields>
+    <gender>Neuter</gender>
+</CustomObjectTranslation>

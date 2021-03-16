@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Continuous Integration</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Continuous Integrations</value>
+    </caseValues>
+    <fieldSets>
+        <label><!-- CustomFields --></label>
+        <name>CustomFields</name>
+    </fieldSets>
+    <fields>
+        <label><!-- Active --></label>
+        <name>Active__c</name>
+    </fields>
+    <fields>
+        <label><!-- Branch --></label>
+        <name>Branch__c</name>
+    </fields>
+    <fields>
+        <label><!-- Check Only --></label>
+        <name>Check_Only__c</name>
+    </fields>
+    <fields>
+        <label><!-- Destination Org Credential --></label>
+        <name>Destination_Org_Credential__c</name>
+        <relationshipLabel><!-- Continuous Integrations --></relationshipLabel>
+    </fields>
+    <fields>
+        <help><!-- For supported metadata items only. --></help>
+        <label><!-- Files to be deployed --></label>
+        <name>Files_to_be_deployed__c</name>
+        <picklistValues>
+            <masterLabel>Deploy all Files</masterLabel>
+            <translation><!-- Deploy all Files --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Deploy only Committed Files</masterLabel>
+            <translation><!-- Deploy only Committed Files --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Git Repository --></label>
+        <name>Git_Repository__c</name>
+        <relationshipLabel><!-- Continuous Integrations --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Last Build Task Duration --></label>
+        <name>Last_Build_Task_Duration__c</name>
+    </fields>
+    <fields>
+        <label><!-- Post Failed Deployment Jobs --></label>
+        <name>Post_Failed_Deployment_Jobs__c</name>
+        <relationshipLabel><!-- Continuous Integrations (Post Failed Deployment Jobs) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Post Success Deployment Jobs --></label>
+        <name>Post_Success_Deployment_Jobs__c</name>
+        <relationshipLabel><!-- Continuous Integrations (Post Success Deployment Jobs) --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Pre Deployment Jobs --></label>
+        <name>Pre_Deployment_Jobs__c</name>
+        <relationshipLabel><!-- Continuous Integrations --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Pre Deployment Options --></label>
+        <name>Pre_Deployment_Options__c</name>
+        <picklistValues>
+            <masterLabel>Always run build task deployment</masterLabel>
+            <translation><!-- Always run build task deployment --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Run build task deployment only if pre deployment job is successful</masterLabel>
+            <translation><!-- Run build task deployment only if pre deployment job is successful --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- If this checkbox is checked, all apex tests will be run as part of the build. --></help>
+        <label><!-- Run All Tests --></label>
+        <name>Run_All_Tests__c</name>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Status__c</name>
+        <picklistValues>
+            <masterLabel>Draft</masterLabel>
+            <translation><!-- Draft --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Failed</masterLabel>
+            <translation><!-- Failed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Progress</masterLabel>
+            <translation><!-- In Progress --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pending</masterLabel>
+            <translation><!-- Pending --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Success</masterLabel>
+            <translation><!-- Success --></translation>
+        </picklistValues>
+    </fields>
+    <gender>Neuter</gender>
+    <sharingReasons>
+        <label><!-- Continuous Integration Permission --></label>
+        <name>ContinuousIntegrationPermission</name>
+    </sharingReasons>
+</CustomObjectTranslation>

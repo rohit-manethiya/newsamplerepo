@@ -1,0 +1,261 @@
+<apex:component controller="LightningReadyFieldsController">
+    <!--Type must be sObject please check the controller. Example usage is {!Account}. If you try to pass sobject type as a string compiling the code will not succeed-->
+    <apex:attribute name="sObject" description="" type="SObject" assignTo="{!subjectedObject}" />
+    <!--String field API name-->
+    <apex:attribute name="field" description="" type="String" assignTo="{!fName}" />
+    <!-- If you want to get standard salesforce field view set this attribute as true-->
+    <apex:attribute name="showClassic" description="If true component will render salesforce classic view for inputFields" type="Boolean" default="false" />
+    <!-- If the field is not required but if you want to make it required on the page layout level set this attribute as true-->
+    <apex:attribute name="requiredView" description="" type="Boolean" default="false" />
+    <apex:attribute name="identity" description="" type="String" default="" />
+    <apex:attribute name="events" description="" type="String" default="" /> <!--onclick="test(); ondblclick = "test2();" -->
+    <apex:attribute name="inputSecret" description="" type="Boolean" default="false" />
+    <apex:attribute name="rerender" description="" type="String"/>
+    <apex:attribute name="showLabel" description="" type="Boolean" default="true"/>
+    <apex:attribute name="onChangeHandler" description="String" type="String" />
+    <style type="text/css">
+        .slds-form-element{
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+    </style>
+    <script>
+        $copado(document).ready(function(){
+            $copado('[id$=roLookup]').removeClass('hover');
+            $copado('[id$=roLookup]').children('a').removeAttr('onblur');
+            $copado('[id$=roLookup]').children('a').removeAttr('onfocus');
+            $copado('[id$=roLookup]').children('a').removeAttr('onmouseout');
+            $copado('[id$=roLookup]').children('a').removeAttr('onmouseover');
+        });
+    </script>
+    <apex:outputPanel rendered="{!!(showClassic && $User.UIThemeDisplayed=='Theme3')}">
+        <!-- If the field is read only for the current user following panel will be rendered to display value only [slds-form-element__static] -->
+        <apex:outputPanel layout="block"  styleClass="slds-form-element" rendered="{!isReadOnlyField}">
+            <label class="slds-form-element__label" for="lookup" style="{!IF(showLabel,'','display: none')}">
+                <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+            </label>
+            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right slds-m-top_xx-small slds-m-bottom_x-small">
+                <apex:outputField id="roLookup" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}"/>
+            </div>
+        </apex:outputPanel>
+        <!-- If the field is NOT read only following panel will be rendered to display suitable input field type. -->
+        <apex:outputPanel layout="none" rendered="{!NOT(isReadOnlyField)}">
+            <!-- Display type is Input Field TEXT,NUMBER etc -->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divTextInput" rendered="{!AND(inputSecret == false,isInputField)}">
+                <label class="slds-form-element__label" for="txtInput" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-form-element__control">
+                    <apex:inputField html-data-id="{!identity}" id="txtInput" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-input"
+                                     onchange="{!onChangeHandler}" ></apex:inputField>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divTextInputSecret" rendered="{!AND(inputSecret == true,isInputField)}">
+                <label class="slds-form-element__label" for="txtInput" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-form-element__control">
+                    <apex:inputSecret html-data-id="{!identity}" id="txtInputSecret" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-input"></apex:inputSecret>
+                </div>
+            </apex:outputPanel>
+
+            <!-- Display type is Picklist Field only one value can be selected-->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divPicklist" rendered="{!isPicklistField}">
+                <label class="slds-form-element__label" for="selPicklist" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-form-element__control">
+                    <apex:inputField html-data-id="{!identity}" required="{!requiredView}" id="selPicklist" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-select" rendered="{!ISBLANK(rerender)}" onchange="{!onChangeHandler}"></apex:inputField>
+                    <apex:inputField html-data-id="{!identity}" required="{!requiredView}" id="selPicklistAction" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-select" rendered="{!NOT(ISBLANK(rerender))}">
+                        <apex:actionSupport event="onchange" rerender="{!rerender}"/>
+                    </apex:inputField>
+                </div>
+                <apex:outputPanel layout="none" rendered="{!isDependentPicklistField}">
+                    <script>
+                    window.lric = window.lric || {};
+                    if (lric.dependentPicklist == null) {
+                        lric.dependentPicklist = [];
+                        var windowsOnLoad = window.onload;
+                        window.onload = function() {
+                            for (var i = 0; i < lric.dependentPicklist.length; i++) {
+                                var depplId = lric.dependentPicklist[i];
+                                var deppl = picklist.picklists[depplId];
+                                var controller = document.getElementById(deppl.controller_id);
+                                var ctrlTagName = controller.tagName;
+                                if (ctrlTagName == "SELECT") {
+                                    controller.addEventListener("change", function(evt) {
+                                        lric.updateDepPicklistStyle(evt);
+                                    });
+                                } else {
+                                    controller.addEventListener("click", function(evt) {
+                                        lric.updateDepPicklistStyle(evt);
+                                    });
+                                }
+
+                                var dpl = document.getElementById(depplId);
+                                dpl.className += " slds-select";
+                            }
+                            if (windowsOnLoad != null)
+                                windowsOnLoad();
+                        }
+                    }
+                    if (lric.updateDepPicklistStyle == null) {
+                        lric.updateDepPicklistStyle = function(evt) {
+                            for (var i = 0; i < lric.dependentPicklist.length; i++) {
+                                var depplId = lric.dependentPicklist[i];
+                                var deppl = picklist.picklists[depplId];
+                                if (deppl.controller_id == evt.target.id) {
+                                    var dpl = document.getElementById(depplId);
+                                    if (dpl.className == null || dpl.className.indexOf("slds-select") == -1)
+                                        dpl.className += " slds-select";
+                                }
+                            }
+                        }
+                    }
+                    lric.dependentPicklist.push("{!$Component.selPicklist}");
+                    lric.dependentPicklist.push("{!$Component.selPicklistAction}");
+                </script>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <!-- Display type is Textarea Field -->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divTextArea" rendered="{!isTextareaField}">
+                <label class="slds-form-element__label" for="txtArea" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-form-element__control">
+                    <apex:inputField html-data-id="{!identity}" id="txtArea" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" required="{!requiredView}" styleclass="slds-textarea"></apex:inputField>
+                </div>
+            </apex:outputPanel>
+            <!-- Display type is Checkbox Field -->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divCheckbox" rendered="{!isCheckboxField}">
+                <div class="slds-form-element__control">
+                    <span class="slds-checkbox">
+                        <apex:inputField id="checkBox" required="{!requiredView}" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}"></apex:inputField>
+                        <label class="slds-checkbox__label" for="{!$Component.checkBox}" style="{!if(showLabel,'','display: none')}">
+                            <span class="slds-form-element__label">{!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}</span><br/>
+                            <span class="slds-checkbox--faux"></span>
+                        </label>
+                    </span>
+                </div>
+            </apex:outputPanel>
+            <!-- Display type is Date or Datetime Field -->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divDatetime" rendered="{!isDatetimeField}">
+                <label class="slds-form-element__label" for="txtDatetime" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-form-element__control">
+                    <apex:inputField html-data-id="{!identity}" required="{!requiredView}" id="txtDatetime" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-input" style="width:50%;"></apex:inputField>
+                </div>
+                <script type="text/javascript">
+                    // Wrap the datePicker control within slds div to stylish it
+                    var datePickerHandler;
+                    if (datePickerHandler == null) {
+                        datePickerHandler = document.createElement('div');
+                        datePickerHandler.className = 'slds';
+                        datePickerHandler.id = 'datePicker_slds_wrapper';
+                        document.addEventListener("DOMContentLoaded", function(event) {
+                            var dtp = document.getElementById('datePicker');
+                            if (dtp != null) {
+                                var dtpParent = dtp.parentElement;
+                                dtpParent.appendChild(datePickerHandler);
+                                datePickerHandler.appendChild(dtp);
+                            }
+                        });
+                    }
+                </script>
+            </apex:outputPanel>
+            <!-- Display type is Lookup Field This is the most tricky one to handle.-->
+            <apex:outputPanel layout="block" styleClass="slds-lookup" id="divLookup" rendered="{!isLookupField}" html-data-select="single" html-data-scope="single" html-data-typeahead="true">
+                <apex:outputPanel layout="block" styleClass="slds-form-element" id="divLookupFormElem">
+                    <label class="slds-form-element__label" for="lookup" style="{!if(showLabel,'','display: none')}">
+                        <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                        {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                    </label>
+                    <apex:outputPanel layout="block" styleClass="slds-form-element__control slds-input-has-icon slds-input-has-icon--right slds-m-top_xx-small slds-m-bottom_x-small" rendered="{!NOT(isReadOnlyField)}">
+                        <apex:inputField required="{!requiredView}" html-data-id="{!identity}" id="lookup" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-input" style="visibility:hidden" onchange="{!onChangeHandler}"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <script>
+                    var divLookupFormElem = document.getElementById("{!$Component.divLookupFormElem}");
+                    var errMsg = divLookupFormElem.querySelector(".errorMsg");
+                    if (errMsg != null){
+                        divLookupFormElem.appendChild(errMsg);
+                    }
+                    var lrInput = document.getElementById("{!$Component['lookup']}");
+                    lrInput.style.visibility = "";
+                    var lrSpan = lrInput.parentElement;
+                    var lrURL = lrSpan.querySelector("a");
+                    if(lrURL){
+                        lrURL.style.visibility = "";
+                        lrURL.className = "";
+                        lrURL.innerHTML = "<svg aria-hidden=\"true\" class=\"slds-input__icon\"><use xlink:href=\"" + "{!URLFOR($Resource.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#search')}" + "\"></use></svg>";
+                    }
+                </script>
+            </apex:outputPanel>
+            <!-- Display type is MultiplePicklist Field more than one value can be selected-->
+            <apex:outputPanel layout="block" styleClass="slds-form-element" id="divMultiPicklist" rendered="{!isMultiPicklistField}">
+                <label class="slds-form-element__label" for="divMSPWrapper" style="{!if(showLabel,'','display: none')}">
+                    <apex:outputPanel layout="none" rendered="{!OR(isRequiredField,requiredView)}"><abbr class="slds-required" title="required" >*</abbr></apex:outputPanel>
+                    {!$ObjectType[IF(AND(LEFT(objectName,LEN(NameSpace))!=NameSpace, RIGHT(objectName,3)='__c'),NameSpace + objectName, objectName)].Fields[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)].Label}
+                </label>
+                <div class="slds-picklist--draggable slds-grid" id="divMSPWrapper" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" >
+                    <apex:outputPanel layout="block" styleClass="slds-form-element__control" id="divMspLeft">
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="block" styleClass="slds-grid slds-grid--vertical" id="divMspButtons">
+                        <button class="slds-button slds-button--icon-container">
+                            <svg aria-hidden="true" class="slds-button__icon">
+                                <use xlink:href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#right')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Up</span>
+                        </button>
+                        <button class="slds-button slds-button--icon-container">
+                            <svg aria-hidden="true" class="slds-button__icon">
+                                <use xlink:href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#left')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Down</span>
+                        </button>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="block" styleClass="slds-form-element__control" id="divMspRight">
+                    </apex:outputPanel>
+                </div>
+                <apex:outputPanel layout="block" styleClass="slds-form-element__control" id="divVfcWrapper">
+                    <apex:inputField html-data-id="{!identity}" required="{!requiredView}" id="Picklist" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" styleclass="slds-select"></apex:inputField>
+                </apex:outputPanel>
+                <script type="text/javascript">
+                    var selectedDivHandler = document.getElementById("{!$Component.divVfcWrapper}");
+                    var selectList = selectedDivHandler.getElementsByTagName("select");
+                    var selectedId = selectList[0].id;
+                    var selectedLeft = selectList[1];
+                    var selectedRight = selectList[2];
+                    // Re-parent select controls for LEX support
+                    document.getElementById("{!$Component.divMspLeft}").appendChild(selectedLeft);
+                    document.getElementById("{!$Component.divMspRight}").appendChild(selectedRight);
+                    // Take away the "optgroup" because the VF render issue
+                    selectedLeft.innerHTML = selectedLeft.getElementsByTagName("optgroup")[0].innerHTML;
+                    selectedRight.innerHTML = selectedRight.getElementsByTagName("optgroup")[0].innerHTML;
+                    // Hook button event
+                    var btns = document.getElementById("{!$Component.divMspButtons}").getElementsByTagName("button");
+                    btns[0].onclick = function() {
+                        MultiSelectPicklist.handleMSPSelect(selectedId);
+                        return false;
+                    };
+                    btns[1].onclick = function() {
+                        MultiSelectPicklist.handleMSPUnSelect(selectedId);
+                        return false;
+                    };
+                    // Remove unused HTML elments
+                    selectedDivHandler.removeChild(selectedDivHandler.getElementsByTagName("table")[0]);
+                </script>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!showClassic && $User.UIThemeDisplayed=='Theme3'}">
+        <apex:inputField html-data-id="{!identity}" value="{!sObject[IF(AND(LEFT(field,LEN(NameSpace))!=NameSpace, RIGHT(field,3)='__c'),NameSpace + field, field)]}" />
+    </apex:outputPanel>
+</apex:component>

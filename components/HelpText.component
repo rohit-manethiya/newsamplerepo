@@ -1,0 +1,9 @@
+<apex:component >
+    <apex:attribute name="label" type="String" description="help text label" required="true"/> 
+
+    <span class="slds-icon_container slds-icon-utility-info" title="{!label}">                                    
+        <svg style="width: 16px; height: 16px;" class="slds-button__icon slds-icon_xx-small" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+        </svg>
+    </span>
+</apex:component>

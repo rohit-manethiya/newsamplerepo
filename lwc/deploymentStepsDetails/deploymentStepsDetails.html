@@ -1,0 +1,39 @@
+<template>
+    <lightning-spinner if:true={showSpinner} variant="brand" alternative-text="Loading" size="large">
+    </lightning-spinner>
+
+    <lightning-card>
+        <div slot="title"><b>{stepCardTitle}</b></div>
+        <lightning-layout>
+            <lightning-layout-item class="slds-p-right_medium" size="6">
+                <lightning-input class="validValue" type="text" name="inputStepName" label={label.STEP_NAME}
+                    value={stepName} onchange={handleChange} required></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="6">
+                <lightning-input type="text" name="selectedStepType" label={label.Step_Type} value={selectedStepType} disabled>
+                </lightning-input>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+
+    <div class="slds-border_top slds-p-top_large slds-m-top_large">
+        <lightning-card>
+
+            <div slot="title"><b>{detailsCardTitle}</b></div>
+
+            <c-deployment-steps-apex if:true={isApex} step-id={selectedStepId}></c-deployment-steps-apex>
+
+            <c-deployment-steps-salesforce-flow if:true={isSalesforceFlow} step-id={selectedStepId}>
+            </c-deployment-steps-salesforce-flow>
+
+            <c-deployment-steps-external-c-i if:true={isExternalCI} step-id={selectedStepId}>
+            </c-deployment-steps-external-c-i>
+
+            <!-- Commented because inner automations are not available yet -->
+            <!--<c-deployment-steps-automation if:true={isAutomation} current-deployment-id={currentDeploymentId}
+                step-id={selectedStepId}>
+            </c-deployment-steps-automation>-->
+
+        </lightning-card>
+    </div>
+</template>

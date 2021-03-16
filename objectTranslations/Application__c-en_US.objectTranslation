@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Application</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Applications</value>
+    </caseValues>
+    <fields>
+        <label><!-- Description --></label>
+        <name>Description__c</name>
+    </fields>
+    <fields>
+        <label><!-- Parent Application --></label>
+        <name>Parent_Application__c</name>
+        <relationshipLabel><!-- Sub-Applications --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Product Manager --></label>
+        <name>Product_Manager__c</name>
+        <relationshipLabel><!-- Applications --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Release Status --></label>
+        <name>Release_Status__c</name>
+        <picklistValues>
+            <masterLabel>Beta</masterLabel>
+            <translation><!-- Beta --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Definition</masterLabel>
+            <translation><!-- Definition --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Development</masterLabel>
+            <translation><!-- Development --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>GA</masterLabel>
+            <translation><!-- GA --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pilot</masterLabel>
+            <translation><!-- Pilot --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Stability Icon --></label>
+        <name>Stability_Icon__c</name>
+    </fields>
+    <fields>
+        <label><!-- Stability --></label>
+        <name>Stability__c</name>
+        <picklistValues>
+            <masterLabel>Stable</masterLabel>
+            <translation><!-- Stable --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Uncertain</masterLabel>
+            <translation><!-- Uncertain --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Unstable</masterLabel>
+            <translation><!-- Unstable --></translation>
+        </picklistValues>
+    </fields>
+    <nameFieldLabel><!-- Name --></nameFieldLabel>
+    <startsWith>Vowel</startsWith>
+</CustomObjectTranslation>

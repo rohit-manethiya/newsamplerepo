@@ -1,0 +1,20 @@
+<apex:component id="CopadoSpinner">
+    <apex:actionStatus onStart="lockScreen()" onStop="unlockScreen()" id="loadingScreen"/>
+    <script>
+        function lockScreen(){
+            document.getElementById('CopadoSpinner').style.display='block';
+        }
+        function unlockScreen(){
+            document.getElementById('CopadoSpinner').style.display='none';
+        }
+    </script>
+    <div id="CopadoSpinner" style="display: none">
+        <div class="slds-spinner_container" style="position: fixed;">
+            <div role="status" class="slds-spinner slds-spinner_large slds-spinner_brand">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+    </div>
+</apex:component>
